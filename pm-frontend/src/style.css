@@ -1,0 +1,30 @@
+:root {
+  --pm-primary: #1a3a5c;
+  --pm-sidebar-bg: #1a3a5c;
+  --pm-header-bg: #ffffff;
+  --pm-bg: #f0f2f5;
+  --pm-card-bg: #ffffff;
+  --pm-text: #303133;
+  --pm-text-secondary: #606266;
+  --pm-border: #e4e7ed;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif;
+  background: var(--pm-bg);
+  color: var(--pm-text);
+  font-size: 14px;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 3px; }
+
+.page-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+.page-header { margin-bottom: 20px; }
+.page-header h2 { font-size: 20px; font-weight: 600; color: var(--pm-primary); }
+.page-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+.card-box { background: var(--pm-card-bg); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }

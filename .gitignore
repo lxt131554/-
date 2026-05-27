@@ -1,0 +1,28 @@
+# 后端
+pm-backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# 前端
+pm-frontend/node_modules/
+pm-frontend/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 环境
+.env.local
+.env.*.local
+
+# 日志
+*.log
+logs/
