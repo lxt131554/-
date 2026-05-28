@@ -17,25 +17,27 @@
         </el-button>
       </div>
 
-      <el-table :data="tableData" border stripe v-loading="loading" empty-text="暂无偏差记录">
+      <el-table :data="tableData" v-loading="loading" empty-text="暂无偏差记录">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
-        <el-table-column prop="stageName" label="阶段" width="120" />
-        <el-table-column prop="type" label="来源" width="80" align="center">
+        <el-table-column prop="stageName" label="阶段" min-width="120" />
+        <el-table-column prop="type" label="来源" min-width="80" align="center">
           <template #default="{row}">
-            <el-tag size="small" :type="row.type=='auto'?'warning':''">{{ row.type=='auto'?'自动':'手动' }}</el-tag>
+            <el-tag size="small" class="dev-tag" :class="'dev-tag--' + (row.type=='auto'?'amber':'slate')">
+              {{ row.type=='auto'?'自动':'手动' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="description" label="偏差描述" min-width="240" show-overflow-tooltip />
         <el-table-column prop="reason" label="偏差原因" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="status" label="状态" width="90" align="center">
+        <el-table-column prop="status" label="状态" min-width="90" align="center">
           <template #default="{row}">
             <el-tag :type="row.status=='open'?'danger':'success'" size="small">
               {{ row.status=='open'?'未关闭':'已关闭' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="170" />
-        <el-table-column label="操作" width="80" fixed="right" align="center">
+        <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column label="操作" min-width="80" fixed="right" align="center">
           <template #default="{row}">
             <el-button v-if="row.status=='open'" text type="primary" size="small" @click="handleClose(row)">
               关闭
@@ -126,3 +128,27 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.dev-tag {
+  border-radius: 99px;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  padding: 2px 10px;
+  height: 20px;
+  line-height: 18px;
+  border: none;
+  display: inline-block;
+}
+
+.dev-tag--amber {
+  background: var(--pm-pale-amber);
+  color: var(--pm-amber-text);
+}
+
+.dev-tag--slate {
+  background: var(--pm-pale-slate);
+  color: var(--pm-slate-text);
+}
+</style>

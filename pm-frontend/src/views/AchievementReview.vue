@@ -10,9 +10,9 @@
         <el-descriptions-item label="提交时间">{{ report.submitTime }}</el-descriptions-item>
         <el-descriptions-item label="进度">{{ report.progressRate }}%</el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag v-if="report.reviewStatus==='pending'" type="warning">待审核</el-tag>
-          <el-tag v-else-if="report.reviewStatus==='passed'" type="success">已通过</el-tag>
-          <el-tag v-else-if="report.reviewStatus==='returned'" type="danger">已退回</el-tag>
+          <el-tag v-if="report.reviewStatus==='pending'" type="warning" size="small">待审核</el-tag>
+          <el-tag v-else-if="report.reviewStatus==='passed'" type="success" size="small">已通过</el-tag>
+          <el-tag v-else-if="report.reviewStatus==='returned'" type="danger" size="small">已退回</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="工作内容" :span="2">{{ report.content }}</el-descriptions-item>
         <el-descriptions-item label="存在问题" :span="2">{{ report.problem || '无' }}</el-descriptions-item>
@@ -22,7 +22,7 @@
               <el-icon><Download /></el-icon> {{ report.attachmentName }}
             </el-link>
           </template>
-          <span v-else style="color:#909399">无附件</span>
+          <span v-else class="text-muted">无附件</span>
         </el-descriptions-item>
         <el-descriptions-item label="审阅意见" :span="2" v-if="report.reviewComment">{{ report.reviewComment }}</el-descriptions-item>
       </el-descriptions>
@@ -83,3 +83,7 @@ async function doReview(status) {
 
 onMounted(loadReport)
 </script>
+
+<style scoped>
+.text-muted { color: var(--pm-text-muted); }
+</style>

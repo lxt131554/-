@@ -62,8 +62,16 @@ const supportItems = [
   { id: 2, projectId: 3, title: '草原生态修复方案需要外部专家评审', content: '阿坝州草原生态修复项目涉及高寒草甸恢复技术，院内缺乏该领域专家，需要邀请川农大草原研究所专家参与方案评审。', applicantId: 3, applicantName: '李工', handlerId: 2, handlerName: '张主任', expectTime: '2026-06-15', status: 'pending', reply: null, createTime: '2026-05-26 14:00:00', updateTime: '2026-05-26 14:00:00', projectName: '阿坝州草原生态修复项目实施方案' }
 ]
 
+const reviews = {
+  1: { id: 1, projectId: 1, overallDeviation: '外业偏差15天，内业偏差30天，成果偏差30天。前期对工作量预估不足，导致多次延期。', efficiencyRating: '整体效率偏低。前期对地形复杂度和协调难度预估不足，外业阶段雨天停工较多，内业阶段因数据不完整多次返工。建议后续类似项目增加15%的时间buffer。', qualityRating: '成果质量整体满足要求，但图件标注存在少量错误，报告文字有少量纰漏。经专家审核后已修正，最终通过评审。外业数据采集较为扎实，为后续分析提供了良好基础。', communicationNote: '与业主的沟通总体顺畅，关键节点均及时汇报。但在外业调查阶段与地方林业站的协调不够，导致资料获取延迟。院级层面介入后问题得到解决。后续建议在项目启动期就建立多方沟通机制。', createUserId: 2, createTime: '2026-07-25 10:00:00', projectName: '古蔺县森林资源调查与空间规划' }
+}
+
+const experiences = {
+  1: { id: 1, projectId: 1, reusableExperience: '1. 古蔺项目的外业调查分组模式值得复用——按地形单元分4个小组并行推进，每组配置林业+测绘+地理专业人员，效率提升明显。\n2. 建立了完整的林地资源数据库模板，包括样地调查表、树种分布图、蓄积量统计表等，可直接复用于类似项目。\n3. 与业主的定期沟通机制（每周五下午进度通报）有效减少了后期返工。', shortcomings: '1. 前期对地形复杂度评估不足，北部山区交通条件差，导致外业延迟。\n2. 内业阶段数据分析人才配置不足，过度依赖1-2名骨干，形成瓶颈。\n3. 缺乏标准化的质量审核流程，第一版成果内部审核不够严格。', risks: '1. 地形复杂区域的外业调查时间窗口受天气影响大，需预留弹性时间。\n2. 地方数据获取存在行政壁垒，需要提前建立协调机制。\n3. 成果编制阶段多专业协作容易出现衔接遗漏。', improvement: '1. 建议在项目启动前进行实地踏勘，准确评估调查难度和时间。\n2. 建立内部三级审核制度（自审→互审→专家审），提高成果质量。\n3. 推广古蔺项目的分组并行作业模式到其他大型调查项目。\n4. 加强与地方林业部门的常态化联系，降低数据获取成本。', createUserId: 2, createTime: '2026-07-25 11:00:00', projectName: '古蔺县森林资源调查与空间规划' }
+}
+
 export function getMockData() {
-  return { users, projects, projectMembers, stages, reports, deviations, supportItems, currentUser }
+  return { users, projects, projectMembers, stages, reports, deviations, supportItems, reviews, experiences, currentUser }
 }
 
 export function setMockUser(username) {

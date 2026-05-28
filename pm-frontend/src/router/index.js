@@ -23,7 +23,11 @@ const routes = [
       { path: 'my-tasks/:stageId/report', name: 'StageReport', component: () => import('../views/StageReport.vue') },
       { path: 'pending-review', name: 'PendingReview', component: () => import('../views/PendingReview.vue') },
       { path: 'pending-review/:reportId', name: 'Review', component: () => import('../views/Review.vue') },
-      { path: 'achievement-review/:reportId', name: 'AchievementReview', component: () => import('../views/AchievementReview.vue') }
+      { path: 'achievement-review/:reportId', name: 'AchievementReview', component: () => import('../views/AchievementReview.vue') },
+      { path: 'leader-dashboard', name: 'LeaderDashboard', component: () => import('../views/LeaderDashboard.vue') },
+      { path: 'projects/:id/review', name: 'ProjectReview', component: () => import('../views/ProjectReview.vue') },
+      { path: 'projects/:id/experience', name: 'ProjectExperience', component: () => import('../views/ProjectExperience.vue') },
+      { path: 'experiences', name: 'ExperienceLibrary', component: () => import('../views/ExperienceLibrary.vue') },
     ]
   }
 ]

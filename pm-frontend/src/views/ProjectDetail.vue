@@ -4,35 +4,39 @@
       <el-button text @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon> 返回列表</el-button>
       <h2 style="margin-top:8px">{{ project.name }}</h2>
       <p style="color:var(--pm-text-secondary);margin-top:4px">{{ project.description || '暂无描述' }}</p>
+      <el-button v-if="project.status=='active' && (auth.user?.role=='manager'||auth.user?.role=='admin')"
+        type="warning" size="small" @click="handleCompleteProject" style="margin-left:12px">
+        完成项目
+      </el-button>
     </div>
 
     <div class="card-box" style="margin-bottom:16px">
       <div class="page-toolbar">
-        <span style="font-weight:600;font-size:16px">项目阶段</span>
+        <span class="section-title">项目阶段</span>
         <el-button type="primary" size="small" @click="showAddStage=true"
           v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">
           <el-icon><Plus /></el-icon> 添加阶段
         </el-button>
       </div>
-      <el-table :data="stages" border stripe>
+      <el-table :data="stages">
         <el-table-column prop="stageName" label="阶段名称" min-width="160" />
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="assigneeName" label="责任人" width="120" />
-        <el-table-column label="计划时间" width="200">
+        <el-table-column prop="assigneeName" label="责任人" min-width="120" />
+        <el-table-column label="计划时间" min-width="200">
           <template #default="{row}">{{ row.planStart || '-' }} 至 {{ row.planEnd || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="110">
+        <el-table-column prop="status" label="状态" min-width="110">
           <template #default="{row}">
-            <el-tag v-if="row.status==='pending'" type="info">待开始</el-tag>
-            <el-tag v-else-if="row.status==='in_progress'" type="primary">进行中</el-tag>
-            <el-tag v-else-if="row.status==='submitted'" type="warning">待审阅</el-tag>
-            <el-tag v-else-if="row.status==='completed'" type="success">已完成</el-tag>
+            <el-tag v-if="row.status==='pending'" type="info" size="small">待开始</el-tag>
+            <el-tag v-else-if="row.status==='in_progress'" type="primary" size="small">进行中</el-tag>
+            <el-tag v-else-if="row.status==='submitted'" type="warning" size="small">待审阅</el-tag>
+            <el-tag v-else-if="row.status==='completed'" type="success" size="small">已完成</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="最新填报" min-width="200" show-overflow-tooltip>
           <template #default="{row}">{{ row.latestReport?.content || '暂无' }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="180">
+        <el-table-column label="操作" min-width="180">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/my-tasks/${row.id}/report`)"
               v-if="auth.user?.role==='engineer'">填报</el-button>
@@ -44,16 +48,30 @@
 
     <div class="card-box">
       <div class="page-toolbar">
-        <span style="font-weight:600;font-size:16px">项目成员</span>
+        <span class="section-title">项目成员</span>
         <el-button type="primary" size="small" @click="showAddMember=true">
           <el-icon><Plus /></el-icon> 添加成员
         </el-button>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:12px">
+      <div class="member-tags">
         <el-tag v-for="m in members" :key="m.id" closable :type="m.roleInProject==='manager'?'warning':'success'"
           @close="handleRemoveMember(m)" size="large">
           {{ m.realName }}（{{ m.roleInProject==='manager'?'负责人':'工程师' }}）
         </el-tag>
+      </div>
+    </div>
+
+    <div class="card-box" v-if="project.status=='completed'" style="margin-top:16px">
+      <div class="page-toolbar">
+        <span style="font-weight:600;font-size:16px">收尾复盘</span>
+      </div>
+      <div style="display:flex;gap:12px">
+        <el-button type="primary" @click="router.push(`/projects/${projectId}/review`)">
+          项目自评
+        </el-button>
+        <el-button type="primary" @click="router.push(`/projects/${projectId}/experience`)">
+          经验总结
+        </el-button>
       </div>
     </div>
 
@@ -110,7 +128,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { getProjectDetail } from '../api/project'
+import { getProjectDetail, updateProject } from '../api/project'
 import { getStages, addStage, deleteStage } from '../api/stage'
 import { getProjectMembers, addProjectMember, removeProjectMember } from '../api/project'
 import { ElMessage } from 'element-plus'
@@ -175,5 +193,28 @@ async function handleRemoveMember(m) {
   loadMembers()
 }
 
+async function handleCompleteProject() {
+  try {
+    await updateProject(projectId, { ...project.value, status: 'completed' })
+    ElMessage.success('项目已完成')
+    loadProject()
+  } catch {}
+}
+
 onMounted(() => { loadProject(); loadStages(); loadMembers() })
 </script>
+
+<style scoped>
+.section-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--pm-text);
+  letter-spacing: -0.01em;
+}
+
+.member-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+</style>

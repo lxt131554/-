@@ -15,23 +15,23 @@
         </div>
       </div>
 
-      <el-table :data="tableData" border stripe v-loading="loading">
-        <el-table-column prop="id" label="编号" width="80" />
+      <el-table :data="tableData" v-loading="loading" class="pm-table">
+        <el-table-column prop="id" label="编号" min-width="80" />
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
             <el-link type="primary" @click="router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
           </template>
         </el-table-column>
         <el-table-column prop="description" label="描述" min-width="240" show-overflow-tooltip />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="status" label="状态" min-width="100">
           <template #default="{row}">
-            <el-tag :type="row.status==='active'?'success':'info'">
+            <el-tag :type="row.status==='active'?'success':'info'" size="small">
               {{ row.status==='active'?'进行中': row.status==='completed'?'已完成':'已关闭' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="170" />
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column label="操作" min-width="120" fixed="right">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/projects/${row.id}`)">查看</el-button>
             <el-button text type="danger" @click="handleDelete(row)" v-if="auth.user?.role==='admin'">删除</el-button>
@@ -114,3 +114,9 @@ async function handleDelete(row) {
 
 onMounted(loadData)
 </script>
+
+<style scoped>
+.pm-table {
+  width: 100%;
+}
+</style>

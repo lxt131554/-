@@ -1,18 +1,23 @@
 <template>
   <el-container style="height:100vh">
-    <el-aside width="220px" style="background:var(--pm-sidebar-bg);overflow:hidden">
-      <div style="padding:20px;text-align:center;color:#fff;font-size:18px;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.1)">
-        <el-icon style="margin-right:6px"><Monitor /></el-icon>
-        项目管理系统
+    <!-- Sidebar -->
+    <el-aside width="200px" class="layout-sidebar">
+      <div class="sidebar-brand">
+        <el-icon :size="20"><Monitor /></el-icon>
+        <span>项目管理系统</span>
       </div>
       <el-menu
         :default-active="route.path"
-        background-color="#1a3a5c"
-        text-color="#bfcbd9"
-        active-text-color="#409eff"
+        background-color="transparent"
+        text-color="#9B9DA0"
+        active-text-color="#FFFFFF"
         router
-        style="border-right:none"
+        style="border-right:none;flex:1;padding-top:8px"
       >
+        <el-menu-item index="/dashboard">
+          <el-icon><HomeFilled /></el-icon>
+          <span>工作台</span>
+        </el-menu-item>
         <el-menu-item index="/projects">
           <el-icon><Folder /></el-icon>
           <span>项目列表</span>
@@ -43,17 +48,28 @@
           <el-icon><Headset /></el-icon>
           <span>支持事项</span>
         </el-menu-item>
+        <el-menu-item v-if="auth.user?.role=='leader'" index="/leader-dashboard">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>领导看板</span>
+        </el-menu-item>
+        <el-menu-item index="/experiences">
+          <el-icon><Collection /></el-icon>
+          <span>经验库</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
+    <!-- Main area -->
     <el-container>
-      <el-header style="background:#fff;border-bottom:1px solid var(--pm-border);display:flex;align-items:center;justify-content:flex-end;padding:0 24px">
-        <span style="margin-right:12px;color:var(--pm-text-secondary)">
-          {{ auth.user?.realName }}（{{ roleLabel }}）
-        </span>
-        <el-button type="danger" text @click="handleLogout">退出</el-button>
+      <el-header class="layout-header">
+        <div class="header-user">
+          <span class="header-name">{{ auth.user?.realName }}</span>
+          <span class="header-role">{{ roleLabel }}</span>
+          <span class="header-divider"></span>
+          <el-button type="danger" text size="small" @click="handleLogout">退出</el-button>
+        </div>
       </el-header>
-      <el-main style="background:var(--pm-bg);padding:20px">
+      <el-main class="layout-main">
         <router-view />
       </el-main>
     </el-container>
@@ -78,3 +94,75 @@ function handleLogout() {
   auth.logout().then(() => router.push('/login'))
 }
 </script>
+
+<style scoped>
+/* Sidebar container -- not glued to edge */
+.layout-sidebar {
+  background: var(--pm-sidebar-bg);
+  margin: 6px 0 6px 6px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Brand area */
+.sidebar-brand {
+  padding: 22px 20px 18px;
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Top header -- floating feel */
+.layout-header {
+  background: var(--pm-surface);
+  border-bottom: 1px solid var(--pm-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--pm-space-lg);
+  height: 52px;
+}
+
+/* User info */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-name {
+  color: var(--pm-text);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.header-role {
+  color: var(--pm-text-muted);
+  font-size: 13px;
+  background: var(--pm-surface-hover);
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-weight: 500;
+}
+
+.header-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--pm-border);
+  margin: 0 4px;
+}
+
+/* Main content */
+.layout-main {
+  background: var(--pm-bg);
+  padding: var(--pm-space-lg);
+  overflow-y: auto;
+}
+</style>

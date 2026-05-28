@@ -39,7 +39,7 @@
               <el-icon><Upload /></el-icon> 选择文件
             </el-button>
             <template #tip>
-              <div style="color:#909399;font-size:12px">支持 PDF、Word、Excel、CAD图纸、图片、压缩包，单个文件不超过50MB</div>
+              <div class="upload-tip">支持 PDF、Word、Excel、CAD图纸、图片、压缩包，单个文件不超过50MB</div>
             </template>
           </el-upload>
         </el-form-item>
@@ -52,14 +52,16 @@
       <el-divider>历史填报记录</el-divider>
       <el-timeline v-if="history.length">
         <el-timeline-item v-for="item in history" :key="item.id" :timestamp="item.createTime" placement="top">
-          <el-card>
-            <p><strong>进度：</strong>{{ item.progressRate }}%</p>
-            <p><strong>内容：</strong>{{ item.content }}</p>
-            <p v-if="item.problem"><strong>问题：</strong>{{ item.problem }}</p>
-            <p v-if="item.reviewComment"><strong>审阅意见：</strong>{{ item.reviewComment }}</p>
-            <el-tag v-if="item.reviewStatus==='passed'" type="success" size="small">已通过</el-tag>
-            <el-tag v-else-if="item.reviewStatus==='returned'" type="danger" size="small">已退回</el-tag>
-            <el-tag v-else type="info" size="small">待审阅</el-tag>
+          <el-card shadow="never">
+            <p class="timeline-row"><strong>进度：</strong>{{ item.progressRate }}%</p>
+            <p class="timeline-row"><strong>内容：</strong>{{ item.content }}</p>
+            <p class="timeline-row" v-if="item.problem"><strong>问题：</strong>{{ item.problem }}</p>
+            <p class="timeline-row" v-if="item.reviewComment"><strong>审阅意见：</strong>{{ item.reviewComment }}</p>
+            <div style="margin-top:8px">
+              <el-tag v-if="item.reviewStatus==='passed'" type="success" size="small">已通过</el-tag>
+              <el-tag v-else-if="item.reviewStatus==='returned'" type="danger" size="small">已退回</el-tag>
+              <el-tag v-else type="info" size="small">待审阅</el-tag>
+            </div>
           </el-card>
         </el-timeline-item>
       </el-timeline>
@@ -134,3 +136,27 @@ async function handleSubmit() {
 
 onMounted(loadHistory)
 </script>
+
+<style scoped>
+.upload-tip {
+  color: var(--pm-text-muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.timeline-row {
+  margin-bottom: 4px;
+  font-size: 15px;
+  color: var(--pm-text);
+  line-height: 1.6;
+}
+
+.timeline-row:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-row strong {
+  color: var(--pm-text-secondary);
+  font-weight: 500;
+}
+</style>

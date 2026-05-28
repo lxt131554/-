@@ -10,9 +10,9 @@
         <el-descriptions-item label="提交时间">{{ report.submitTime }}</el-descriptions-item>
         <el-descriptions-item label="进度">{{ report.progressRate }}%</el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag v-if="report.reviewStatus==='pending'" type="warning">待审阅</el-tag>
-          <el-tag v-else-if="report.reviewStatus==='passed'" type="success">已通过</el-tag>
-          <el-tag v-else-if="report.reviewStatus==='returned'" type="danger">已退回</el-tag>
+          <el-tag v-if="report.reviewStatus==='pending'" type="warning" size="small">待审阅</el-tag>
+          <el-tag v-else-if="report.reviewStatus==='passed'" type="success" size="small">已通过</el-tag>
+          <el-tag v-else-if="report.reviewStatus==='returned'" type="danger" size="small">已退回</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="工作内容" :span="2">{{ report.content }}</el-descriptions-item>
         <el-descriptions-item label="存在问题" :span="2">{{ report.problem || '无' }}</el-descriptions-item>

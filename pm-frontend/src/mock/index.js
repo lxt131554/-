@@ -305,7 +305,7 @@ async function getMockResponse(config) {
   }
 
   // ======================== Dashboard endpoints ========================
-  else if (url === '/api/dashboard' && method === 'get') {
+  else if (url === '/dashboard' && method === 'get') {
     const user = getMockUser()
     let stats = {}
     if (user?.role === 'engineer') {
@@ -319,14 +319,14 @@ async function getMockResponse(config) {
   }
 
   // ======================== Deviation endpoints ========================
-  else if (url === '/api/deviations' && method === 'get') {
+  else if (url === '/deviations' && method === 'get') {
     let list = [...mockData.deviations]
     if (params.status) {
       list = list.filter(d => d.status === params.status)
     }
     result = { code: 200, message: 'success', data: list }
   }
-  else if (url === '/api/deviations' && method === 'post') {
+  else if (url === '/deviations' && method === 'post') {
     const user = getMockUser()
     const newDeviation = {
       id: Date.now(),
@@ -348,8 +348,8 @@ async function getMockResponse(config) {
     mockData.deviations.push(newDeviation)
     result = { code: 200, message: 'success', data: newDeviation }
   }
-  else if (url?.match(/^\/api\/deviations\/\d+\/close$/) && method === 'put') {
-    const id = parseInt(url.split('/')[3])
+  else if (url?.match(/^\/deviations\/\d+\/close$/) && method === 'put') {
+    const id = parseInt(url.split('/')[2])
     const deviation = mockData.deviations.find(d => d.id === id)
     if (deviation) {
       deviation.status = 'closed'
@@ -359,14 +359,14 @@ async function getMockResponse(config) {
   }
 
   // ======================== Support endpoints ========================
-  else if (url === '/api/supports' && method === 'get') {
+  else if (url === '/supports' && method === 'get') {
     let list = [...mockData.supportItems]
     if (params.status) {
       list = list.filter(s => s.status === params.status)
     }
     result = { code: 200, message: 'success', data: list }
   }
-  else if (url === '/api/supports' && method === 'post') {
+  else if (url === '/supports' && method === 'post') {
     const user = getMockUser()
     const now = new Date().toISOString().replace('T', ' ').slice(0, 19)
     const newSupport = {
@@ -388,8 +388,8 @@ async function getMockResponse(config) {
     mockData.supportItems.push(newSupport)
     result = { code: 200, message: 'success', data: newSupport }
   }
-  else if (url?.match(/^\/api\/supports\/\d+\/resolve$/) && method === 'put') {
-    const id = parseInt(url.split('/')[3])
+  else if (url?.match(/^\/supports\/\d+\/resolve$/) && method === 'put') {
+    const id = parseInt(url.split('/')[2])
     const supportItem = mockData.supportItems.find(s => s.id === id)
     if (supportItem) {
       supportItem.status = 'resolved'
@@ -397,6 +397,96 @@ async function getMockResponse(config) {
       supportItem.updateTime = new Date().toISOString().replace('T', ' ').slice(0, 19)
     }
     result = { code: 200, message: 'success', data: supportItem || null }
+  }
+
+  // ======================== Leader Dashboard endpoint ========================
+  else if (url === '/leader-dashboard' && method === 'get') {
+    result = {
+      code: 200, message: 'success', data: {
+        activeProjects: mockData.projects.filter(p => p.status === 'active').length,
+        completedProjects: mockData.projects.filter(p => p.status === 'completed').length,
+        openDeviations: mockData.deviations.filter(d => d.status === 'open').length,
+        pendingSupports: mockData.supportItems.filter(s => s.status === 'pending').length,
+        projects: mockData.projects
+      }
+    }
+  }
+
+  // ======================== Review endpoints ========================
+  else if (url?.match(/^\/projects\/\d+\/review$/) && method === 'get') {
+    const projectId = parseInt(url.split('/')[2])
+    const review = Object.values(mockData.reviews).find(r => r.projectId === projectId)
+    result = { code: 200, message: 'success', data: review || null }
+  }
+  else if (url?.match(/^\/projects\/\d+\/review$/) && method === 'post') {
+    const projectId = parseInt(url.split('/')[2])
+    const user = getMockUser()
+    let review = Object.values(mockData.reviews).find(r => r.projectId === projectId)
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 19)
+    if (review) {
+      if (body.overallDeviation !== undefined) review.overallDeviation = body.overallDeviation
+      if (body.efficiencyRating !== undefined) review.efficiencyRating = body.efficiencyRating
+      if (body.qualityRating !== undefined) review.qualityRating = body.qualityRating
+      if (body.communicationNote !== undefined) review.communicationNote = body.communicationNote
+      review.projectName = body.projectName || review.projectName
+      review.createUserId = user?.id || review.createUserId
+      review.createTime = now
+    } else {
+      const newId = Date.now()
+      review = {
+        id: newId,
+        projectId,
+        overallDeviation: body.overallDeviation || '',
+        efficiencyRating: body.efficiencyRating || '',
+        qualityRating: body.qualityRating || '',
+        communicationNote: body.communicationNote || '',
+        createUserId: user?.id,
+        createTime: now,
+        projectName: body.projectName || ''
+      }
+      mockData.reviews[newId] = review
+    }
+    result = { code: 200, message: 'success', data: review }
+  }
+
+  // ======================== Experience endpoints ========================
+  else if (url?.match(/^\/projects\/\d+\/experience$/) && method === 'get') {
+    const projectId = parseInt(url.split('/')[2])
+    const experience = Object.values(mockData.experiences).find(e => e.projectId === projectId)
+    result = { code: 200, message: 'success', data: experience || null }
+  }
+  else if (url?.match(/^\/projects\/\d+\/experience$/) && method === 'post') {
+    const projectId = parseInt(url.split('/')[2])
+    const user = getMockUser()
+    let experience = Object.values(mockData.experiences).find(e => e.projectId === projectId)
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 19)
+    if (experience) {
+      if (body.reusableExperience !== undefined) experience.reusableExperience = body.reusableExperience
+      if (body.shortcomings !== undefined) experience.shortcomings = body.shortcomings
+      if (body.risks !== undefined) experience.risks = body.risks
+      if (body.improvement !== undefined) experience.improvement = body.improvement
+      experience.projectName = body.projectName || experience.projectName
+      experience.createUserId = user?.id || experience.createUserId
+      experience.createTime = now
+    } else {
+      const newId = Date.now()
+      experience = {
+        id: newId,
+        projectId,
+        reusableExperience: body.reusableExperience || '',
+        shortcomings: body.shortcomings || '',
+        risks: body.risks || '',
+        improvement: body.improvement || '',
+        createUserId: user?.id,
+        createTime: now,
+        projectName: body.projectName || ''
+      }
+      mockData.experiences[newId] = experience
+    }
+    result = { code: 200, message: 'success', data: experience }
+  }
+  else if (url === '/experiences' && method === 'get') {
+    result = { code: 200, message: 'success', data: Object.values(mockData.experiences) }
   }
 
   if (result) {
