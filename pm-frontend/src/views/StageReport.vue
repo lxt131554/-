@@ -26,6 +26,18 @@
             标记为偏差（工作延期或未按计划完成时勾选）
           </el-checkbox>
         </el-form-item>
+        <el-form-item label="质量管控措施">
+          <el-input v-model="form.qualityControl" type="textarea" :rows="2"
+            placeholder="例：每样地设置8个检尺点；外业数据当日复核；照片与样地编号一一对应" />
+        </el-form-item>
+        <el-form-item label="阶段成果说明">
+          <el-input v-model="form.resultSummary" type="textarea" :rows="2"
+            placeholder="例：完成小班调查表120份、树种分布图2幅、蓄积量统计表1套" />
+        </el-form-item>
+        <el-form-item label="沟通协调情况">
+          <el-input v-model="form.coordinationNote" type="textarea" :rows="2"
+            placeholder="例：与县林业局对接3次；院内部协调会2次；业主反馈需调整样地布局" />
+        </el-form-item>
         <el-form-item label="成果附件">
           <el-upload
             ref="uploadRef"
@@ -88,7 +100,8 @@ const selectedFile = ref(null)
 
 const form = reactive({
   progressRate: 0, content: '', problem: '',
-  actualStart: '', actualEnd: '', isDeviation: false
+  actualStart: '', actualEnd: '', isDeviation: false,
+  qualityControl: '', resultSummary: '', coordinationNote: ''
 })
 const rules = { content: [{ required: true, message: '请填写工作内容', trigger: 'blur' }] }
 
@@ -114,6 +127,9 @@ async function handleSubmit() {
     fd.append('problem', form.problem || '')
     fd.append('actualStart', form.actualStart || '')
     fd.append('actualEnd', form.actualEnd || '')
+    fd.append('qualityControl', form.qualityControl || '')
+    fd.append('resultSummary', form.resultSummary || '')
+    fd.append('coordinationNote', form.coordinationNote || '')
     if (selectedFile.value) {
       fd.append('file', selectedFile.value)
     }

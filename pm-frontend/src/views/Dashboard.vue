@@ -21,6 +21,18 @@
       </div>
     </div>
 
+    <!-- Engineer warnings -->
+    <div v-if="auth.user?.role=='engineer' && (stats.overdue || stats.nearDeadline)" class="stat-grid" style="margin-top:16px">
+      <el-card v-if="stats.overdue" class="stat-card warning-card" shadow="hover" @click="$router.push('/my-tasks')">
+        <div class="stat-num" style="color:#f56c6c">{{ stats.overdue }}</div>
+        <div class="stat-label">已逾期阶段</div>
+      </el-card>
+      <el-card v-if="stats.nearDeadline" class="stat-card warning-card" shadow="hover" @click="$router.push('/my-tasks')">
+        <div class="stat-num" style="color:#e6a23c">{{ stats.nearDeadline }}</div>
+        <div class="stat-label">即将到期</div>
+      </el-card>
+    </div>
+
     <!-- Manager stats -->
     <div v-if="auth.user?.role=='manager'" class="stat-grid">
       <div class="stat-card stat-card--blue" @click="$router.push('/pending-review')" style="animation-delay:0ms">
@@ -53,6 +65,14 @@
           <div class="stat-label">待处理支持</div>
         </div>
       </div>
+    </div>
+
+    <!-- Manager pending review warnings -->
+    <div v-if="auth.user?.role=='manager' && stats.reviewOverdue" class="stat-grid" style="margin-top:16px">
+      <el-card class="stat-card warning-card" shadow="hover" @click="$router.push('/pending-review')">
+        <div class="stat-num" style="color:#f56c6c">{{ stats.reviewOverdue }}</div>
+        <div class="stat-label">审阅超时(>48h)</div>
+      </el-card>
     </div>
 
     <!-- Leader stats -->
@@ -230,4 +250,6 @@ onMounted(loadStats)
   box-shadow: var(--pm-shadow);
   transform: translateY(-1px);
 }
+
+.warning-card { border: 1px solid rgba(245,108,108,0.2); }
 </style>

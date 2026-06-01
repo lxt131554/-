@@ -15,6 +15,12 @@ public class SysStageReport {
     private String content;
     private Integer progressRate;
     private String problem;
+
+    // V0.7: 阶段填报补全
+    private String qualityControl;
+    private String resultSummary;
+    private String coordinationNote;
+
     private LocalDate planStart;
     private LocalDate planEnd;
     private LocalDate actualStart;

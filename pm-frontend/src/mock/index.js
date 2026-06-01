@@ -86,7 +86,24 @@ async function getMockResponse(config) {
       description: body.description || '',
       status: 'active',
       createUserId: getMockUser()?.id,
-      createTime: new Date().toISOString().replace('T', ' ').slice(0, 19)
+      createTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      customerLevel: body.customerLevel || '',
+      contacts: body.contacts || '',
+      achievementType: body.achievementType || '',
+      approvalRequirements: body.approvalRequirements || '',
+      canUndertake: body.canUndertake || '',
+      mainRisks: body.mainRisks || '',
+      keyConstraints: body.keyConstraints || '',
+      deliverableRequirements: body.deliverableRequirements || '',
+      approvalPath: body.approvalPath || '',
+      hrAllocation: body.hrAllocation || '',
+      expectedOutputs: body.expectedOutputs || '',
+      coreMaterials: body.coreMaterials || '',
+      teamSetup: body.teamSetup || '',
+      coreStrategy: body.coreStrategy || '',
+      bidSituation: body.bidSituation || '',
+      procurementInfo: body.procurementInfo || '',
+      acquisitionResult: body.acquisitionResult || ''
     }
     mockData.projects.push(newProject)
     mockData.projectMembers[newProject.id] = []
@@ -100,6 +117,23 @@ async function getMockResponse(config) {
       if (body.name !== undefined) project.name = body.name
       if (body.description !== undefined) project.description = body.description
       if (body.status !== undefined) project.status = body.status
+      if (body.customerLevel !== undefined) project.customerLevel = body.customerLevel
+      if (body.contacts !== undefined) project.contacts = body.contacts
+      if (body.achievementType !== undefined) project.achievementType = body.achievementType
+      if (body.approvalRequirements !== undefined) project.approvalRequirements = body.approvalRequirements
+      if (body.canUndertake !== undefined) project.canUndertake = body.canUndertake
+      if (body.mainRisks !== undefined) project.mainRisks = body.mainRisks
+      if (body.keyConstraints !== undefined) project.keyConstraints = body.keyConstraints
+      if (body.deliverableRequirements !== undefined) project.deliverableRequirements = body.deliverableRequirements
+      if (body.approvalPath !== undefined) project.approvalPath = body.approvalPath
+      if (body.hrAllocation !== undefined) project.hrAllocation = body.hrAllocation
+      if (body.expectedOutputs !== undefined) project.expectedOutputs = body.expectedOutputs
+      if (body.coreMaterials !== undefined) project.coreMaterials = body.coreMaterials
+      if (body.teamSetup !== undefined) project.teamSetup = body.teamSetup
+      if (body.coreStrategy !== undefined) project.coreStrategy = body.coreStrategy
+      if (body.bidSituation !== undefined) project.bidSituation = body.bidSituation
+      if (body.procurementInfo !== undefined) project.procurementInfo = body.procurementInfo
+      if (body.acquisitionResult !== undefined) project.acquisitionResult = body.acquisitionResult
     }
     result = { code: 200, message: 'success', data: project || null }
   }
@@ -233,6 +267,9 @@ async function getMockResponse(config) {
       content: body.content || '',
       progressRate: parseInt(body.progressRate) || 0,
       problem: body.problem || '',
+      qualityControl: body.qualityControl || '',
+      resultSummary: body.resultSummary || '',
+      coordinationNote: body.coordinationNote || '',
       actualStart: body.actualStart || null,
       actualEnd: body.actualEnd || null,
       reviewStatus: 'pending',
@@ -309,11 +346,36 @@ async function getMockResponse(config) {
     const user = getMockUser()
     let stats = {}
     if (user?.role === 'engineer') {
-      stats = { todo: 2, returned: 1 }
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      let overdue = 0, nearDeadline = 0
+      Object.values(mockData.stages).forEach(stageList => {
+        stageList.forEach(s => {
+          if (s.assigneeId === user?.id && s.status !== 'completed' && s.planEnd) {
+            const endDate = new Date(s.planEnd)
+            endDate.setHours(0, 0, 0, 0)
+            const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+            if (daysLeft < 0) overdue++
+            else if (daysLeft <= 3) nearDeadline++
+          }
+        })
+      })
+      stats = { todo: 2, returned: 1, overdue, nearDeadline }
     } else if (user?.role === 'manager') {
-      stats = { pendingReview: 1, pendingAchievement: 1, openDeviations: 2, pendingSupports: 2 }
+      const now = new Date()
+      let reviewOverdue = 0
+      Object.values(mockData.reports).forEach(reportList => {
+        reportList.forEach(r => {
+          if (r.reviewStatus === 'pending' && r.submitTime) {
+            const submitDate = new Date(r.submitTime)
+            const hoursSince = (now - submitDate) / (1000 * 60 * 60)
+            if (hoursSince > 48) reviewOverdue++
+          }
+        })
+      })
+      stats = { pendingReview: 1, pendingAchievement: 1, openDeviations: 2, pendingSupports: 2, pendingChanges: 1, reviewOverdue }
     } else if (user?.role === 'leader') {
-      stats = { openDeviations: 2, pendingSupports: 2 }
+      stats = { openDeviations: 2, pendingSupports: 2, pendingReview: 1, pendingChanges: 1 }
     }
     result = { code: 200, message: 'success', data: stats }
   }

@@ -13,6 +13,139 @@
       </el-button>
     </div>
 
+    <!-- 启动与策划信息 -->
+    <div class="card-box" style="margin-bottom:16px">
+      <div class="page-toolbar">
+        <span class="section-title">启动与策划信息</span>
+        <el-button v-if="!planningEditMode && (auth.user?.role=='manager'||auth.user?.role=='admin')"
+          size="small" @click="startPlanningEdit">
+          <el-icon><Edit /></el-icon> {{ hasPlanningData ? '编辑' : '填写' }}
+        </el-button>
+        <template v-if="planningEditMode">
+          <el-button size="small" @click="cancelPlanningEdit">取消</el-button>
+          <el-button type="primary" size="small" @click="handleSavePlanning" :loading="savingPlanning">保存</el-button>
+        </template>
+      </div>
+
+      <!-- View mode -->
+      <el-descriptions v-if="!planningEditMode && hasPlanningData" :column="2" border size="small">
+        <el-descriptions-item label="客户等级">{{ project.customerLevel || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="成果产出类型">{{ project.achievementType || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="双方联系人" :span="2">{{ project.contacts || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="审核审批要求" :span="2">{{ project.approvalRequirements || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="能否承接判断" :span="2">{{ project.canUndertake || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="主要风险" :span="2">{{ project.mainRisks || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="关键约束" :span="2">{{ project.keyConstraints || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="成果交付要求" :span="2">{{ project.deliverableRequirements || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="预计审批路径" :span="2">{{ project.approvalPath || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="人力资源配置" :span="2">{{ project.hrAllocation || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="预计阶段成果" :span="2">{{ project.expectedOutputs || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="核心资料" :span="2">{{ project.coreMaterials || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="项目组组建" :span="2">{{ project.teamSetup || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="核心策略" :span="2">{{ project.coreStrategy || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="投标情况" :span="2">{{ project.bidSituation || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="采购程序" :span="2">{{ project.procurementInfo || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="获取结果" :span="2">{{ project.acquisitionResult || '-' }}</el-descriptions-item>
+      </el-descriptions>
+      <el-empty v-else-if="!planningEditMode" description="暂未填写启动与策划信息" :image-size="80">
+        <el-button v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" type="primary" @click="startPlanningEdit">
+          立即填写
+        </el-button>
+      </el-empty>
+
+      <!-- Edit mode -->
+      <div v-else class="edit-planning-section">
+        <el-form :model="planningForm" label-width="130px">
+          <el-divider content-position="left"><strong>客户分析</strong></el-divider>
+          <el-form-item label="客户等级/项目分级">
+            <el-select v-model="planningForm.customerLevel" placeholder="请选择项目分级" clearable style="width:100%">
+              <el-option label="S级（战略性项目）" value="S" />
+              <el-option label="A级（重大项目）" value="A" />
+              <el-option label="B级（成长型项目）" value="B" />
+              <el-option label="C级（一般项目）" value="C" />
+              <el-option label="D级（观察项目）" value="D" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="双方联系人">
+            <el-input v-model="planningForm.contacts" type="textarea" :rows="2"
+              placeholder="例：甲方：张局长 138xxxx；乙方：李工 139xxxx" />
+          </el-form-item>
+          <el-form-item label="成果产出类型">
+            <el-select v-model="planningForm.achievementType" placeholder="请选择或直接输入" clearable filterable allow-create style="width:100%">
+              <el-option label="规划文本+图件+统计表" value="规划文本+图件+统计表" />
+              <el-option label="调查报告+数据库" value="调查报告+数据库" />
+              <el-option label="实施方案+图纸" value="实施方案+图纸" />
+              <el-option label="规划设计+预算" value="规划设计+预算" />
+              <el-option label="研究报告" value="研究报告" />
+              <el-option label="咨询报告" value="咨询报告" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="审核审批要求">
+            <el-input v-model="planningForm.approvalRequirements" type="textarea" :rows="2"
+              placeholder="例：需通过省林业局审批、县政府常务会审查" />
+          </el-form-item>
+
+          <el-divider content-position="left"><strong>前期分析</strong></el-divider>
+          <el-form-item label="能否承接判断">
+            <el-input v-model="planningForm.canUndertake" type="textarea" :rows="2"
+              placeholder="例：项目涉及专业齐全，院内有足够技术力量，可以承接" />
+          </el-form-item>
+          <el-form-item label="主要风险">
+            <el-input v-model="planningForm.mainRisks" type="textarea" :rows="2"
+              placeholder="例：地形复杂导致外业延期；地方协调存在不确定性" />
+          </el-form-item>
+          <el-form-item label="关键约束">
+            <el-input v-model="planningForm.keyConstraints" type="textarea" :rows="2"
+              placeholder="例：工期8个月；需跨部门协作" />
+          </el-form-item>
+          <el-form-item label="成果交付要求">
+            <el-input v-model="planningForm.deliverableRequirements" type="textarea" :rows="2"
+              placeholder="例：纸质报告10套、电子版5份" />
+          </el-form-item>
+          <el-form-item label="预计审批路径">
+            <el-input v-model="planningForm.approvalPath" type="textarea" :rows="2"
+              placeholder="例：院内审核→专家评审→县林业局审批" />
+          </el-form-item>
+
+          <el-divider content-position="left"><strong>策划启动</strong></el-divider>
+          <el-form-item label="人力资源配置">
+            <el-input v-model="planningForm.hrAllocation" type="textarea" :rows="2"
+              placeholder="例：项目负责人1人、外业5人、内业3人" />
+          </el-form-item>
+          <el-form-item label="预计阶段成果">
+            <el-input v-model="planningForm.expectedOutputs" type="textarea" :rows="2"
+              placeholder="例：1.调查报告 2.规划文本 3.图件集" />
+          </el-form-item>
+          <el-form-item label="核心资料">
+            <el-input v-model="planningForm.coreMaterials" type="textarea" :rows="2"
+              placeholder="例：国土三调数据、林地一张图" />
+          </el-form-item>
+          <el-form-item label="项目组组建">
+            <el-input v-model="planningForm.teamSetup" type="textarea" :rows="2"
+              placeholder="例：以张主任为组长，15人，分4个专业组" />
+          </el-form-item>
+          <el-form-item label="核心策略">
+            <el-input v-model="planningForm.coreStrategy" type="textarea" :rows="2"
+              placeholder="例：分组并行作业；关键节点向院领导汇报" />
+          </el-form-item>
+
+          <el-divider content-position="left"><strong>项目获取</strong></el-divider>
+          <el-form-item label="投标情况">
+            <el-input v-model="planningForm.bidSituation" type="textarea" :rows="2"
+              placeholder="例：竞争性谈判中标，参与单位3家" />
+          </el-form-item>
+          <el-form-item label="采购程序">
+            <el-input v-model="planningForm.procurementInfo" type="textarea" :rows="2"
+              placeholder="例：政府采购公开招标，咨询中心负责" />
+          </el-form-item>
+          <el-form-item label="获取结果">
+            <el-input v-model="planningForm.acquisitionResult" type="textarea" :rows="2"
+              placeholder="例：成功中标，合同额120万元" />
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+
     <div class="card-box" style="margin-bottom:16px">
       <div class="page-toolbar">
         <span class="section-title">项目阶段</span>
@@ -184,7 +317,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { getProjectDetail, updateProject } from '../api/project'
@@ -214,6 +347,44 @@ const changes = ref([])
 const showAddChange = ref(false)
 const addingChange = ref(false)
 const changeForm = reactive({ content: '', confirmTime: '', impact: '' })
+
+// Planning section - inline edit mode
+const planningEditMode = ref(false)
+const savingPlanning = ref(false)
+const planningForm = reactive({
+  customerLevel: '', contacts: '', achievementType: '', approvalRequirements: '',
+  canUndertake: '', mainRisks: '', keyConstraints: '', deliverableRequirements: '',
+  approvalPath: '', hrAllocation: '', expectedOutputs: '', coreMaterials: '',
+  teamSetup: '', coreStrategy: '', bidSituation: '', procurementInfo: '', acquisitionResult: ''
+})
+
+const hasPlanningData = computed(() => {
+  return project.value.customerLevel || project.value.contacts || project.value.canUndertake
+    || project.value.mainRisks || project.value.teamSetup || project.value.hrAllocation
+})
+
+function startPlanningEdit() {
+  const fields = ['customerLevel','contacts','achievementType','approvalRequirements',
+    'canUndertake','mainRisks','keyConstraints','deliverableRequirements',
+    'approvalPath','hrAllocation','expectedOutputs','coreMaterials',
+    'teamSetup','coreStrategy','bidSituation','procurementInfo','acquisitionResult']
+  fields.forEach(f => { planningForm[f] = project.value[f] || '' })
+  planningEditMode.value = true
+}
+
+function cancelPlanningEdit() {
+  planningEditMode.value = false
+}
+
+async function handleSavePlanning() {
+  savingPlanning.value = true
+  try {
+    await updateProject(projectId, { ...project.value, ...planningForm })
+    ElMessage.success('启动信息已保存')
+    planningEditMode.value = false
+    loadProject()
+  } catch {} finally { savingPlanning.value = false }
+}
 
 async function loadProject() {
   const res = await getProjectDetail(projectId)
@@ -308,5 +479,21 @@ onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.edit-planning-section {
+  margin-top: 16px;
+}
+
+.edit-planning-section .el-divider {
+  margin: 20px 0 16px;
+}
+
+.edit-planning-section .el-divider:first-child {
+  margin-top: 0;
+}
+
+.edit-planning-section .el-form-item {
+  margin-bottom: 16px;
 }
 </style>

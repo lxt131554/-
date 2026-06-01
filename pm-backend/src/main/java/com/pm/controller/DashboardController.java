@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -48,8 +50,23 @@ public class DashboardController {
                 long returned = reportService.count(new LambdaQueryWrapper<SysStageReport>()
                         .eq(SysStageReport::getSubmitUserId, userId)
                         .eq(SysStageReport::getReviewStatus, "returned"));
+                // Warnings: overdue and near-deadline stages
+                LocalDate today = LocalDate.now();
+                long overdue = stageService.count(new LambdaQueryWrapper<SysProjectStage>()
+                        .eq(SysProjectStage::getAssigneeId, userId)
+                        .ne(SysProjectStage::getStatus, "completed")
+                        .isNotNull(SysProjectStage::getPlanEnd)
+                        .lt(SysProjectStage::getPlanEnd, today));
+                long nearDeadline = stageService.count(new LambdaQueryWrapper<SysProjectStage>()
+                        .eq(SysProjectStage::getAssigneeId, userId)
+                        .ne(SysProjectStage::getStatus, "completed")
+                        .isNotNull(SysProjectStage::getPlanEnd)
+                        .ge(SysProjectStage::getPlanEnd, today)
+                        .le(SysProjectStage::getPlanEnd, today.plusDays(3)));
                 result.put("todo", todo);
                 result.put("returned", returned);
+                result.put("overdue", overdue);
+                result.put("nearDeadline", nearDeadline);
                 break;
             }
             case "manager": {
@@ -63,11 +80,17 @@ public class DashboardController {
                         .eq(SysSupportItem::getStatus, "pending"));
                 long pendingChanges = changeService.count(new LambdaQueryWrapper<SysChange>()
                         .eq(SysChange::getStatus, "pending"));
+                // Warning: reviews pending for more than 48 hours
+                long reviewOverdue = reportService.count(new LambdaQueryWrapper<SysStageReport>()
+                        .eq(SysStageReport::getReviewStatus, "pending")
+                        .isNotNull(SysStageReport::getSubmitTime)
+                        .lt(SysStageReport::getSubmitTime, LocalDateTime.now().minusHours(48)));
                 result.put("pendingReview", pendingReview);
                 result.put("pendingAchievement", pendingAchievement);
                 result.put("openDeviations", openDeviations);
                 result.put("pendingSupports", pendingSupports);
                 result.put("pendingChanges", pendingChanges);
+                result.put("reviewOverdue", reviewOverdue);
                 break;
             }
             case "leader": {

@@ -39,6 +39,9 @@ public class ReportController {
             @RequestParam(value = "content", required = false) String content,
             @RequestParam(value = "progressRate", defaultValue = "0") Integer progressRate,
             @RequestParam(value = "problem", required = false) String problem,
+            @RequestParam(value = "qualityControl", required = false) String qualityControl,
+            @RequestParam(value = "resultSummary", required = false) String resultSummary,
+            @RequestParam(value = "coordinationNote", required = false) String coordinationNote,
             @RequestParam(value = "actualStart", required = false) String actualStart,
             @RequestParam(value = "actualEnd", required = false) String actualEnd,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -48,6 +51,9 @@ public class ReportController {
         report.setContent(content);
         report.setProgressRate(progressRate);
         report.setProblem(problem);
+        report.setQualityControl(qualityControl);
+        report.setResultSummary(resultSummary);
+        report.setCoordinationNote(coordinationNote);
         if (actualStart != null && !actualStart.isEmpty()) report.setActualStart(LocalDate.parse(actualStart));
         if (actualEnd != null && !actualEnd.isEmpty()) report.setActualEnd(LocalDate.parse(actualEnd));
 

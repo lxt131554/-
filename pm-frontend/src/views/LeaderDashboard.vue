@@ -24,6 +24,14 @@
       </el-card>
     </div>
 
+    <!-- 逾期项目警告 -->
+    <el-card v-if="stats.openDeviations > 0" class="warning-card" shadow="hover" @click="$router.push('/deviations')" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="color:var(--pm-text)">有 {{ stats.openDeviations }} 项未关闭偏差需要关注</span>
+        <el-button text type="primary">查看</el-button>
+      </div>
+    </el-card>
+
     <!-- 待处理偏差 -->
     <div class="card-box" style="margin-top:16px" v-if="openDeviationList.length">
       <div class="page-toolbar">
@@ -117,4 +125,5 @@ onMounted(loadData)
 .stat-card:has(.cursor-pointer) { cursor: pointer; }
 .stat-num { font-size: 52px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .stat-label { font-size: 15px; color: var(--pm-text-secondary); margin-top: 6px; letter-spacing: 0.5px; }
+.warning-card { border: 1px solid rgba(245,108,108,0.2); }
 </style>

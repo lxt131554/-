@@ -10,7 +10,25 @@ const users = {
 }
 
 const projects = [
-  { id: 1, name: '古蔺县森林资源调查与空间规划', description: '对古蔺县全域森林资源进行调查评估，编制林地保护利用规划，涉及15人团队、外业调查30天、内业整理25天、成果编制20天。', status: 'active', createUserId: 2, createTime: '2026-05-10 09:30:00' },
+  { id: 1, name: '古蔺县森林资源调查与空间规划', description: '对古蔺县全域森林资源进行调查评估，编制林地保护利用规划，涉及15人团队、外业调查30天、内业整理25天、成果编制20天。', status: 'active', createUserId: 2, createTime: '2026-05-10 09:30:00',
+    customerLevel: 'A（重大项目）',
+    contacts: '甲方：某局长（联系方式），乙方：张主任',
+    achievementType: '林地保护利用规划文本、图件、统计表',
+    approvalRequirements: '需通过省林业局审批、县政府常务会审查',
+    canUndertake: '项目涉及专业齐全，院内有足够技术力量，可以承接',
+    mainRisks: '地形复杂区域外业调查难度大、地方协调存在不确定性',
+    keyConstraints: '工期紧张（8个月）、需跨部门协作、资料获取有行政壁垒',
+    deliverableRequirements: '纸质报告10套、电子版光盘5份、图件PDF+CAD',
+    approvalPath: '院内审核→专家评审→县林业局审批→县政府常务会',
+    hrAllocation: '项目负责人1人、技术负责人1人、外业调查工程师5人、内业工程师3人、制图员2人',
+    expectedOutputs: '1.项目建议书 2.外业调查报告 3.规划文本 4.图件集 5.汇报PPT',
+    coreMaterials: '国土三调数据、林地一张图、森林资源二类调查数据、地方统计年鉴',
+    teamSetup: '以张主任为组长，配置15人团队，分4个专业组',
+    coreStrategy: '通过资料比对和实地调查确保数据准确性；采用分组并行作业缩短工期；关键节点向院领导汇报争取协调支持',
+    bidSituation: '竞争性谈判中标，参与单位3家',
+    procurementInfo: '政府采购公开招标，咨询中心负责',
+    acquisitionResult: '成功中标，合同额120万元'
+  },
   { id: 2, name: '攀枝花市林业产业发展规划', description: '攀枝花市林业产业"十五五"发展规划编制，重点围绕特色经济林、林下经济、森林康养三大方向。', status: 'active', createUserId: 2, createTime: '2026-05-15 14:00:00' },
   { id: 3, name: '阿坝州草原生态修复项目实施方案', description: '阿坝州退化草原生态修复实施方案编制，涉及鼠荒地治理、人工种草、围栏封育等工程措施。', status: 'active', createUserId: 2, createTime: '2026-05-20 10:00:00' }
 ]
