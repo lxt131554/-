@@ -14,7 +14,11 @@
       </div>
       <el-table :data="tableData" v-loading="loading" empty-text="暂无支持事项">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
-        <el-table-column prop="title" label="事项标题" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="title" label="事项标题" min-width="220" show-overflow-tooltip>
+          <template #default="{row}">
+            <el-link type="primary" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</el-link>
+          </template>
+        </el-table-column>
         <el-table-column prop="applicantName" label="申请人" min-width="100" />
         <el-table-column prop="handlerName" label="处理人" min-width="100" />
         <el-table-column prop="expectTime" label="期望时间" min-width="120" />
@@ -39,8 +43,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import request from '../api/index'
 
+const router = useRouter()
 const loading = ref(false)
 const tableData = ref([])
 const filterStatus = ref('')

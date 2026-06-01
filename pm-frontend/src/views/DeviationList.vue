@@ -27,7 +27,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="偏差描述" min-width="240" show-overflow-tooltip />
+        <el-table-column prop="description" label="偏差描述" min-width="240" show-overflow-tooltip>
+          <template #default="{row}">
+            <el-link type="primary" @click="router.push(`/deviations/${row.id}`)">{{ row.description }}</el-link>
+          </template>
+        </el-table-column>
         <el-table-column prop="reason" label="偏差原因" min-width="160" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" min-width="90" align="center">
           <template #default="{row}">
@@ -75,11 +79,13 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
 import { getProjects } from '../api/project'
 import { ElMessage } from 'element-plus'
 
+const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
 const tableData = ref([])

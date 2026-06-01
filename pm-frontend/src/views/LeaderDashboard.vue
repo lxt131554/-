@@ -24,7 +24,47 @@
       </el-card>
     </div>
 
+    <!-- 待处理偏差 -->
+    <div class="card-box" style="margin-top:16px" v-if="openDeviationList.length">
+      <div class="page-toolbar">
+        <span style="font-weight:600;font-size:16px">待处理偏差</span>
+        <el-button text type="primary" @click="$router.push('/deviations')">查看全部</el-button>
+      </div>
+      <el-table :data="openDeviationList" border stripe>
+        <el-table-column prop="projectName" label="项目" min-width="160" />
+        <el-table-column prop="description" label="偏差描述" min-width="240" show-overflow-tooltip>
+          <template #default="{row}">
+            <el-link type="primary" @click="$router.push(`/deviations/${row.id}`)">{{ row.description }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createUserName" label="创建人" min-width="100" />
+        <el-table-column prop="createTime" label="时间" min-width="160" />
+      </el-table>
+    </div>
+
+    <!-- 待处理支持事项 -->
+    <div class="card-box" style="margin-top:16px" v-if="pendingSupportList.length">
+      <div class="page-toolbar">
+        <span style="font-weight:600;font-size:16px">待处理支持事项</span>
+        <el-button text type="primary" @click="$router.push('/supports')">查看全部</el-button>
+      </div>
+      <el-table :data="pendingSupportList" border stripe>
+        <el-table-column prop="projectName" label="项目" min-width="160" />
+        <el-table-column prop="title" label="事项" min-width="240" show-overflow-tooltip>
+          <template #default="{row}">
+            <el-link type="primary" @click="$router.push(`/supports/${row.id}`)">{{ row.title }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="applicantName" label="申请人" min-width="100" />
+        <el-table-column prop="createTime" label="时间" min-width="160" />
+      </el-table>
+    </div>
+
+    <!-- 项目列表 -->
     <div class="card-box" style="margin-top:16px">
+      <div class="page-toolbar">
+        <span style="font-weight:600;font-size:16px">全院项目</span>
+      </div>
       <el-table :data="projects" border stripe v-loading="loading" empty-text="暂无项目">
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
@@ -49,12 +89,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import request from '../api/index'
 
 const stats = ref({})
 const projects = ref([])
 const loading = ref(false)
+
+const openDeviationList = computed(() => stats.value.openDeviationList || [])
+const pendingSupportList = computed(() => stats.value.pendingSupportList || [])
 
 async function loadData() {
   loading.value = true

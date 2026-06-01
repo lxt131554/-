@@ -8,6 +8,9 @@
         type="warning" size="small" @click="handleCompleteProject" style="margin-left:12px">
         完成项目
       </el-button>
+      <el-button size="small" @click="handleExport" style="margin-left:8px">
+        <el-icon><Download /></el-icon> 导出 Excel
+      </el-button>
     </div>
 
     <div class="card-box" style="margin-bottom:16px">
@@ -46,6 +49,59 @@
       </el-table>
     </div>
 
+    <div class="card-box" style="margin-bottom:16px">
+      <div class="page-toolbar">
+        <span style="font-weight:600;font-size:16px">变更控制</span>
+        <el-button type="primary" size="small" @click="showAddChange=true"
+          v-if="auth.user?.role=='manager'||auth.user?.role=='admin'">
+          <el-icon><Plus /></el-icon> 新增变更
+        </el-button>
+      </div>
+      <el-table :data="changes" border stripe v-if="changes.length">
+        <el-table-column prop="content" label="变更内容" min-width="240" show-overflow-tooltip>
+          <template #default="{row}">
+            <el-link type="primary" @click="router.push(`/changes/${row.id}`)">{{ row.content }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="confirmTime" label="确认时间" min-width="120" />
+        <el-table-column prop="impact" label="影响范围" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="status" label="状态" min-width="90" align="center">
+          <template #default="{row}">
+            <el-tag :type="row.status=='confirmed'?'success':'warning'" size="small">
+              {{ row.status=='confirmed'?'已确认':'待确认' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" min-width="170" align="center">
+          <template #default="{row}">
+            <el-button text type="primary" size="small" @click="router.push(`/changes/${row.id}`)">查看详情</el-button>
+            <el-button v-if="row.status=='pending' && (auth.user?.role=='leader'||auth.user?.role=='admin')" text type="success" size="small"
+              @click="handleConfirmChange(row)">确认变更</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-else description="暂无变更记录" :image-size="60" />
+    </div>
+
+    <!-- 新增变更对话框 -->
+    <el-dialog v-model="showAddChange" title="新增变更" width="500px">
+      <el-form :model="changeForm" label-width="100px">
+        <el-form-item label="变更核心内容" required>
+          <el-input v-model="changeForm.content" type="textarea" :rows="3" placeholder="描述变更的核心内容" />
+        </el-form-item>
+        <el-form-item label="确认时间">
+          <el-date-picker v-model="changeForm.confirmTime" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width:100%" />
+        </el-form-item>
+        <el-form-item label="影响范围">
+          <el-input v-model="changeForm.impact" type="textarea" :rows="2" placeholder="对工期、质量、成本等的影响" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddChange=false">取消</el-button>
+        <el-button type="primary" @click="handleAddChange" :loading="addingChange">保存</el-button>
+      </template>
+    </el-dialog>
+
     <div class="card-box">
       <div class="page-toolbar">
         <span class="section-title">项目成员</span>
@@ -71,6 +127,9 @@
         </el-button>
         <el-button type="primary" @click="router.push(`/projects/${projectId}/experience`)">
           经验总结
+        </el-button>
+        <el-button type="primary" @click="router.push(`/projects/${projectId}/approval`)">
+          成果评审
         </el-button>
       </div>
     </div>
@@ -131,6 +190,7 @@ import { useAuthStore } from '../stores/auth'
 import { getProjectDetail, updateProject } from '../api/project'
 import { getStages, addStage, deleteStage } from '../api/stage'
 import { getProjectMembers, addProjectMember, removeProjectMember } from '../api/project'
+import request from '../api/index'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -149,6 +209,11 @@ const stageForm = reactive({
   planStart: '', planEnd: '', sortOrder: 0
 })
 const newMember = reactive({ userId: '', roleInProject: 'engineer' })
+
+const changes = ref([])
+const showAddChange = ref(false)
+const addingChange = ref(false)
+const changeForm = reactive({ content: '', confirmTime: '', impact: '' })
 
 async function loadProject() {
   const res = await getProjectDetail(projectId)
@@ -193,6 +258,29 @@ async function handleRemoveMember(m) {
   loadMembers()
 }
 
+async function loadChanges() {
+  try {
+    const res = await request.get(`/projects/${projectId}/changes`)
+    changes.value = res.data || []
+  } catch {}
+}
+async function handleAddChange() {
+  if (!changeForm.content) { ElMessage.warning('请填写变更内容'); return }
+  addingChange.value = true
+  try {
+    await request.post(`/projects/${projectId}/changes`, { ...changeForm })
+    ElMessage.success('变更记录已保存')
+    showAddChange.value = false
+    Object.assign(changeForm, { content: '', confirmTime: '', impact: '' })
+    loadChanges()
+  } finally { addingChange.value = false }
+}
+async function handleConfirmChange(row) {
+  await request.put(`/changes/${row.id}/confirm`)
+  ElMessage.success('变更已确认')
+  loadChanges()
+}
+
 async function handleCompleteProject() {
   try {
     await updateProject(projectId, { ...project.value, status: 'completed' })
@@ -201,7 +289,11 @@ async function handleCompleteProject() {
   } catch {}
 }
 
-onMounted(() => { loadProject(); loadStages(); loadMembers() })
+function handleExport() {
+  window.open(`/api/projects/${projectId}/export`, '_blank')
+}
+
+onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
 </script>
 
 <style scoped>

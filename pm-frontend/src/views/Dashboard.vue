@@ -35,6 +35,12 @@
           <div class="stat-label">待审核成果</div>
         </div>
       </div>
+      <div class="stat-card stat-card--gray" @click="$router.push('/projects')" style="animation-delay:90ms">
+        <div class="stat-inner">
+          <div class="stat-num">{{ stats.pendingChanges ?? '--' }}</div>
+          <div class="stat-label">待确认变更</div>
+        </div>
+      </div>
       <div class="stat-card stat-card--amber" @click="$router.push('/deviations')" style="animation-delay:120ms">
         <div class="stat-inner">
           <div class="stat-num">{{ stats.openDeviations ?? '--' }}</div>
@@ -61,6 +67,18 @@
         <div class="stat-inner">
           <div class="stat-num">{{ stats.pendingSupports ?? '--' }}</div>
           <div class="stat-label">待处理支持事项</div>
+        </div>
+      </div>
+      <div class="stat-card stat-card--blue" @click="$router.push('/pending-review')" style="animation-delay:90ms">
+        <div class="stat-inner">
+          <div class="stat-num">{{ stats.pendingReview ?? '--' }}</div>
+          <div class="stat-label">待审阅填报</div>
+        </div>
+      </div>
+      <div class="stat-card stat-card--green" @click="$router.push('/leader-dashboard')" style="animation-delay:120ms">
+        <div class="stat-inner">
+          <div class="stat-num">{{ stats.pendingChanges ?? '--' }}</div>
+          <div class="stat-label">待审批变更</div>
         </div>
       </div>
     </div>
@@ -155,12 +173,14 @@ onMounted(loadStats)
 .stat-card--amber::after { background: #F59E0B; }
 .stat-card--green::after { background: var(--pm-green-text); }
 .stat-card--red::after   { background: var(--pm-red-text); }
+.stat-card--gray::after  { background: #8E8E93; }
 
 /* Stat number colors */
 .stat-card--blue .stat-num  { color: var(--pm-accent); }
 .stat-card--amber .stat-num { color: var(--pm-amber-text); }
 .stat-card--green .stat-num { color: var(--pm-green-text); }
 .stat-card--red .stat-num   { color: var(--pm-red-text); }
+.stat-card--gray .stat-num  { color: #8E8E93; }
 
 .stat-num {
   font-size: 60px;

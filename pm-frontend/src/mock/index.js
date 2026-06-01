@@ -401,12 +401,16 @@ async function getMockResponse(config) {
 
   // ======================== Leader Dashboard endpoint ========================
   else if (url === '/leader-dashboard' && method === 'get') {
+    var openDevList = mockData.deviations.filter(function(d) { return d.status === 'open' })
+    var pendingSupList = mockData.supportItems.filter(function(s) { return s.status === 'pending' })
     result = {
       code: 200, message: 'success', data: {
-        activeProjects: mockData.projects.filter(p => p.status === 'active').length,
-        completedProjects: mockData.projects.filter(p => p.status === 'completed').length,
-        openDeviations: mockData.deviations.filter(d => d.status === 'open').length,
-        pendingSupports: mockData.supportItems.filter(s => s.status === 'pending').length,
+        activeProjects: mockData.projects.filter(function(p) { return p.status === 'active' }).length,
+        completedProjects: mockData.projects.filter(function(p) { return p.status === 'completed' }).length,
+        openDeviations: openDevList.length,
+        openDeviationList: openDevList,
+        pendingSupports: pendingSupList.length,
+        pendingSupportList: pendingSupList,
         projects: mockData.projects
       }
     }
@@ -487,6 +491,63 @@ async function getMockResponse(config) {
   }
   else if (url === '/experiences' && method === 'get') {
     result = { code: 200, message: 'success', data: Object.values(mockData.experiences) }
+  }
+
+  // ======================== Change endpoints ========================
+  else if (url === '/changes' && method === 'get') {
+    const allChanges = []
+    Object.entries(mockData.changes).forEach(([projectId, changesList]) => {
+      const project = mockData.projects.find(p => p.id === parseInt(projectId))
+      changesList.forEach(c => {
+        allChanges.push({ ...c, projectName: project?.name || '' })
+      })
+    })
+    result = { code: 200, message: 'success', data: allChanges }
+  }
+  else if (url?.match(/^\/projects\/\d+\/changes$/) && method === 'get') {
+    const projectId = parseInt(url.split('/')[2])
+    result = { code: 200, message: 'success', data: mockData.changes[projectId] || [] }
+  }
+  else if (url?.match(/^\/projects\/\d+\/changes$/) && method === 'post') {
+    const projectId = parseInt(url.split('/')[2])
+    const changes = mockData.changes[projectId] || []
+    const newChange = {
+      id: Date.now(),
+      projectId,
+      content: body.content || '',
+      confirmTime: body.confirmTime || '',
+      impact: body.impact || '',
+      status: 'pending'
+    }
+    changes.push(newChange)
+    mockData.changes[projectId] = changes
+    result = { code: 200, message: 'success', data: newChange }
+  }
+  else if (url?.match(/^\/changes\/\d+\/confirm$/) && method === 'put') {
+    const changeId = parseInt(url.split('/')[2])
+    let found = null
+    Object.values(mockData.changes).forEach(changesList => {
+      const c = changesList.find(ch => ch.id === changeId)
+      if (c) { c.status = 'confirmed'; found = c }
+    })
+    result = { code: 200, message: 'success', data: found }
+  }
+
+  // ======================== Approval endpoints ========================
+  else if (url?.match(/^\/projects\/\d+\/approval$/) && method === 'get') {
+    const projectId = parseInt(url.split('/')[2])
+    result = { code: 200, message: 'success', data: mockData.approvals[projectId] || null }
+  }
+  else if (url?.match(/^\/projects\/\d+\/approval$/) && method === 'post') {
+    const projectId = parseInt(url.split('/')[2])
+    const approval = {
+      projectId,
+      reviewSituation: body.reviewSituation || '',
+      failReason: body.failReason || '',
+      confirmTime: body.confirmTime || ''
+    }
+    mockData.approvals[projectId] = approval
+    result = { code: 200, message: 'success', data: approval }
   }
 
   if (result) {

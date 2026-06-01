@@ -29,7 +29,7 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(SysProject::getName, keyword);
         }
-        if (!"admin".equals(role)) {
+        if (!"admin".equals(role) && !"leader".equals(role)) {
             List<SysProjectMember> myMembers = memberMapper.selectList(
                 new LambdaQueryWrapper<SysProjectMember>().eq(SysProjectMember::getUserId, userId)
             );

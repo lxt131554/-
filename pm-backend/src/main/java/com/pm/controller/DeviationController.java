@@ -24,6 +24,15 @@ public class DeviationController {
         return Result.ok(list);
     }
 
+    @GetMapping("/{id}")
+    public Result<SysDeviation> getById(@PathVariable Long id) {
+        SysDeviation d = deviationService.getById(id);
+        if (d == null) {
+            return Result.fail("偏差不存在");
+        }
+        return Result.ok(d);
+    }
+
     @PostMapping
     public Result<SysDeviation> create(@RequestBody SysDeviation deviation,
                                        @AuthenticationPrincipal LoginUser loginUser) {

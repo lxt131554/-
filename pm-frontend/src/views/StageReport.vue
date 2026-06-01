@@ -120,14 +120,12 @@ async function handleSubmit() {
     const res = await submitReport(stageId, fd)
     // 标记偏差时自动创建偏差记录
     if (form.isDeviation && form.problem) {
-      try {
-        await request.post('/deviations', {
-          projectId: res.data.projectId || (history.value[0]?.projectId),
-          description: form.problem,
-          reason: '阶段执行偏差',
-          impact: '影响项目进度'
-        })
-      } catch (e) { /* 静默处理 */ }
+      await request.post('/deviations', {
+        projectId: res.data.projectId || (history.value[0]?.projectId),
+        description: form.problem,
+        reason: '阶段执行偏差',
+        impact: '影响项目进度'
+      })
     }
     ElMessage.success('提交成功')
     router.back()

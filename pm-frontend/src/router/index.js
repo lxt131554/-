@@ -14,9 +14,11 @@ const routes = [
     children: [
       { path: 'dashboard', name: 'Dashboard', component: () => import('../views/Dashboard.vue') },
       { path: 'deviations', name: 'DeviationList', component: () => import('../views/DeviationList.vue') },
+      { path: 'deviations/:id', name: 'DeviationDetail', component: () => import('../views/DeviationDetail.vue') },
       { path: 'supports', name: 'SupportList', component: () => import('../views/SupportList.vue') },
       { path: 'supports/new', name: 'SupportForm', component: () => import('../views/SupportForm.vue') },
       { path: 'supports/:id', name: 'SupportEdit', component: () => import('../views/SupportForm.vue') },
+      { path: 'changes/:id', name: 'ChangeDetail', component: () => import('../views/ChangeDetail.vue') },
       { path: 'projects', name: 'ProjectList', component: () => import('../views/ProjectList.vue') },
       { path: 'projects/:id', name: 'ProjectDetail', component: () => import('../views/ProjectDetail.vue') },
       { path: 'my-tasks', name: 'MyTasks', component: () => import('../views/MyTasks.vue') },
@@ -27,6 +29,7 @@ const routes = [
       { path: 'leader-dashboard', name: 'LeaderDashboard', component: () => import('../views/LeaderDashboard.vue') },
       { path: 'projects/:id/review', name: 'ProjectReview', component: () => import('../views/ProjectReview.vue') },
       { path: 'projects/:id/experience', name: 'ProjectExperience', component: () => import('../views/ProjectExperience.vue') },
+      { path: 'projects/:id/approval', name: 'ProjectApproval', component: () => import('../views/ProjectApproval.vue') },
       { path: 'experiences', name: 'ExperienceLibrary', component: () => import('../views/ExperienceLibrary.vue') },
     ]
   }
