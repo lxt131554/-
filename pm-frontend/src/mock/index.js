@@ -68,9 +68,13 @@ async function getMockResponse(config) {
     const page = parseInt(params.page) || 1
     const size = parseInt(params.size) || 10
     const keyword = params.keyword
+    const status = params.status
     let list = [...mockData.projects]
     if (keyword) {
       list = list.filter(p => p.name.includes(keyword))
+    }
+    if (status) {
+      list = list.filter(p => p.status === status)
     }
     result = { code: 200, message: 'success', data: { records: list, total: list.length, size, current: page, pages: 1 } }
   }
@@ -103,7 +107,9 @@ async function getMockResponse(config) {
       coreStrategy: body.coreStrategy || '',
       bidSituation: body.bidSituation || '',
       procurementInfo: body.procurementInfo || '',
-      acquisitionResult: body.acquisitionResult || ''
+      acquisitionResult: body.acquisitionResult || '',
+      projectImportance: body.projectImportance || '',
+      achievementDirection: body.achievementDirection || ''
     }
     mockData.projects.push(newProject)
     mockData.projectMembers[newProject.id] = []
@@ -134,6 +140,8 @@ async function getMockResponse(config) {
       if (body.bidSituation !== undefined) project.bidSituation = body.bidSituation
       if (body.procurementInfo !== undefined) project.procurementInfo = body.procurementInfo
       if (body.acquisitionResult !== undefined) project.acquisitionResult = body.acquisitionResult
+      if (body.projectImportance !== undefined) project.projectImportance = body.projectImportance
+      if (body.achievementDirection !== undefined) project.achievementDirection = body.achievementDirection
     }
     result = { code: 200, message: 'success', data: project || null }
   }
@@ -147,7 +155,8 @@ async function getMockResponse(config) {
   }
   else if (url?.match(/^\/projects\/\d+\/members$/) && method === 'get') {
     const projectId = parseInt(url.split('/')[2])
-    result = { code: 200, message: 'success', data: mockData.projectMembers[projectId] || [] }
+    const allMembers = mockData.projectMembers[projectId] || []
+    result = { code: 200, message: 'success', data: allMembers.filter(function(m) { return m.status !== 'pending' }) }
   }
   else if (url?.match(/^\/projects\/\d+\/members$/) && method === 'post') {
     const projectId = parseInt(url.split('/')[2])
@@ -158,7 +167,8 @@ async function getMockResponse(config) {
       userId: parseInt(body.userId) || body.userId,
       realName: user?.realName || '',
       dept: user?.dept || '',
-      roleInProject: body.roleInProject
+      roleInProject: body.roleInProject,
+      status: 'pending'
     }
     members.push(newMember)
     mockData.projectMembers[projectId] = members
@@ -172,6 +182,42 @@ async function getMockResponse(config) {
     const idx = members.findIndex(m => m.id === memberId)
     if (idx !== -1) members.splice(idx, 1)
     result = { code: 200, message: 'success', data: null }
+  }
+  else if (url?.match(/^\/projects\/\d+\/members\/\d+\/confirm$/) && method === 'put') {
+    const parts = url.split('/')
+    const projectId = parseInt(parts[2])
+    const memberId = parseInt(parts[4])
+    const members = mockData.projectMembers[projectId] || []
+    const member = members.find(m => m.id === memberId)
+    if (member) {
+      const currentUser = getMockUser()
+      if (member.userId !== currentUser?.id) {
+        result = { code: 403, message: '无权操作', data: null }
+      } else {
+        member.status = 'confirmed'
+        result = { code: 200, message: 'success', data: null }
+      }
+    } else {
+      result = { code: 404, message: '成员不存在', data: null }
+    }
+  }
+  else if (url === '/projects/members/pending' && method === 'get') {
+    const currentUser = getMockUser()
+    const pendingList = []
+    Object.entries(mockData.projectMembers).forEach(function([projectId, members]) {
+      members.forEach(function(m) {
+        if (m.userId === currentUser?.id && m.status === 'pending') {
+          const project = mockData.projects.find(function(p) { return p.id === parseInt(projectId) })
+          pendingList.push({
+            id: m.id,
+            projectId: parseInt(projectId),
+            projectName: project ? project.name : '',
+            roleInProject: m.roleInProject
+          })
+        }
+      })
+    })
+    result = { code: 200, message: 'success', data: pendingList }
   }
 
   // ======================== Stage endpoints ========================
@@ -270,6 +316,7 @@ async function getMockResponse(config) {
       qualityControl: body.qualityControl || '',
       resultSummary: body.resultSummary || '',
       coordinationNote: body.coordinationNote || '',
+      deptReviewNote: body.deptReviewNote || '',
       actualStart: body.actualStart || null,
       actualEnd: body.actualEnd || null,
       reviewStatus: 'pending',
@@ -338,7 +385,45 @@ async function getMockResponse(config) {
 
   // ======================== User endpoints ========================
   else if (url === '/users' && method === 'get') {
-    result = { code: 200, message: 'success', data: Object.values(mockData.users) }
+    result = { code: 200, message: 'success', data: Object.values(mockData.users).map(u => ({...u})) }
+  }
+  else if (url === '/users' && method === 'post') {
+    const newUser = {
+      id: Date.now(),
+      username: body.username,
+      realName: body.realName,
+      password: '',
+      role: body.role || 'engineer',
+      dept: body.dept || '',
+      enabled: true
+    }
+    mockData.users[body.username] = newUser
+    result = { code: 200, message: 'success', data: { ...newUser } }
+  }
+  else if (url?.match(/^\/users\/\d+$/) && method === 'put') {
+    const id = parseInt(url.split('/')[2])
+    let user = Object.values(mockData.users).find(u => u.id === id)
+    if (user) {
+      if (body.realName !== undefined) user.realName = body.realName
+      if (body.role !== undefined) user.role = body.role
+      if (body.dept !== undefined) user.dept = body.dept
+      if (body.password !== undefined && body.password !== '') {
+        // password change in mock is a no-op
+      }
+      result = { code: 200, message: 'success', data: { ...user } }
+    } else {
+      result = { code: 404, message: '用户不存在', data: null }
+    }
+  }
+  else if (url?.match(/^\/users\/\d+\/toggle$/) && method === 'put') {
+    const id = parseInt(url.split('/')[2])
+    let user = Object.values(mockData.users).find(u => u.id === id)
+    if (user) {
+      user.enabled = !user.enabled
+      result = { code: 200, message: 'success', data: null }
+    } else {
+      result = { code: 404, message: '用户不存在', data: null }
+    }
   }
 
   // ======================== Dashboard endpoints ========================
@@ -378,6 +463,100 @@ async function getMockResponse(config) {
       stats = { openDeviations: 2, pendingSupports: 2, pendingReview: 1, pendingChanges: 1 }
     }
     result = { code: 200, message: 'success', data: stats }
+  }
+
+  // ======================== Notification endpoints ========================
+  else if (url === '/notifications' && method === 'get') {
+    var user = getMockUser()
+    var list = []
+    var now = new Date().toISOString().replace('T', ' ').slice(0, 19)
+
+    if (user?.role === 'engineer') {
+      // Returned reports (stages with status in_progress assigned to this user)
+      Object.values(mockData.stages).forEach(function(stageList) {
+        stageList.forEach(function(s) {
+          if (s.assigneeId === user.id && s.status === 'in_progress') {
+            list.push({
+              type: 'returned',
+              message: '「' + s.stageName + '」被退回，需重新填报',
+              url: '/my-tasks/' + s.id + '/report',
+              time: now
+            })
+          }
+        })
+      })
+      // Overdue stages
+      var today = new Date()
+      today.setHours(0, 0, 0, 0)
+      Object.values(mockData.stages).forEach(function(stageList) {
+        stageList.forEach(function(s) {
+          if (s.assigneeId === user.id && s.planEnd && s.status !== 'completed') {
+            var endDate = new Date(s.planEnd)
+            endDate.setHours(0, 0, 0, 0)
+            if (endDate < today) {
+              var days = Math.ceil((today - endDate) / (1000 * 60 * 60 * 24))
+              list.push({
+                type: 'overdue',
+                message: '「' + s.stageName + '」已逾期 ' + days + ' 天',
+                url: '/my-tasks/' + s.id + '/report',
+                time: s.planEnd
+              })
+            }
+          }
+        })
+      })
+    }
+
+    if (user?.role === 'manager') {
+      // Pending reviews
+      var pendingReview = []
+      Object.values(mockData.reports).forEach(function(reportList) {
+        reportList.forEach(function(r) {
+          if (r.reviewStatus === 'pending') pendingReview.push(r)
+        })
+      })
+      if (pendingReview.length > 0) {
+        list.push({ type: 'review', message: pendingReview.length + ' 条阶段填报待审阅', url: '/pending-review', time: now })
+      }
+      // Pending achievements (reports with attachments)
+      var pendingAchievement = pendingReview.filter(function(r) { return r.attachmentName }).length
+      if (pendingAchievement > 0) {
+        list.push({ type: 'achievement', message: pendingAchievement + ' 项成果待审核', url: '/pending-review', time: now })
+      }
+      // Open deviations
+      var openDev = mockData.deviations.filter(function(d) { return d.status === 'open' }).length
+      if (openDev > 0) {
+        list.push({ type: 'deviation', message: openDev + ' 项偏差未关闭', url: '/deviations', time: now })
+      }
+      // Pending supports
+      var pendingSup = mockData.supportItems.filter(function(s) { return s.status === 'pending' }).length
+      if (pendingSup > 0) {
+        list.push({ type: 'support', message: pendingSup + ' 项支持事项待处理', url: '/supports', time: now })
+      }
+    }
+
+    if (user?.role === 'leader') {
+      // Open deviations
+      var openDevL = mockData.deviations.filter(function(d) { return d.status === 'open' }).length
+      if (openDevL > 0) {
+        list.push({ type: 'deviation', message: openDevL + ' 项偏差未关闭', url: '/deviations', time: now })
+      }
+      // Pending supports
+      var pendingSupL = mockData.supportItems.filter(function(s) { return s.status === 'pending' }).length
+      if (pendingSupL > 0) {
+        list.push({ type: 'support', message: pendingSupL + ' 项支持事项待处理', url: '/supports', time: now })
+      }
+      // Pending changes
+      var pendingChanges = 0
+      Object.values(mockData.changes).forEach(function(changesList) {
+        changesList.forEach(function(c) { if (c.status === 'pending') pendingChanges++ })
+      })
+      if (pendingChanges > 0) {
+        list.push({ type: 'change', message: pendingChanges + ' 项变更待确认', url: '/deviations', time: now })
+      }
+    }
+
+    result = { code: 200, message: 'success', data: list }
   }
 
   // ======================== Deviation endpoints ========================
@@ -456,6 +635,7 @@ async function getMockResponse(config) {
     if (supportItem) {
       supportItem.status = 'resolved'
       supportItem.reply = body.reply || ''
+      supportItem.resolveNote = body.resolveNote || ''
       supportItem.updateTime = new Date().toISOString().replace('T', ' ').slice(0, 19)
     }
     result = { code: 200, message: 'success', data: supportItem || null }
@@ -476,6 +656,91 @@ async function getMockResponse(config) {
         projects: mockData.projects
       }
     }
+  }
+
+  // ======================== Statistics endpoint ========================
+  else if (url === '/statistics' && method === 'get') {
+    var allProjects = mockData.projects;
+    var totalProjects = allProjects.length;
+    var activeProjects = allProjects.filter(function(p) { return p.status === 'active'; }).length;
+    var completedProjects = allProjects.filter(function(p) { return p.status === 'completed'; }).length;
+
+    // Overdue stages
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var allStages = [];
+    Object.values(mockData.stages).forEach(function(stageList) {
+      stageList.forEach(function(s) { allStages.push(s); });
+    });
+    var overdueStages = allStages.filter(function(s) {
+      if (!s.planEnd || s.status === 'completed') return false;
+      var endDate = new Date(s.planEnd);
+      endDate.setHours(0, 0, 0, 0);
+      return endDate < today;
+    }).length;
+
+    // Open deviations
+    var openDeviations = mockData.deviations.filter(function(d) { return d.status === 'open'; }).length;
+
+    // Pending supports
+    var pendingSupports = mockData.supportItems.filter(function(s) { return s.status === 'pending'; }).length;
+
+    // By department
+    var allUsers = Object.values(mockData.users);
+    var userDeptMap = {};
+    allUsers.forEach(function(u) { userDeptMap[u.id] = u.dept || '未知'; });
+
+    var projectsByDept = {};
+    allProjects.forEach(function(p) {
+      var dept = userDeptMap[p.createUserId] || '未知';
+      projectsByDept[dept] = (projectsByDept[dept] || 0) + 1;
+    });
+
+    var allExperiences = Object.values(mockData.experiences);
+    var experiencesByDept = {};
+    allExperiences.forEach(function(e) {
+      var dept = userDeptMap[e.createUserId] || '未知';
+      experiencesByDept[dept] = (experiencesByDept[dept] || 0) + 1;
+    });
+
+    var allDepts = {};
+    Object.keys(projectsByDept).forEach(function(d) { allDepts[d] = true; });
+    Object.keys(experiencesByDept).forEach(function(d) { allDepts[d] = true; });
+
+    var deptStats = [];
+    Object.keys(allDepts).forEach(function(dept) {
+      deptStats.push({
+        dept: dept,
+        projects: projectsByDept[dept] || 0,
+        experiences: experiencesByDept[dept] || 0
+      });
+    });
+
+    // Monthly project creation
+    var monthlyMap = {};
+    allProjects.forEach(function(p) {
+      if (p.createTime) {
+        var month = p.createTime.substring(0, 7) + '-01';
+        monthlyMap[month] = (monthlyMap[month] || 0) + 1;
+      }
+    });
+    var monthlyKeys = Object.keys(monthlyMap).sort();
+    var monthlyStats = monthlyKeys.map(function(k) {
+      return { month: k, count: monthlyMap[k] };
+    });
+
+    result = {
+      code: 200, message: 'success', data: {
+        totalProjects: totalProjects,
+        activeProjects: activeProjects,
+        completedProjects: completedProjects,
+        overdueStages: overdueStages,
+        openDeviations: openDeviations,
+        pendingSupports: pendingSupports,
+        deptStats: deptStats,
+        monthlyStats: monthlyStats
+      }
+    };
   }
 
   // ======================== Review endpoints ========================

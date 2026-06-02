@@ -1,10 +1,12 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.pm.common.Result;
 import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectMember;
 import com.pm.entity.SysUser;
+import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.SysProjectService;
@@ -13,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,15 +26,17 @@ public class ProjectController {
 
     private final SysProjectService projectService;
     private final SysUserMapper userMapper;
+    private final SysProjectMemberMapper memberMapper;
 
     @GetMapping
     public Result<IPage<SysProject>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
             @AuthenticationPrincipal LoginUser loginUser) {
         SysUser user = loginUser.getUser();
-        IPage<SysProject> result = projectService.pageWithMembers(page, size, keyword, user.getId(), user.getRole());
+        IPage<SysProject> result = projectService.pageWithMembers(page, size, keyword, status, user.getId(), user.getRole());
         return Result.ok(result);
     }
 
@@ -50,7 +55,7 @@ public class ProjectController {
         project.setCreateUserId(loginUser.getUser().getId());
         project.setStatus("active");
         projectService.save(project);
-        projectService.addMember(project.getId(), loginUser.getUser().getId(), "manager");
+        projectService.addMember(project.getId(), loginUser.getUser().getId(), "manager", "confirmed");
         return Result.ok(project);
     }
 
@@ -85,10 +90,21 @@ public class ProjectController {
     }
 
     @PostMapping("/{id}/members")
-    public Result<?> addMember(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public Result<?> addMember(@PathVariable Long id, @RequestBody Map<String, Object> body,
+                               @AuthenticationPrincipal LoginUser loginUser) {
+        // Only project manager or admin can add members
+        String role = loginUser.getUser().getRole();
+        if (!"admin".equals(role)) {
+            List<SysProjectMember> members = projectService.getMembers(id);
+            boolean isManager = members.stream().anyMatch(m ->
+                m.getUserId().equals(loginUser.getUser().getId()) && "manager".equals(m.getRoleInProject()));
+            if (!isManager) {
+                return Result.fail(403, "只有项目负责人才能添加成员");
+            }
+        }
         Long userId = Long.valueOf(body.get("userId").toString());
         String roleInProject = body.get("roleInProject").toString();
-        projectService.addMember(id, userId, roleInProject);
+        projectService.addMember(id, userId, roleInProject, "pending");
         return Result.ok();
     }
 
@@ -96,5 +112,37 @@ public class ProjectController {
     public Result<?> removeMember(@PathVariable Long id, @PathVariable Long memberId) {
         projectService.removeMember(id, memberId);
         return Result.ok();
+    }
+
+    @PutMapping("/{projectId}/members/{memberId}/confirm")
+    public Result<?> confirmMember(@PathVariable Long projectId, @PathVariable Long memberId,
+                                    @AuthenticationPrincipal LoginUser loginUser) {
+        SysProjectMember member = memberMapper.selectById(memberId);
+        if (member == null || !member.getUserId().equals(loginUser.getUser().getId())) {
+            return Result.fail("无权操作");
+        }
+        member.setStatus("confirmed");
+        memberMapper.updateById(member);
+        return Result.ok();
+    }
+
+    @GetMapping("/members/pending")
+    public Result<List<Map<String, Object>>> pendingInvites(@AuthenticationPrincipal LoginUser loginUser) {
+        List<SysProjectMember> list = memberMapper.selectList(
+            new LambdaQueryWrapper<SysProjectMember>()
+                .eq(SysProjectMember::getUserId, loginUser.getUser().getId())
+                .eq(SysProjectMember::getStatus, "pending")
+        );
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (SysProjectMember m : list) {
+            SysProject project = projectService.getById(m.getProjectId());
+            Map<String, Object> info = new HashMap<>();
+            info.put("id", m.getId());
+            info.put("projectId", m.getProjectId());
+            info.put("projectName", project != null ? project.getName() : "");
+            info.put("roleInProject", m.getRoleInProject());
+            result.add(info);
+        }
+        return Result.ok(result);
     }
 }

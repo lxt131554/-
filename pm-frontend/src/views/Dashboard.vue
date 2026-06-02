@@ -5,6 +5,15 @@
       <p style="color:var(--pm-text-secondary);margin-top:4px;font-size:16px">欢迎，{{ auth.user?.realName }}</p>
     </div>
 
+    <!-- Pending invitations -->
+    <div v-if="pendingInvites.length" style="margin-bottom:16px">
+      <el-card v-for="inv in pendingInvites" :key="inv.id" class="warning-card" shadow="hover"
+        style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;margin-bottom:8px">
+        <span>被邀请加入项目「{{ inv.projectName }}」作为{{ inv.roleInProject==='manager'?'负责人':'工程师' }}</span>
+        <el-button type="primary" size="small" @click="handleAcceptInvite(inv)">接受</el-button>
+      </el-card>
+    </div>
+
     <!-- Engineer stats -->
     <div v-if="auth.user?.role=='engineer'" class="stat-grid">
       <div class="stat-card stat-card--blue" @click="$router.push('/my-tasks')" style="animation-delay:0ms">
@@ -103,6 +112,11 @@
       </div>
     </div>
 
+    <!-- Friendly empty state when all stats are 0 -->
+    <div v-if="allStatsZero" style="margin-top:16px;text-align:center;padding:40px 0">
+      <el-empty description="暂无待办事项，一切正常" :image-size="80" />
+    </div>
+
     <!-- Quick actions row -->
     <div class="quick-actions">
       <el-button class="quick-action-btn" @click="$router.push('/projects')">
@@ -122,12 +136,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
+import { ElMessage } from 'element-plus'
 
 const auth = useAuthStore()
 const stats = ref({})
+const pendingInvites = ref([])
+
+const allStatsZero = computed(() => {
+  const s = stats.value
+  if (!s || Object.keys(s).length === 0) return false
+  if (auth.user?.role === 'engineer') {
+    return !s.todo && !s.returned && !s.overdue && !s.nearDeadline
+  }
+  if (auth.user?.role === 'manager') {
+    return !s.pendingReview && !s.pendingAchievement && !s.pendingChanges && !s.openDeviations && !s.pendingSupports && !s.reviewOverdue
+  }
+  if (auth.user?.role === 'leader') {
+    return !s.openDeviations && !s.pendingSupports && !s.pendingReview && !s.pendingChanges
+  }
+  return false
+})
 
 async function loadStats() {
   try {
@@ -136,7 +167,22 @@ async function loadStats() {
   } catch {}
 }
 
-onMounted(loadStats)
+async function loadPendingInvites() {
+  try {
+    const res = await request.get('/projects/members/pending')
+    pendingInvites.value = res.data || []
+  } catch {}
+}
+
+async function handleAcceptInvite(inv) {
+  try {
+    await request.put(`/projects/${inv.projectId}/members/${inv.id}/confirm`)
+    ElMessage.success('已接受邀请')
+    loadPendingInvites()
+  } catch {}
+}
+
+onMounted(() => { loadStats(); loadPendingInvites() })
 </script>
 
 <style scoped>

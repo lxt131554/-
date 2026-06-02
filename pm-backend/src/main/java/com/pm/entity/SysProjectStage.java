@@ -26,6 +26,8 @@ public class SysProjectStage {
     private LocalDateTime updateTime;
 
     @TableField(exist = false)
+    private String projectName;
+    @TableField(exist = false)
     private String assigneeName;
     @TableField(exist = false)
     private SysStageReport latestReport;

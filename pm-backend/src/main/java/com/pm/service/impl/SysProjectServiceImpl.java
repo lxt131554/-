@@ -24,14 +24,19 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
     private final SysProjectMemberMapper memberMapper;
 
     @Override
-    public IPage<SysProject> pageWithMembers(int page, int size, String keyword, Long userId, String role) {
+    public IPage<SysProject> pageWithMembers(int page, int size, String keyword, String status, Long userId, String role) {
         LambdaQueryWrapper<SysProject> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(SysProject::getName, keyword);
         }
+        if (status != null && !status.isEmpty()) {
+            wrapper.eq(SysProject::getStatus, status);
+        }
         if (!"admin".equals(role) && !"leader".equals(role)) {
             List<SysProjectMember> myMembers = memberMapper.selectList(
-                new LambdaQueryWrapper<SysProjectMember>().eq(SysProjectMember::getUserId, userId)
+                new LambdaQueryWrapper<SysProjectMember>()
+                    .eq(SysProjectMember::getUserId, userId)
+                    .eq(SysProjectMember::getStatus, "confirmed")
             );
             Set<Long> myProjectIds = myMembers.stream().map(SysProjectMember::getProjectId).collect(Collectors.toSet());
             if (myProjectIds.isEmpty()) {
@@ -46,11 +51,12 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
 
     @Override
     @Transactional
-    public void addMember(Long projectId, Long userId, String roleInProject) {
+    public void addMember(Long projectId, Long userId, String roleInProject, String status) {
         SysProjectMember member = new SysProjectMember();
         member.setProjectId(projectId);
         member.setUserId(userId);
         member.setRoleInProject(roleInProject);
+        member.setStatus(status != null ? status : "pending");
         memberMapper.insert(member);
     }
 

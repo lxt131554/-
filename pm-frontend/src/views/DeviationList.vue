@@ -17,7 +17,7 @@
         </el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" empty-text="暂无偏差记录">
+      <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
         <el-table-column prop="stageName" label="阶段" min-width="120" />
         <el-table-column prop="type" label="来源" min-width="80" align="center">
@@ -49,6 +49,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-else-if="!loading" description="暂无偏差记录" />
     </div>
 
     <!-- Create dialog -->
@@ -70,8 +71,8 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showCreate=false">取消</el-button>
         <el-button type="primary" @click="handleCreate" :loading="creating">保存</el-button>
+        <el-button @click="showCreate=false">取消</el-button>
       </template>
     </el-dialog>
   </div>

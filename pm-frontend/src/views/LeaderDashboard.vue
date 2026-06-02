@@ -33,12 +33,12 @@
     </el-card>
 
     <!-- 待处理偏差 -->
-    <div class="card-box" style="margin-top:16px" v-if="openDeviationList.length">
+    <div class="card-box" style="margin-top:16px">
       <div class="page-toolbar">
         <span style="font-weight:600;font-size:16px">待处理偏差</span>
-        <el-button text type="primary" @click="$router.push('/deviations')">查看全部</el-button>
+        <el-button v-if="openDeviationList.length" text type="primary" @click="$router.push('/deviations')">查看全部</el-button>
       </div>
-      <el-table :data="openDeviationList" border stripe>
+      <el-table v-if="openDeviationList.length" :data="openDeviationList" border stripe>
         <el-table-column prop="projectName" label="项目" min-width="160" />
         <el-table-column prop="description" label="偏差描述" min-width="240" show-overflow-tooltip>
           <template #default="{row}">
@@ -48,15 +48,16 @@
         <el-table-column prop="createUserName" label="创建人" min-width="100" />
         <el-table-column prop="createTime" label="时间" min-width="160" />
       </el-table>
+      <el-empty v-else description="暂无待处理偏差" :image-size="80" />
     </div>
 
     <!-- 待处理支持事项 -->
-    <div class="card-box" style="margin-top:16px" v-if="pendingSupportList.length">
+    <div class="card-box" style="margin-top:16px">
       <div class="page-toolbar">
         <span style="font-weight:600;font-size:16px">待处理支持事项</span>
-        <el-button text type="primary" @click="$router.push('/supports')">查看全部</el-button>
+        <el-button v-if="pendingSupportList.length" text type="primary" @click="$router.push('/supports')">查看全部</el-button>
       </div>
-      <el-table :data="pendingSupportList" border stripe>
+      <el-table v-if="pendingSupportList.length" :data="pendingSupportList" border stripe>
         <el-table-column prop="projectName" label="项目" min-width="160" />
         <el-table-column prop="title" label="事项" min-width="240" show-overflow-tooltip>
           <template #default="{row}">
@@ -66,6 +67,30 @@
         <el-table-column prop="applicantName" label="申请人" min-width="100" />
         <el-table-column prop="createTime" label="时间" min-width="160" />
       </el-table>
+      <el-empty v-else description="暂无待处理支持事项" :image-size="80" />
+    </div>
+
+    <!-- 待确认变更 -->
+    <div class="card-box" style="margin-top:16px">
+      <div class="page-toolbar">
+        <span style="font-weight:600;font-size:16px">待确认变更</span>
+        <el-button v-if="pendingChangeList.length" text type="primary" @click="$router.push('/projects')">查看全部</el-button>
+      </div>
+      <el-table v-if="pendingChangeList.length" :data="pendingChangeList" border stripe>
+        <el-table-column prop="projectName" label="项目" min-width="160" />
+        <el-table-column prop="content" label="变更内容" min-width="240" show-overflow-tooltip>
+          <template #default="{row}">
+            <el-link type="primary" @click="$router.push(`/changes/${row.id}`)">{{ row.content }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="confirmTime" label="确认时间" min-width="120" />
+        <el-table-column label="操作" min-width="100" align="center">
+          <template #default="{row}">
+            <el-button text type="success" size="small" @click="$router.push(`/projects/${row.projectId}`)">去处理</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-else description="暂无待确认变更" :image-size="80" />
     </div>
 
     <!-- 项目列表 -->
@@ -73,7 +98,7 @@
       <div class="page-toolbar">
         <span style="font-weight:600;font-size:16px">全院项目</span>
       </div>
-      <el-table :data="projects" border stripe v-loading="loading" empty-text="暂无项目">
+      <el-table v-if="projects.length" :data="projects" border stripe v-loading="loading">
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
             <el-link type="primary" @click="$router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
@@ -92,6 +117,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-else-if="!loading" description="暂无项目" />
     </div>
   </div>
 </template>
@@ -106,6 +132,7 @@ const loading = ref(false)
 
 const openDeviationList = computed(() => stats.value.openDeviationList || [])
 const pendingSupportList = computed(() => stats.value.pendingSupportList || [])
+const pendingChangeList = computed(() => stats.value.pendingChanges || [])
 
 async function loadData() {
   loading.value = true

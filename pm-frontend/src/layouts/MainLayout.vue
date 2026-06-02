@@ -48,9 +48,17 @@
           <el-icon><Headset /></el-icon>
           <span>支持事项</span>
         </el-menu-item>
+        <el-menu-item v-if="auth.user?.role=='admin'" index="/users">
+          <el-icon><Setting /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
         <el-menu-item v-if="auth.user?.role=='leader'" index="/leader-dashboard">
           <el-icon><DataAnalysis /></el-icon>
           <span>领导看板</span>
+        </el-menu-item>
+        <el-menu-item v-if="auth.user?.role=='leader'||auth.user?.role=='admin'" index="/statistics">
+          <el-icon><TrendCharts /></el-icon>
+          <span>统计分析</span>
         </el-menu-item>
         <el-menu-item index="/experiences">
           <el-icon><Collection /></el-icon>
@@ -62,6 +70,22 @@
     <!-- Main area -->
     <el-container>
       <el-header class="layout-header">
+        <el-popover ref="notifyPopover" placement="bottom-end" :width="320" trigger="click">
+          <template #reference>
+            <el-badge :value="notifications.length" :hidden="!notifications.length" :max="99" style="margin-right:20px;cursor:pointer">
+              <el-icon :size="20"><Bell /></el-icon>
+            </el-badge>
+          </template>
+          <div v-if="notifications.length" style="max-height:400px;overflow-y:auto">
+            <div v-for="(n, i) in notifications" :key="i"
+              style="padding:12px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer"
+              @click="goNotify(n.url)">
+              <div style="font-size:14px;color:var(--pm-text)">{{ n.message }}</div>
+              <div style="font-size:12px;color:#999;margin-top:4px">{{ n.time?.substring(0,16) }}</div>
+            </div>
+          </div>
+          <el-empty v-else description="暂无待办事项" :image-size="60" />
+        </el-popover>
         <div class="header-user">
           <span class="header-name">{{ auth.user?.realName }}</span>
           <span class="header-role">{{ roleLabel }}</span>
@@ -79,16 +103,35 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { Bell } from '@element-plus/icons-vue'
+import request from '../api/index'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const notifyPopover = ref(null)
 
 const roleLabel = computed(() => {
   const map = { admin: '管理员', manager: '项目负责人', engineer: '工程师', leader: '院领导' }
   return map[auth.user?.role] || ''
 })
+
+const notifications = ref([])
+
+async function loadNotifications() {
+  try {
+    const res = await request.get('/notifications')
+    notifications.value = res.data || []
+  } catch {}
+}
+
+function goNotify(url) {
+  notifyPopover.value?.hide()
+  router.push(url)
+}
+
+onMounted(() => { loadNotifications() })
 
 function handleLogout() {
   auth.logout().then(() => router.push('/login'))

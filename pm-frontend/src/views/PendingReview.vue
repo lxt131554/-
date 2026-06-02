@@ -6,7 +6,8 @@
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
         <el-table-column prop="stageName" label="阶段" min-width="140" />
         <el-table-column prop="submitUserName" label="提交人" min-width="100" />
-        <el-table-column prop="content" label="填报内容" min-width="240" show-overflow-tooltip />
+        <el-table-column prop="content" label="填报内容" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="problem" label="存在问题" min-width="160" show-overflow-tooltip />
         <el-table-column prop="progressRate" label="进度" min-width="80">
           <template #default="{row}">{{ row.progressRate }}%</template>
         </el-table-column>

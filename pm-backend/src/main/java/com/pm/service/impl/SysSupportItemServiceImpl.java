@@ -26,11 +26,12 @@ public class SysSupportItemServiceImpl extends ServiceImpl<SysSupportItemMapper,
 
     @Override
     @Transactional
-    public void resolve(Long id, String reply) {
+    public void resolve(Long id, String reply, String resolveNote) {
         SysSupportItem item = new SysSupportItem();
         item.setId(id);
         item.setStatus("resolved");
         item.setReply(reply);
+        item.setResolveNote(resolveNote);
         baseMapper.updateById(item);
     }
 }

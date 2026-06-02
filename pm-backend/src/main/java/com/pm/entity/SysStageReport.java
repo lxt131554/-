@@ -21,6 +21,9 @@ public class SysStageReport {
     private String resultSummary;
     private String coordinationNote;
 
+    // V0.9: 部门审核情况
+    private String deptReviewNote;
+
     private LocalDate planStart;
     private LocalDate planEnd;
     private LocalDate actualStart;

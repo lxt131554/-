@@ -18,6 +18,7 @@ public class SysProjectStageServiceImpl extends ServiceImpl<SysProjectStageMappe
         implements SysProjectStageService {
 
     private final SysStageReportMapper reportMapper;
+    private final com.pm.mapper.SysProjectMapper projectMapper;
 
     @Override
     public List<SysProjectStage> listByProjectId(Long projectId) {
@@ -40,11 +41,16 @@ public class SysProjectStageServiceImpl extends ServiceImpl<SysProjectStageMappe
 
     @Override
     public List<SysProjectStage> listMyTasks(Long userId) {
-        return baseMapper.selectList(
+        List<SysProjectStage> stages = baseMapper.selectList(
             new LambdaQueryWrapper<SysProjectStage>()
                 .eq(SysProjectStage::getAssigneeId, userId)
                 .orderByAsc(SysProjectStage::getStatus)
                 .orderByDesc(SysProjectStage::getCreateTime)
         );
+        for (SysProjectStage s : stages) {
+            var project = projectMapper.selectById(s.getProjectId());
+            if (project != null) s.setProjectName(project.getName());
+        }
+        return stages;
     }
 }

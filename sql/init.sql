@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS sys_project_member (
     project_id BIGINT NOT NULL COMMENT '项目ID',
     user_id BIGINT NOT NULL COMMENT '用户ID',
     role_in_project VARCHAR(20) NOT NULL COMMENT 'manager/engineer',
+    status VARCHAR(20) DEFAULT 'confirmed' COMMENT 'confirmed/pending',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_project_user (project_id, user_id)
 ) COMMENT '项目成员表';

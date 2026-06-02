@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -50,5 +51,23 @@ public class StageController {
     @GetMapping("/stages/my-tasks")
     public Result<List<SysProjectStage>> myTasks(@AuthenticationPrincipal LoginUser loginUser) {
         return Result.ok(stageService.listMyTasks(loginUser.getUser().getId()));
+    }
+
+    @PostMapping("/stages/template/{projectId}")
+    public Result<List<SysProjectStage>> applyTemplate(@PathVariable Long projectId,
+                                                       @RequestBody List<SysProjectStage> templateStages) {
+        List<SysProjectStage> created = new ArrayList<>();
+        for (int i = 0; i < templateStages.size(); i++) {
+            SysProjectStage stage = templateStages.get(i);
+            stage.setProjectId(projectId);
+            stage.setStatus("pending");
+            stage.setSortOrder(i);
+            stage.setActualStart(null);
+            stage.setActualEnd(null);
+            stage.setId(null);
+            stageService.save(stage);
+            created.add(stage);
+        }
+        return Result.ok(created);
     }
 }

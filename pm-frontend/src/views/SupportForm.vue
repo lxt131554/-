@@ -56,6 +56,10 @@
           <el-form-item label="处理回复" required>
             <el-input v-model="reply" type="textarea" :rows="4" placeholder="输入处理意见、解决方案或协调结果" />
           </el-form-item>
+          <el-form-item label="解决情况说明">
+            <el-input v-model="resolveNote" type="textarea" :rows="3"
+              placeholder="例：经院领导协调，县林业局已提供所需资料，外业调查恢复正常" />
+          </el-form-item>
           <el-form-item>
             <el-button type="success" @click="handleResolve" :loading="submitting">
               <el-icon><Check /></el-icon> 确认解决
@@ -87,6 +91,7 @@ const projects = ref([])
 const users = ref([])
 const detail = ref(null)
 const reply = ref('')
+const resolveNote = ref('')
 
 const form = reactive({ projectId: null, title: '', content: '', handlerId: null, expectTime: '' })
 
@@ -120,7 +125,7 @@ async function handleResolve() {
   if (!reply.value.trim()) { ElMessage.warning('请填写处理回复'); return }
   submitting.value = true
   try {
-    await request.put(`/supports/${route.params.id}/resolve`, { reply: reply.value })
+    await request.put(`/supports/${route.params.id}/resolve`, { reply: reply.value, resolveNote: resolveNote.value })
     ElMessage.success('已标记为已解决')
     router.back()
   } finally { submitting.value = false }

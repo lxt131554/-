@@ -12,7 +12,7 @@
           <el-icon><Plus /></el-icon> 新建支持申请
         </el-button>
       </div>
-      <el-table :data="tableData" v-loading="loading" empty-text="暂无支持事项">
+      <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
         <el-table-column prop="title" label="事项标题" min-width="220" show-overflow-tooltip>
           <template #default="{row}">
@@ -37,6 +37,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-else-if="!loading" description="暂无支持事项" />
     </div>
   </div>
 </template>

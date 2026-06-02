@@ -33,6 +33,10 @@ public class SysProject {
     private String procurementInfo;
     private String acquisitionResult;
 
+    // V0.9: 项目重要性及成果方向
+    private String projectImportance;
+    private String achievementDirection;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

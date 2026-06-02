@@ -38,6 +38,10 @@
           <el-input v-model="form.coordinationNote" type="textarea" :rows="2"
             placeholder="例：与县林业局对接3次；院内部协调会2次；业主反馈需调整样地布局" />
         </el-form-item>
+        <el-form-item label="部门审核情况">
+          <el-input v-model="form.deptReviewNote" type="textarea" :rows="2"
+            placeholder="例：部门审核发现图件缺少比例尺标注、统计表数据与文字描述不一致，已退回修改" />
+        </el-form-item>
         <el-form-item label="成果附件">
           <el-upload
             ref="uploadRef"
@@ -55,6 +59,9 @@
             </template>
           </el-upload>
         </el-form-item>
+        <el-alert v-if="!form.qualityControl || !form.resultSummary"
+          title="建议填写质量管控措施和阶段成果说明，以便后续审核和台账导出"
+          type="info" :closable="false" show-icon style="margin-bottom:16px" />
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="submitting">提交填报</el-button>
           <el-button @click="router.back()">取消</el-button>
@@ -101,7 +108,7 @@ const selectedFile = ref(null)
 const form = reactive({
   progressRate: 0, content: '', problem: '',
   actualStart: '', actualEnd: '', isDeviation: false,
-  qualityControl: '', resultSummary: '', coordinationNote: ''
+  qualityControl: '', resultSummary: '', coordinationNote: '', deptReviewNote: ''
 })
 const rules = { content: [{ required: true, message: '请填写工作内容', trigger: 'blur' }] }
 
@@ -130,6 +137,7 @@ async function handleSubmit() {
     fd.append('qualityControl', form.qualityControl || '')
     fd.append('resultSummary', form.resultSummary || '')
     fd.append('coordinationNote', form.coordinationNote || '')
+    fd.append('deptReviewNote', form.deptReviewNote || '')
     if (selectedFile.value) {
       fd.append('file', selectedFile.value)
     }

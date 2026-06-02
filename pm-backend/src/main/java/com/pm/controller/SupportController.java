@@ -38,7 +38,8 @@ public class SupportController {
     public Result<?> resolve(@PathVariable Long id,
                              @RequestBody Map<String, String> body) {
         String reply = body.get("reply");
-        supportItemService.resolve(id, reply);
+        String resolveNote = body.get("resolveNote");
+        supportItemService.resolve(id, reply, resolveNote);
         return Result.ok();
     }
 }

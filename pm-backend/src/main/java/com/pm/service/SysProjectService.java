@@ -7,8 +7,8 @@ import com.pm.entity.SysProjectMember;
 import java.util.List;
 
 public interface SysProjectService extends IService<SysProject> {
-    IPage<SysProject> pageWithMembers(int page, int size, String keyword, Long userId, String role);
-    void addMember(Long projectId, Long userId, String roleInProject);
+    IPage<SysProject> pageWithMembers(int page, int size, String keyword, String status, Long userId, String role);
+    void addMember(Long projectId, Long userId, String roleInProject, String status);
     void removeMember(Long projectId, Long memberId);
     List<SysProjectMember> getMembers(Long projectId);
 }

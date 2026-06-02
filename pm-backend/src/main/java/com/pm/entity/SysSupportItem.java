@@ -18,6 +18,10 @@ public class SysSupportItem {
     private LocalDate expectTime;
     private String status;
     private String reply;
+
+    // V0.9: 上级支持及解决情况
+    private String resolveNote;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

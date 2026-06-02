@@ -12,6 +12,7 @@ public class SysProjectMember {
     private Long projectId;
     private Long userId;
     private String roleInProject;
+    private String status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 

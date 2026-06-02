@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface SysSupportItemService extends IService<SysSupportItem> {
     List<SysSupportItem> listAll(String status);
-    void resolve(Long id, String reply);
+    void resolve(Long id, String reply, String resolveNote);
 }

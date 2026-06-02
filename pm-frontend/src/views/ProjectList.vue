@@ -5,17 +5,22 @@
     </div>
     <div class="card-box">
       <div class="page-toolbar">
+        <el-select v-model="statusFilter" placeholder="项目状态" clearable style="width:140px;margin-right:8px" @change="loadData">
+          <el-option label="全部" value="" />
+          <el-option label="进行中" value="active" />
+          <el-option label="已完成" value="completed" />
+        </el-select>
         <el-input v-model="keyword" placeholder="搜索项目名称" clearable style="width:280px" @clear="loadData" @keyup.enter="loadData">
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
         <div>
-          <el-button type="primary" @click="showCreate=true" v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">
+          <el-button type="primary" @click="router.push('/projects/create')" v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">
             <el-icon><Plus /></el-icon> 新建项目
           </el-button>
         </div>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" class="pm-table">
+      <el-table v-if="tableData.length" :data="tableData" v-loading="loading" class="pm-table">
         <el-table-column prop="id" label="编号" min-width="80" />
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
@@ -38,25 +43,12 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-else-if="!loading" description="暂无项目数据" />
 
-      <el-pagination v-model:current-page="page" :total="total" :page-size="size"
+      <el-pagination v-if="total > 0" v-model:current-page="page" :total="total" :page-size="size"
         layout="total, prev, pager, next" @current-change="loadData" style="margin-top:16px;justify-content:flex-end" />
     </div>
 
-    <el-dialog v-model="showCreate" title="新建项目" width="500px">
-      <el-form :model="createForm" :rules="createRules" ref="createFormRef" label-width="80px">
-        <el-form-item label="项目名称" prop="name">
-          <el-input v-model="createForm.name" placeholder="请输入项目名称" />
-        </el-form-item>
-        <el-form-item label="项目描述" prop="description">
-          <el-input v-model="createForm.description" type="textarea" :rows="3" placeholder="请输入项目描述（选填）" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showCreate=false">取消</el-button>
-        <el-button type="primary" @click="handleCreate" :loading="creating">创建</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -64,7 +56,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { getProjects, createProject, deleteProject } from '../api/project'
+import { getProjects, deleteProject } from '../api/project'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
@@ -75,34 +67,15 @@ const page = ref(1)
 const total = ref(0)
 const size = ref(10)
 const keyword = ref('')
-
-const showCreate = ref(false)
-const creating = ref(false)
-const createFormRef = ref(null)
-const createForm = reactive({ name: '', description: '' })
-const createRules = { name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }] }
+const statusFilter = ref('')
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await getProjects({ page: page.value, size: size.value, keyword: keyword.value })
+    const res = await getProjects({ page: page.value, size: size.value, keyword: keyword.value, status: statusFilter.value })
     tableData.value = res.data.records
     total.value = res.data.total
   } finally { loading.value = false }
-}
-
-async function handleCreate() {
-  const valid = await createFormRef.value.validate().catch(() => false)
-  if (!valid) return
-  creating.value = true
-  try {
-    await createProject({ name: createForm.name, description: createForm.description })
-    ElMessage.success('项目创建成功')
-    showCreate.value = false
-    createForm.name = ''
-    createForm.description = ''
-    loadData()
-  } finally { creating.value = false }
 }
 
 async function handleDelete(row) {

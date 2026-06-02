@@ -4,6 +4,9 @@
       <el-button text @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon> 返回列表</el-button>
       <h2 style="margin-top:8px">{{ project.name }}</h2>
       <p style="color:var(--pm-text-secondary);margin-top:4px">{{ project.description || '暂无描述' }}</p>
+      <div v-if="deviationSummary" style="margin-top:4px">
+        <el-tag type="warning" size="small">整体偏差: {{ deviationSummary }}</el-tag>
+      </div>
       <el-button v-if="project.status=='active' && (auth.user?.role=='manager'||auth.user?.role=='admin')"
         type="warning" size="small" @click="handleCompleteProject" style="margin-left:12px">
         完成项目
@@ -33,6 +36,8 @@
         <el-descriptions-item label="成果产出类型">{{ project.achievementType || '-' }}</el-descriptions-item>
         <el-descriptions-item label="双方联系人" :span="2">{{ project.contacts || '-' }}</el-descriptions-item>
         <el-descriptions-item label="审核审批要求" :span="2">{{ project.approvalRequirements || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="项目重要性" :span="2">{{ project.projectImportance || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="成果方向及附件" :span="2">{{ project.achievementDirection || '-' }}</el-descriptions-item>
         <el-descriptions-item label="能否承接判断" :span="2">{{ project.canUndertake || '-' }}</el-descriptions-item>
         <el-descriptions-item label="主要风险" :span="2">{{ project.mainRisks || '-' }}</el-descriptions-item>
         <el-descriptions-item label="关键约束" :span="2">{{ project.keyConstraints || '-' }}</el-descriptions-item>
@@ -83,6 +88,14 @@
           <el-form-item label="审核审批要求">
             <el-input v-model="planningForm.approvalRequirements" type="textarea" :rows="2"
               placeholder="例：需通过省林业局审批、县政府常务会审查" />
+          </el-form-item>
+          <el-form-item label="项目重要性">
+            <el-input v-model="planningForm.projectImportance" type="textarea" :rows="2"
+              placeholder="例：对甲方是年度重点任务、对我院是拓展新业务领域的关键项目" />
+          </el-form-item>
+          <el-form-item label="成果方向附件">
+            <el-input v-model="planningForm.achievementDirection" type="textarea" :rows="2"
+              placeholder="例：规划文本送省厅备案、图件提交县自然资源局入库" />
           </el-form-item>
 
           <el-divider content-position="left"><strong>前期分析</strong></el-divider>
@@ -153,8 +166,12 @@
           v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">
           <el-icon><Plus /></el-icon> 添加阶段
         </el-button>
+        <el-button v-if="!stages.length && (auth.user?.role=='manager'||auth.user?.role=='admin')"
+          type="success" size="small" @click="openTemplateDialog" style="margin-left:8px">
+          使用标准模板
+        </el-button>
       </div>
-      <el-table :data="stages">
+      <el-table v-if="stages.length" :data="stages">
         <el-table-column prop="stageName" label="阶段名称" min-width="160" />
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
         <el-table-column prop="assigneeName" label="责任人" min-width="120" />
@@ -180,6 +197,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-else description="暂无项目阶段" />
     </div>
 
     <div class="card-box" style="margin-bottom:16px">
@@ -217,7 +235,7 @@
     </div>
 
     <!-- 新增变更对话框 -->
-    <el-dialog v-model="showAddChange" title="新增变更" width="500px">
+    <el-dialog v-model="showAddChange" title="新增变更" width="500px" :close-on-click-modal="false">
       <el-form :model="changeForm" label-width="100px">
         <el-form-item label="变更核心内容" required>
           <el-input v-model="changeForm.content" type="textarea" :rows="3" placeholder="描述变更的核心内容" />
@@ -230,22 +248,26 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showAddChange=false">取消</el-button>
         <el-button type="primary" @click="handleAddChange" :loading="addingChange">保存</el-button>
+        <el-button @click="showAddChange=false">取消</el-button>
       </template>
     </el-dialog>
 
     <div class="card-box">
       <div class="page-toolbar">
         <span class="section-title">项目成员</span>
-        <el-button type="primary" size="small" @click="showAddMember=true">
+        <el-button type="primary" size="small" @click="showAddMember=true"
+          v-if="isProjectManager || auth.user?.role=='admin'">
           <el-icon><Plus /></el-icon> 添加成员
         </el-button>
       </div>
       <div class="member-tags">
-        <el-tag v-for="m in members" :key="m.id" closable :type="m.roleInProject==='manager'?'warning':'success'"
+        <el-tag v-for="m in members" :key="m.id"
+          :closable="isProjectManager || auth.user?.role=='admin'"
+          :type="m.roleInProject==='manager'?'warning':'success'"
           @close="handleRemoveMember(m)" size="large">
           {{ m.realName }}（{{ m.roleInProject==='manager'?'负责人':'工程师' }}）
+          <span v-if="m.status=='pending'" style="margin-left:4px;font-size:11px;opacity:0.7">（待确认）</span>
         </el-tag>
       </div>
     </div>
@@ -267,7 +289,7 @@
       </div>
     </div>
 
-    <el-dialog v-model="showAddStage" title="添加阶段" width="500px">
+    <el-dialog v-model="showAddStage" title="添加阶段" width="500px" :close-on-click-modal="false">
       <el-form :model="stageForm" label-width="80px">
         <el-form-item label="阶段名称" required>
           <el-input v-model="stageForm.stageName" placeholder="如：外业调查" />
@@ -291,12 +313,12 @@
         </el-form-item>
       </el-form>
       <template #footer>
+        <el-button type="primary" @click="handleAddStage" :loading="addingStage">添加</el-button>
         <el-button @click="showAddStage=false">取消</el-button>
-        <el-button type="primary" @click="handleAddStage">添加</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="showAddMember" title="添加成员" width="400px">
+    <el-dialog v-model="showAddMember" title="添加成员" width="400px" :close-on-click-modal="false">
       <el-form label-width="80px">
         <el-form-item label="用户ID">
           <el-input v-model="newMember.userId" placeholder="输入用户ID" />
@@ -309,8 +331,40 @@
         </el-form-item>
       </el-form>
       <template #footer>
+        <el-button type="primary" @click="handleAddMember" :loading="addingMember">添加</el-button>
         <el-button @click="showAddMember=false">取消</el-button>
-        <el-button type="primary" @click="handleAddMember">添加</el-button>
+      </template>
+    </el-dialog>
+    <!-- 标准模板预览弹窗 -->
+    <el-dialog v-model="showTemplateDialog" title="标准阶段模板预览" width="700px" :close-on-click-modal="false">
+      <el-alert title="请确认以下阶段信息，可修改后一次性创建" type="info" :closable="false" show-icon style="margin-bottom:16px" />
+      <el-form label-width="100px">
+        <div v-for="(t, i) in templateStages" :key="i" style="border:1px solid var(--pm-border);border-radius:8px;padding:16px;margin-bottom:12px">
+          <div style="font-weight:600;margin-bottom:8px">阶段 {{ i + 1 }}</div>
+          <el-form-item label="阶段名称"><el-input v-model="t.stageName" /></el-form-item>
+          <el-form-item label="责任人" required>
+            <el-select v-model="t.assigneeId" placeholder="选择责任人" style="width:100%">
+              <el-option v-for="m in members" :key="m.userId" :label="m.realName" :value="m.userId" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="描述"><el-input v-model="t.description" /></el-form-item>
+          <el-row :gutter="12">
+            <el-col :span="12">
+              <el-form-item label="计划开始">
+                <el-date-picker v-model="t.planStart" type="date" value-format="YYYY-MM-DD" style="width:100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="计划结束">
+                <el-date-picker v-model="t.planEnd" type="date" value-format="YYYY-MM-DD" style="width:100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+      </el-form>
+      <template #footer>
+        <el-button @click="showTemplateDialog=false">取消</el-button>
+        <el-button type="primary" @click="handleApplyTemplate" :loading="applyingTemplate">确认创建</el-button>
       </template>
     </el-dialog>
   </div>
@@ -337,6 +391,8 @@ const members = ref([])
 const showAddStage = ref(false)
 const showAddMember = ref(false)
 
+const addingStage = ref(false)
+const addingMember = ref(false)
 const stageForm = reactive({
   stageName: '', description: '', assigneeId: null,
   planStart: '', planEnd: '', sortOrder: 0
@@ -353,6 +409,7 @@ const planningEditMode = ref(false)
 const savingPlanning = ref(false)
 const planningForm = reactive({
   customerLevel: '', contacts: '', achievementType: '', approvalRequirements: '',
+  projectImportance: '', achievementDirection: '',
   canUndertake: '', mainRisks: '', keyConstraints: '', deliverableRequirements: '',
   approvalPath: '', hrAllocation: '', expectedOutputs: '', coreMaterials: '',
   teamSetup: '', coreStrategy: '', bidSituation: '', procurementInfo: '', acquisitionResult: ''
@@ -361,10 +418,30 @@ const planningForm = reactive({
 const hasPlanningData = computed(() => {
   return project.value.customerLevel || project.value.contacts || project.value.canUndertake
     || project.value.mainRisks || project.value.teamSetup || project.value.hrAllocation
+    || project.value.projectImportance || project.value.achievementDirection
+})
+
+const isProjectManager = computed(() => {
+  return members.value.some(m => m.userId === auth.user?.id && m.roleInProject === 'manager')
+})
+
+const deviationSummary = computed(() => {
+  const stagesList = stages.value || []
+  const parts = []
+  stagesList.forEach(s => {
+    if (s.planEnd && s.actualEnd) {
+      const planEnd = new Date(s.planEnd)
+      const actualEnd = new Date(s.actualEnd)
+      const diffDays = Math.ceil((actualEnd - planEnd) / (1000 * 60 * 60 * 24))
+      if (diffDays > 0) parts.push(`${s.stageName}+${diffDays}天`)
+    }
+  })
+  return parts.length ? parts.join('，') : ''
 })
 
 function startPlanningEdit() {
   const fields = ['customerLevel','contacts','achievementType','approvalRequirements',
+    'projectImportance','achievementDirection',
     'canUndertake','mainRisks','keyConstraints','deliverableRequirements',
     'approvalPath','hrAllocation','expectedOutputs','coreMaterials',
     'teamSetup','coreStrategy','bidSituation','procurementInfo','acquisitionResult']
@@ -404,24 +481,63 @@ async function handleAddStage() {
     ElMessage.warning('请填写阶段名称和责任人')
     return
   }
-  await addStage(projectId, { ...stageForm })
-  ElMessage.success('阶段添加成功')
-  showAddStage.value = false
-  Object.assign(stageForm, { stageName: '', description: '', assigneeId: null, planStart: '', planEnd: '', sortOrder: 0 })
-  loadStages()
+  addingStage.value = true
+  try {
+    await addStage(projectId, { ...stageForm })
+    ElMessage.success('阶段添加成功')
+    showAddStage.value = false
+    Object.assign(stageForm, { stageName: '', description: '', assigneeId: null, planStart: '', planEnd: '', sortOrder: 0 })
+    loadStages()
+  } finally { addingStage.value = false }
 }
 async function handleDeleteStage(row) {
   await deleteStage(projectId, row.id)
   ElMessage.success('删除成功')
   loadStages()
 }
+const showTemplateDialog = ref(false)
+const applyingTemplate = ref(false)
+const templateStages = reactive([
+  { stageName: '外业调查', description: '实地勘测、数据采集、样地调查', planStart: '', planEnd: '', assigneeId: null },
+  { stageName: '内业整理', description: '数据整理、图纸绘制、统计分析', planStart: '', planEnd: '', assigneeId: null },
+  { stageName: '成果提交', description: '编制报告、制作图件、提交审核', planStart: '', planEnd: '', assigneeId: null }
+])
+
+function openTemplateDialog() {
+  const today = new Date()
+  const offsets = [[15, 30], [10, 25], [10, 20]]
+  templateStages.forEach((t, i) => {
+    const start = new Date(today)
+    start.setDate(start.getDate() + offsets[i][0])
+    const end = new Date(today)
+    end.setDate(end.getDate() + offsets[i][0] + offsets[i][1])
+    t.planStart = start.toISOString().slice(0, 10)
+    t.planEnd = end.toISOString().slice(0, 10)
+  })
+  showTemplateDialog.value = true
+}
+
+async function handleApplyTemplate() {
+  const missing = templateStages.some(t => !t.assigneeId)
+  if (missing) { ElMessage.warning('请为每个阶段选择责任人'); return }
+  applyingTemplate.value = true
+  try {
+    const res = await request.post(`/stages/template/${projectId}`, templateStages)
+    ElMessage.success(`已创建 ${res.data.length} 个阶段`)
+    showTemplateDialog.value = false
+    loadStages()
+  } catch {} finally { applyingTemplate.value = false }
+}
 async function handleAddMember() {
   if (!newMember.userId) { ElMessage.warning('请输入用户ID'); return }
-  await addProjectMember(projectId, { ...newMember })
-  ElMessage.success('成员添加成功')
-  showAddMember.value = false
-  newMember.userId = ''
-  loadMembers()
+  addingMember.value = true
+  try {
+    await addProjectMember(projectId, { ...newMember })
+    ElMessage.success('成员添加成功')
+    showAddMember.value = false
+    newMember.userId = ''
+    loadMembers()
+  } finally { addingMember.value = false }
 }
 async function handleRemoveMember(m) {
   await removeProjectMember(projectId, m.id)

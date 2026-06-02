@@ -3,7 +3,8 @@
     <div class="page-header"><h2>我的待填报</h2></div>
     <div class="card-box">
       <el-table :data="tasks" v-loading="loading">
-        <el-table-column prop="stageName" label="阶段名称" min-width="160" />
+        <el-table-column prop="projectName" label="所属项目" min-width="180" />
+        <el-table-column prop="stageName" label="阶段名称" min-width="140" />
         <el-table-column prop="description" label="阶段描述" min-width="200" show-overflow-tooltip />
         <el-table-column label="计划时间" min-width="200">
           <template #default="{row}">{{ row.planStart || '-' }} 至 {{ row.planEnd || '-' }}</template>

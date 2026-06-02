@@ -20,6 +20,7 @@ const routes = [
       { path: 'supports/:id', name: 'SupportEdit', component: () => import('../views/SupportForm.vue') },
       { path: 'changes/:id', name: 'ChangeDetail', component: () => import('../views/ChangeDetail.vue') },
       { path: 'projects', name: 'ProjectList', component: () => import('../views/ProjectList.vue') },
+      { path: 'projects/create', name: 'ProjectCreate', component: () => import('../views/ProjectCreate.vue') },
       { path: 'projects/:id', name: 'ProjectDetail', component: () => import('../views/ProjectDetail.vue') },
       { path: 'my-tasks', name: 'MyTasks', component: () => import('../views/MyTasks.vue') },
       { path: 'my-tasks/:stageId/report', name: 'StageReport', component: () => import('../views/StageReport.vue') },
@@ -31,6 +32,8 @@ const routes = [
       { path: 'projects/:id/experience', name: 'ProjectExperience', component: () => import('../views/ProjectExperience.vue') },
       { path: 'projects/:id/approval', name: 'ProjectApproval', component: () => import('../views/ProjectApproval.vue') },
       { path: 'experiences', name: 'ExperienceLibrary', component: () => import('../views/ExperienceLibrary.vue') },
+      { path: 'users', name: 'UserManage', component: () => import('../views/UserManage.vue') },
+      { path: 'statistics', name: 'Statistics', component: () => import('../views/Statistics.vue') },
     ]
   }
 ]

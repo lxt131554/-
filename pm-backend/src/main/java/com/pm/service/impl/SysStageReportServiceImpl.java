@@ -20,6 +20,8 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
         implements SysStageReportService {
 
     private final SysProjectStageMapper stageMapper;
+    private final com.pm.mapper.SysProjectMapper projectMapper;
+    private final com.pm.mapper.SysUserMapper userMapper;
 
     @Override
     @Transactional
@@ -78,11 +80,20 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
 
     @Override
     public List<SysStageReport> listPendingReview(Long reviewerId) {
-        return baseMapper.selectList(
+        var reports = baseMapper.selectList(
             new LambdaQueryWrapper<SysStageReport>()
                 .eq(SysStageReport::getReviewStatus, "pending")
                 .orderByDesc(SysStageReport::getSubmitTime)
         );
+        for (var r : reports) {
+            var stage = stageMapper.selectById(r.getStageId());
+            if (stage != null) r.setStageName(stage.getStageName());
+            var project = projectMapper.selectById(r.getProjectId());
+            if (project != null) r.setProjectName(project.getName());
+            var user = userMapper.selectById(r.getSubmitUserId());
+            if (user != null) r.setSubmitUserName(user.getRealName());
+        }
+        return reports;
     }
 
     @Override
