@@ -22,6 +22,7 @@ const routes = [
       { path: 'projects', name: 'ProjectList', component: () => import('../views/ProjectList.vue') },
       { path: 'projects/create', name: 'ProjectCreate', component: () => import('../views/ProjectCreate.vue') },
       { path: 'projects/:id', name: 'ProjectDetail', component: () => import('../views/ProjectDetail.vue') },
+      { path: 'stages/:id', name: 'StageDetail', component: () => import('../views/StageDetail.vue') },
       { path: 'my-tasks', name: 'MyTasks', component: () => import('../views/MyTasks.vue') },
       { path: 'my-tasks/:stageId/report', name: 'StageReport', component: () => import('../views/StageReport.vue') },
       { path: 'pending-review', name: 'PendingReview', component: () => import('../views/PendingReview.vue') },

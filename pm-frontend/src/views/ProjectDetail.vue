@@ -172,7 +172,11 @@
         </el-button>
       </div>
       <el-table v-if="stages.length" :data="stages">
-        <el-table-column prop="stageName" label="阶段名称" min-width="160" />
+        <el-table-column prop="stageName" label="阶段名称" min-width="160">
+          <template #default="{row}">
+            <el-link type="primary" @click="router.push(`/stages/${row.id}`)">{{ row.stageName }}</el-link>
+          </template>
+        </el-table-column>
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
         <el-table-column prop="assigneeName" label="责任人" min-width="120" />
         <el-table-column label="计划时间" min-width="200">

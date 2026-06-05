@@ -285,6 +285,41 @@ async function getMockResponse(config) {
     result = { code: 200, message: 'success', data: tasks }
   }
 
+  // ======================== Stage detail endpoint ========================
+  else if (url?.match(/^\/stages\/\d+\/detail$/) && method === 'get') {
+    const stageId = parseInt(url.split('/')[2])
+    // Find the stage across all projects
+    let stageInfo = null
+    Object.values(mockData.stages).forEach(stageList => {
+      stageList.forEach(s => {
+        if (s.id === stageId) stageInfo = { ...s }
+      })
+    })
+    if (!stageInfo) {
+      result = { code: 404, message: '阶段不存在', data: null }
+    } else {
+      // Populate project name
+      const project = mockData.projects.find(p => p.id === stageInfo.projectId)
+      stageInfo.projectName = project ? project.name : ''
+
+      // Get reports for this stage
+      const stageReports = (mockData.reports[stageId] || []).map(r => ({ ...r, attachmentData: undefined }))
+
+      // Get deviations for this stage
+      const stageDeviations = mockData.deviations.filter(d => d.stageId === stageId)
+
+      result = {
+        code: 200, message: 'success', data: {
+          stage: stageInfo,
+          reports: stageReports,
+          deviations: stageDeviations,
+          projectId: stageInfo.projectId,
+          projectName: stageInfo.projectName
+        }
+      }
+    }
+  }
+
   // ======================== Report endpoints ========================
   else if (url?.match(/^\/stages\/\d+\/reports$/) && method === 'get') {
     const stageId = parseInt(url.split('/')[2])
