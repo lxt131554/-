@@ -1,8 +1,24 @@
 <template>
   <div class="page-container">
     <div class="page-header"><h2>支持事项</h2></div>
-    <div class="card-box">
-      <div class="page-toolbar">
+    <section class="page-summary-grid" style="margin-bottom:16px">
+      <div class="summary-card summary-card--warning">
+        <div class="summary-card-value">{{ pendingCount }}</div>
+        <div class="summary-card-label">待处理</div>
+        <div class="summary-card-hint">需要协调解决</div>
+      </div>
+      <div class="summary-card summary-card--success">
+        <div class="summary-card-value">{{ resolvedCount }}</div>
+        <div class="summary-card-label">已解决</div>
+        <div class="summary-card-hint">已处理完成</div>
+      </div>
+      <div class="summary-card summary-card--primary">
+        <div class="summary-card-value">{{ tableData.length }}</div>
+        <div class="summary-card-label">全部事项</div>
+      </div>
+    </section>
+    <div class="section-block">
+      <div class="filter-bar">
         <el-radio-group v-model="filterStatus" @change="loadData" size="small">
           <el-radio-button value="">全部</el-radio-button>
           <el-radio-button value="pending">待处理</el-radio-button>
@@ -43,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '../api/index'
 
@@ -51,6 +67,9 @@ const router = useRouter()
 const loading = ref(false)
 const tableData = ref([])
 const filterStatus = ref('')
+
+const pendingCount = computed(() => tableData.value.filter(s => s.status === 'pending').length)
+const resolvedCount = computed(() => tableData.value.filter(s => s.status === 'resolved').length)
 
 async function loadData() {
   loading.value = true

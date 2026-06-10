@@ -3,8 +3,22 @@
     <div class="page-header">
       <h2>项目列表</h2>
     </div>
-    <div class="card-box">
-      <div class="page-toolbar">
+    <section class="page-summary-grid" style="margin-bottom:16px">
+      <div class="summary-card summary-card--primary">
+        <div class="summary-card-value">{{ total }}</div>
+        <div class="summary-card-label">全部项目</div>
+      </div>
+      <div class="summary-card summary-card--success">
+        <div class="summary-card-value">{{ activeCount }}</div>
+        <div class="summary-card-label">进行中</div>
+      </div>
+      <div class="summary-card summary-card--primary">
+        <div class="summary-card-value">{{ completedCount }}</div>
+        <div class="summary-card-label">已完成</div>
+      </div>
+    </section>
+    <div class="section-block">
+      <div class="filter-bar">
         <el-select v-model="statusFilter" placeholder="项目状态" clearable style="width:140px;margin-right:8px" @change="loadData">
           <el-option label="全部" value="" />
           <el-option label="进行中" value="active" />
@@ -53,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { getProjects, deleteProject } from '../api/project'
@@ -68,6 +82,9 @@ const total = ref(0)
 const size = ref(10)
 const keyword = ref('')
 const statusFilter = ref('')
+
+const activeCount = computed(() => tableData.value.filter(r => r.status === 'active').length)
+const completedCount = computed(() => tableData.value.filter(r => r.status === 'completed').length)
 
 async function loadData() {
   loading.value = true
@@ -91,5 +108,19 @@ onMounted(loadData)
 <style scoped>
 .pm-table {
   width: 100%;
+}
+
+.summary-card--primary {
+  border-left: 3px solid var(--pm-accent);
+}
+.summary-card--primary .summary-card-value {
+  color: var(--pm-accent);
+}
+
+.summary-card--success {
+  border-left: 3px solid var(--pm-green-text);
+}
+.summary-card--success .summary-card-value {
+  color: var(--pm-green-text);
 }
 </style>

@@ -3,8 +3,24 @@
     <div class="page-header">
       <h2>偏差台账</h2>
     </div>
-    <div class="card-box">
-      <div class="page-toolbar">
+    <section class="page-summary-grid" style="margin-bottom:16px">
+      <div class="summary-card summary-card--danger">
+        <div class="summary-card-value">{{ openCount }}</div>
+        <div class="summary-card-label">未关闭偏差</div>
+        <div class="summary-card-hint">需要跟进处理</div>
+      </div>
+      <div class="summary-card summary-card--success">
+        <div class="summary-card-value">{{ closedCount }}</div>
+        <div class="summary-card-label">已关闭</div>
+        <div class="summary-card-hint">已处理完成的偏差</div>
+      </div>
+      <div class="summary-card summary-card--primary">
+        <div class="summary-card-value">{{ tableData.length }}</div>
+        <div class="summary-card-label">全部偏差</div>
+      </div>
+    </section>
+    <div class="section-block">
+      <div class="filter-bar">
         <div>
           <el-radio-group v-model="filterStatus" @change="loadData" size="small">
             <el-radio-button value="">全部</el-radio-button>
@@ -22,7 +38,7 @@
         <el-table-column prop="stageName" label="阶段" min-width="120" />
         <el-table-column prop="type" label="来源" min-width="80" align="center">
           <template #default="{row}">
-            <el-tag size="small" class="dev-tag" :class="'dev-tag--' + (row.type=='auto'?'amber':'slate')">
+            <el-tag size="small" :type="row.type=='auto'?'warning':'info'">
               {{ row.type=='auto'?'自动':'手动' }}
             </el-tag>
           </template>
@@ -79,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
@@ -96,6 +112,9 @@ const creating = ref(false)
 const createFormRef = ref(null)
 const projects = ref([])
 const form = reactive({ projectId: null, description: '', reason: '', impact: '' })
+
+const openCount = computed(() => tableData.value.filter(d => d.status === 'open').length)
+const closedCount = computed(() => tableData.value.filter(d => d.status === 'closed').length)
 
 async function loadData() {
   loading.value = true
@@ -137,25 +156,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dev-tag {
-  border-radius: 99px;
-  font-size: 13px;
-  letter-spacing: 0.03em;
-  font-weight: 500;
-  padding: 2px 10px;
-  height: 20px;
-  line-height: 18px;
-  border: none;
-  display: inline-block;
-}
-
-.dev-tag--amber {
-  background: var(--pm-pale-amber);
-  color: var(--pm-amber-text);
-}
-
-.dev-tag--slate {
-  background: var(--pm-pale-slate);
-  color: var(--pm-slate-text);
-}
 </style>
