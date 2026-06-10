@@ -16,6 +16,31 @@
       </el-button>
     </div>
 
+    <!-- 项目概况摘要 -->
+    <section class="page-summary-grid" style="margin-bottom:16px">
+      <div class="summary-card summary-card--primary">
+        <div class="summary-card-label">项目状态</div>
+        <div class="summary-card-value" style="font-size:18px">{{ statusText }}</div>
+      </div>
+      <div class="summary-card summary-card--primary">
+        <div class="summary-card-label">当前阶段</div>
+        <div class="summary-card-value" style="font-size:18px">{{ currentStageName }}</div>
+      </div>
+      <div class="summary-card" :class="project.status==='completed'?'summary-card--success':'summary-card--primary'">
+        <div class="summary-card-label">计划完成</div>
+        <div class="summary-card-value" style="font-size:18px">{{ latestPlanEnd || '—' }}</div>
+      </div>
+      <div class="summary-card" :class="openDeviationsCount>0?'summary-card--danger':'summary-card--success'">
+        <div class="summary-card-value">{{ openDeviationsCount }}</div>
+        <div class="summary-card-label">未关闭偏差</div>
+        <div class="summary-card-hint" v-if="openDeviationsCount>0">需要关注</div>
+      </div>
+      <div class="summary-card" :class="openSupportsCount>0?'summary-card--warning':'summary-card--success'">
+        <div class="summary-card-value">{{ openSupportsCount }}</div>
+        <div class="summary-card-label">支持事项</div>
+      </div>
+    </section>
+
     <!-- 启动与策划信息 -->
     <div class="card-box" style="margin-bottom:16px">
       <div class="page-toolbar">
@@ -30,28 +55,48 @@
         </template>
       </div>
 
-      <!-- View mode -->
-      <el-descriptions v-if="!planningEditMode && hasPlanningData" :column="2" border size="small">
-        <el-descriptions-item label="客户等级">{{ project.customerLevel || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="成果产出类型">{{ project.achievementType || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="双方联系人" :span="2">{{ project.contacts || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="审核审批要求" :span="2">{{ project.approvalRequirements || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="项目重要性" :span="2">{{ project.projectImportance || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="成果方向及附件" :span="2">{{ project.achievementDirection || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="能否承接判断" :span="2">{{ project.canUndertake || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="主要风险" :span="2">{{ project.mainRisks || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="关键约束" :span="2">{{ project.keyConstraints || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="成果交付要求" :span="2">{{ project.deliverableRequirements || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="预计审批路径" :span="2">{{ project.approvalPath || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="人力资源配置" :span="2">{{ project.hrAllocation || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="预计阶段成果" :span="2">{{ project.expectedOutputs || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="核心资料" :span="2">{{ project.coreMaterials || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="项目组组建" :span="2">{{ project.teamSetup || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="核心策略" :span="2">{{ project.coreStrategy || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="投标情况" :span="2">{{ project.bidSituation || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="采购程序" :span="2">{{ project.procurementInfo || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="获取结果" :span="2">{{ project.acquisitionResult || '-' }}</el-descriptions-item>
-      </el-descriptions>
+      <!-- View mode: grouped sections -->
+      <template v-if="!planningEditMode && hasPlanningData">
+        <section class="section-block" style="margin-bottom:12px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">客户与立项判断</h4>
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="客户等级">{{ project.customerLevel || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="成果产出类型">{{ project.achievementType || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="双方联系人" :span="2">{{ project.contacts || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="审核审批要求" :span="2">{{ project.approvalRequirements || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目重要性" :span="2">{{ project.projectImportance || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="成果方向及附件" :span="2">{{ project.achievementDirection || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
+        <section class="section-block" style="margin-bottom:12px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">前期分析与约束</h4>
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="能否承接判断" :span="2">{{ project.canUndertake || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="主要风险" :span="2">{{ project.mainRisks || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="关键约束" :span="2">{{ project.keyConstraints || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="成果交付要求" :span="2">{{ project.deliverableRequirements || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="预计审批路径" :span="2">{{ project.approvalPath || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
+        <section class="section-block" style="margin-bottom:12px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">策划与资源配置</h4>
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="人力资源配置" :span="2">{{ project.hrAllocation || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="预计阶段成果" :span="2">{{ project.expectedOutputs || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="核心资料" :span="2">{{ project.coreMaterials || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目组组建" :span="2">{{ project.teamSetup || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="核心策略" :span="2">{{ project.coreStrategy || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
+        <section class="section-block" style="margin-bottom:12px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">项目获取与审批</h4>
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="投标情况" :span="2">{{ project.bidSituation || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="采购程序" :span="2">{{ project.procurementInfo || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="获取结果" :span="2">{{ project.acquisitionResult || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
+      </template>
       <el-empty v-else-if="!planningEditMode" description="暂未填写启动与策划信息" :image-size="80">
         <el-button v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" type="primary" @click="startPlanningEdit">
           立即填写
@@ -190,6 +235,12 @@
             <el-tag v-else-if="row.status==='completed'" type="success" size="small">已完成</el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="进度" width="80" align="center">
+          <template #default="{row}">
+            <span v-if="row.latestReport?.progressRate">{{ row.latestReport.progressRate }}%</span>
+            <span v-else style="color:var(--pm-text-muted)">—</span>
+          </template>
+        </el-table-column>
         <el-table-column label="最新填报" min-width="200" show-overflow-tooltip>
           <template #default="{row}">{{ row.latestReport?.content || '暂无' }}</template>
         </el-table-column>
@@ -204,9 +255,9 @@
       <el-empty v-else description="暂无项目阶段" />
     </div>
 
-    <div class="card-box" style="margin-bottom:16px">
+    <div class="section-block" style="margin-bottom:16px">
       <div class="page-toolbar">
-        <span style="font-weight:600;font-size:16px">变更控制</span>
+        <span class="section-title">变更控制</span>
         <el-button type="primary" size="small" @click="showAddChange=true"
           v-if="auth.user?.role=='manager'||auth.user?.role=='admin'">
           <el-icon><Plus /></el-icon> 新增变更
@@ -257,7 +308,7 @@
       </template>
     </el-dialog>
 
-    <div class="card-box">
+    <div class="section-block" style="margin-bottom:16px">
       <div class="page-toolbar">
         <span class="section-title">项目成员</span>
         <el-button type="primary" size="small" @click="showAddMember=true"
@@ -276,9 +327,9 @@
       </div>
     </div>
 
-    <div class="card-box" v-if="project.status=='completed'" style="margin-top:16px">
+    <div class="section-block" v-if="project.status=='completed'" style="margin-top:16px">
       <div class="page-toolbar">
-        <span style="font-weight:600;font-size:16px">收尾复盘</span>
+        <span class="section-title">收尾复盘</span>
       </div>
       <div style="display:flex;gap:12px">
         <el-button type="primary" @click="router.push(`/projects/${projectId}/review`)">
@@ -441,6 +492,25 @@ const deviationSummary = computed(() => {
     }
   })
   return parts.length ? parts.join('，') : ''
+})
+
+const statusText = computed(() => project.value.status === 'active' ? '进行中' : '已完成')
+const currentStageName = computed(() => {
+  const stagesList = stages.value || []
+  const active = stagesList.find(s => s.status === 'in_progress' || s.status === 'submitted')
+  return active ? active.stageName : (stagesList.length ? stagesList[stagesList.length - 1].stageName : '未开始')
+})
+const latestPlanEnd = computed(() => {
+  const stagesList = stages.value || []
+  if (!stagesList.length) return null
+  return stagesList[stagesList.length - 1].planEnd
+})
+const openDeviationsCount = computed(() => {
+  return (project.value.deviations || []).filter(d => d.status === 'open').length
+})
+const openSupportsCount = computed(() => {
+  const supports = project.value.supportItems || project.value.supports || []
+  return supports.filter(s => s.status === 'pending' || s.status === 'open').length
 })
 
 function startPlanningEdit() {
@@ -615,5 +685,34 @@ onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
 
 .edit-planning-section .el-form-item {
   margin-bottom: 16px;
+}
+
+/* Summary card color accent variants */
+.summary-card--primary {
+  border-left: 3px solid var(--pm-accent);
+}
+.summary-card--primary .summary-card-value {
+  color: var(--pm-accent);
+}
+
+.summary-card--warning {
+  border-left: 3px solid #F59E0B;
+}
+.summary-card--warning .summary-card-value {
+  color: #F59E0B;
+}
+
+.summary-card--danger {
+  border-left: 3px solid var(--pm-red-text);
+}
+.summary-card--danger .summary-card-value {
+  color: var(--pm-red-text);
+}
+
+.summary-card--success {
+  border-left: 3px solid var(--pm-green-text);
+}
+.summary-card--success .summary-card-value {
+  color: var(--pm-green-text);
 }
 </style>
