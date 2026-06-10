@@ -3,8 +3,8 @@
     <!-- Sidebar -->
     <el-aside width="200px" class="layout-sidebar">
       <div class="sidebar-brand">
-        <el-icon :size="20"><Monitor /></el-icon>
-        <span>项目管理系统</span>
+        <div class="brand-title">林草规划院项目管理系统</div>
+        <div class="brand-subtitle">Project Lifecycle Platform</div>
       </div>
       <el-menu
         :default-active="route.path"
@@ -147,15 +147,21 @@ function handleLogout() {
 
 /* Brand area */
 .sidebar-brand {
-  padding: 22px 20px 18px;
+  padding: 20px 20px 16px;
   color: #FFFFFF;
-  font-size: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.brand-title {
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+.brand-subtitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
 }
 
 /* Top header -- floating feel */

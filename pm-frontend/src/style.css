@@ -36,8 +36,8 @@
 
   /* Radius -- squircle system */
   --pm-radius-sm: 6px;
-  --pm-radius: 10px;
-  --pm-radius-lg: 16px;
+  --pm-radius: 8px;
+  --pm-radius-lg: 12px;
 
   /* Transitions -- custom cubic-bezier, NOT ease-in-out */
   --pm-ease: cubic-bezier(0.32, 0.72, 0, 1);
@@ -92,8 +92,8 @@ html {
 
 body {
   font-family: 'Microsoft YaHei', -apple-system, 'PingFang SC', sans-serif;
-  font-size: 18px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.6;
   background: var(--pm-bg);
   color: var(--pm-text);
   -webkit-font-smoothing: antialiased;
@@ -129,10 +129,10 @@ body {
 }
 
 .page-header h2 {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--pm-text);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   margin: 0 0 4px 0;
 }
 
@@ -144,6 +144,77 @@ body {
   gap: 12px;
 }
 
+.page-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--pm-space-md);
+  margin-bottom: var(--pm-space-lg);
+}
+
+.summary-card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  padding: var(--pm-space-lg);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: box-shadow var(--pm-duration-fast) var(--pm-ease);
+}
+.summary-card:hover {
+  box-shadow: var(--pm-shadow);
+}
+.summary-card .summary-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--pm-text);
+  line-height: 1.2;
+}
+.summary-card .summary-card-label {
+  font-size: 13px;
+  color: var(--pm-text-secondary);
+  margin-top: 6px;
+}
+.summary-card .summary-card-hint {
+  font-size: 12px;
+  color: var(--pm-text-muted);
+  margin-top: 4px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: var(--pm-space-md);
+}
+
+.section-block {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  padding: var(--pm-space-lg);
+  margin-bottom: var(--pm-space-lg);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pm-text);
+  margin-bottom: var(--pm-space-md);
+  padding-bottom: var(--pm-space-sm);
+  border-bottom: 1px solid var(--pm-border);
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--pm-space-md);
+  gap: 12px;
+}
+
 /* ---- Card: Single-Layer ---- */
 .card-box {
   background: var(--pm-surface);
@@ -152,25 +223,6 @@ body {
   padding: var(--pm-space-lg);
   box-shadow: var(--pm-shadow);
   transition: box-shadow var(--pm-duration-fast) var(--pm-ease);
-}
-
-/* ---- Card: Double-Bezel Premium ---- */
-.card-premium {
-  padding: 4px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));
-  transition: transform var(--pm-duration-fast) var(--pm-ease),
-              box-shadow var(--pm-duration-fast) var(--pm-ease);
-}
-.card-premium:hover {
-  transform: translateY(-1px);
-}
-.card-premium > .card-premium-inner {
-  padding: var(--pm-space-lg);
-  border-radius: var(--pm-radius);
-  background: var(--pm-surface);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-  height: 100%;
 }
 
 /* ---- Animations ---- */
@@ -203,7 +255,7 @@ body {
 /* --- Buttons --- */
 .el-button {
   font-weight: 500;
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 8px;
   transition: all var(--pm-duration-fast) var(--pm-ease);
 }
@@ -265,7 +317,7 @@ body {
 .el-button--small {
   height: 32px;
   padding: 0 14px;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 /* Text button (no background) */
@@ -279,7 +331,7 @@ body {
 
 /* --- Inputs & Textareas --- */
 .el-input__wrapper {
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 8px;
   box-shadow: none;
   border: 1px solid var(--pm-border);
@@ -297,7 +349,7 @@ body {
   border-radius: 8px;
   border: 1px solid var(--pm-border);
   box-shadow: none;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.6;
   transition: border-color var(--pm-duration-fast) var(--pm-ease),
               box-shadow var(--pm-duration-fast) var(--pm-ease);
@@ -354,10 +406,9 @@ body {
 }
 .el-table th.el-table__cell {
   background: #FAFAF8;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 13px;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--pm-text-secondary);
   border-bottom: 1px solid var(--pm-border);
   border-right: none;
@@ -365,7 +416,7 @@ body {
 }
 .el-table td.el-table__cell {
   padding: 12px 16px;
-  font-size: 16px;
+  font-size: 14px;
   border-bottom: 1px solid var(--pm-border-light);
   border-right: none;
   border-top: none;
@@ -398,7 +449,7 @@ body {
 /* --- Tags --- */
 .el-tag {
   border-radius: 99px;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.03em;
   font-weight: 500;
   padding: 2px 10px;
@@ -465,7 +516,7 @@ body {
   margin-bottom: 20px;
 }
 .el-form-item__label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--pm-text);
   margin-bottom: 6px;
@@ -616,8 +667,8 @@ body {
   background: var(--pm-surface);
 }
 .el-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--pm-shadow-lg);
+  border-color: var(--pm-border-strong);
+  background: var(--pm-surface-hover);
 }
 
 /* --- Menu (sidebar) --- */
@@ -630,8 +681,8 @@ body {
   margin: 2px 8px;
   height: 36px;
   line-height: 36px;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 400;
   letter-spacing: 0.02em;
   transition: all var(--pm-duration-fast) var(--pm-ease);
   color: var(--pm-sidebar-text);
