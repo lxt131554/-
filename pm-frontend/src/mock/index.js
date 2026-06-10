@@ -465,10 +465,44 @@ async function getMockResponse(config) {
   else if (url === '/dashboard' && method === 'get') {
     const user = getMockUser()
     let stats = {}
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+
+    // Helper: find projects for a user
+    function getUserProjectIds(uid) {
+      const ids = []
+      Object.values(mockData.projectMembers).forEach(mlist => {
+        mlist.forEach(m => {
+          if (m.userId === uid && m.status === 'confirmed') ids.push(m.projectId)
+        })
+      })
+      return [...new Set(ids)]
+    }
+
+    // Helper: build project cards
+    function buildProjectCards(pids) {
+      return pids.map(pid => {
+        const p = mockData.projects.find(x => x.id === pid)
+        if (!p) return null
+        const stages = mockData.stages[pid] || []
+        const activeStage = stages.find(s => s.status === 'in_progress' || s.status === 'submitted') || stages[stages.length - 1] || {}
+        const deviations = mockData.deviations[pid] || []
+        const hasDeviation = deviations.some(d => d.status === 'open')
+        return {
+          projectId: pid,
+          projectName: p.name,
+          status: p.status,
+          currentStage: activeStage.stageName || '未开始',
+          planEnd: activeStage.planEnd || null,
+          hasDeviation
+        }
+      }).filter(Boolean)
+    }
+
     if (user?.role === 'engineer') {
-      const now = new Date()
-      now.setHours(0, 0, 0, 0)
+      const pidList = getUserProjectIds(user.id)
       let overdue = 0, nearDeadline = 0
+      const pendingStagesList = []
       Object.values(mockData.stages).forEach(stageList => {
         stageList.forEach(s => {
           if (s.assigneeId === user?.id && s.status !== 'completed' && s.planEnd) {
@@ -476,24 +510,71 @@ async function getMockResponse(config) {
             endDate.setHours(0, 0, 0, 0)
             const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
             if (daysLeft < 0) overdue++
-            else if (daysLeft <= 3) nearDeadline++
+            else if (daysLeft <= 7) nearDeadline++
+          }
+          if (s.assigneeId === user?.id && (s.status === 'pending' || s.status === 'in_progress')) {
+            const p = mockData.projects.find(x => x.id === s.projectId)
+            pendingStagesList.push({
+              stageId: s.id,
+              projectName: p ? p.name : '',
+              stageName: s.stageName,
+              planEnd: s.planEnd,
+              status: s.status
+            })
           }
         })
       })
-      stats = { todo: 2, returned: 1, overdue, nearDeadline }
+      stats = {
+        todo: 2, returned: 1, overdue, nearDeadline,
+        myProjects: buildProjectCards(pidList),
+        pendingStages: pendingStagesList.slice(0, 5)
+      }
     } else if (user?.role === 'manager') {
-      const now = new Date()
+      const pidList = getUserProjectIds(user.id)
       let reviewOverdue = 0
+      const pendingReviewItems = []
       Object.values(mockData.reports).forEach(reportList => {
         reportList.forEach(r => {
-          if (r.reviewStatus === 'pending' && r.submitTime) {
-            const submitDate = new Date(r.submitTime)
-            const hoursSince = (now - submitDate) / (1000 * 60 * 60)
-            if (hoursSince > 48) reviewOverdue++
+          if (r.reviewStatus === 'pending') {
+            if (r.submitTime) {
+              const submitDate = new Date(r.submitTime)
+              const hoursSince = (now - submitDate) / (1000 * 60 * 60)
+              if (hoursSince > 48) reviewOverdue++
+            }
+            // Only include if this report belongs to a project this manager manages
+            if (pidList.includes(r.projectId)) {
+              const p = mockData.projects.find(x => x.id === r.projectId)
+              const stage = (mockData.stages[r.projectId] || []).find(x => x.id === r.stageId)
+              pendingReviewItems.push({
+                reportId: r.id,
+                projectName: p ? p.name : '',
+                stageName: stage ? stage.stageName : '',
+                submitUserName: '张工',
+                submitTime: r.submitTime
+              })
+            }
           }
         })
       })
-      stats = { pendingReview: 1, pendingAchievement: 1, openDeviations: 2, pendingSupports: 2, pendingChanges: 1, reviewOverdue }
+      let nearDeadlineCount = 0
+      pidList.forEach(pid => {
+        (mockData.stages[pid] || []).forEach(s => {
+          if (s.status !== 'completed' && s.planEnd) {
+            const endDate = new Date(s.planEnd)
+            endDate.setHours(0, 0, 0, 0)
+            const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+            if (daysLeft >= 0 && daysLeft <= 7) nearDeadlineCount++
+          }
+        })
+      })
+      stats = {
+        myProjectCount: pidList.length,
+        pendingReview: 1, pendingAchievement: 1, openDeviations: 2,
+        pendingSupports: 2, pendingChanges: 1, reviewOverdue,
+        nearDeadline: nearDeadlineCount,
+        pendingReviewItems: pendingReviewItems.slice(0, 5),
+        myProjects: buildProjectCards(pidList)
+      }
     } else if (user?.role === 'leader') {
       stats = { openDeviations: 2, pendingSupports: 2, pendingReview: 1, pendingChanges: 1 }
     }

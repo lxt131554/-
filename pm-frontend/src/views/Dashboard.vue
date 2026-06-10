@@ -1,137 +1,196 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
+    <!-- Section 1: Page Header -->
+    <section class="page-header">
       <h2>工作台</h2>
       <p style="color:var(--pm-text-secondary);margin-top:4px;font-size:16px">欢迎，{{ auth.user?.realName }}</p>
-    </div>
+    </section>
 
-    <!-- Pending invitations -->
+    <!-- Pending Invitations -->
     <div v-if="pendingInvites.length" style="margin-bottom:16px">
-      <el-card v-for="inv in pendingInvites" :key="inv.id" class="warning-card" shadow="hover"
-        style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;margin-bottom:8px">
+      <el-card v-for="inv in pendingInvites" :key="inv.id" shadow="hover"
+        style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;margin-bottom:8px;border:1px solid rgba(245,108,108,0.2)">
         <span>被邀请加入项目「{{ inv.projectName }}」作为{{ inv.roleInProject==='manager'?'负责人':'工程师' }}</span>
         <el-button type="primary" size="small" @click="handleAcceptInvite(inv)">接受</el-button>
       </el-card>
     </div>
 
-    <!-- Engineer stats -->
-    <div v-if="auth.user?.role=='engineer'" class="stat-grid">
-      <div class="stat-card stat-card--blue" @click="$router.push('/my-tasks')" style="animation-delay:0ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.todo ?? '--' }}</div>
-          <div class="stat-label">待填报</div>
+    <!-- Section 2: Summary Cards -->
+    <section class="page-summary-grid">
+      <!-- Manager cards -->
+      <template v-if="auth.user?.role=='manager'">
+        <div class="summary-card summary-card--primary" @click="$router.push('/projects')">
+          <div class="summary-card-value">{{ stats.myProjectCount ?? '--' }}</div>
+          <div class="summary-card-label">我负责项目</div>
+          <div class="summary-card-hint">当前跟进中的项目数量</div>
         </div>
-      </div>
-      <div class="stat-card stat-card--amber" style="animation-delay:60ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.returned ?? '--' }}</div>
-          <div class="stat-label">被退回待补充</div>
+        <div class="summary-card summary-card--primary" @click="$router.push('/pending-review')">
+          <div class="summary-card-value">{{ stats.pendingReview ?? '--' }}</div>
+          <div class="summary-card-label">待审核填报</div>
+          <div class="summary-card-hint">需要处理的审核事项</div>
         </div>
-      </div>
-    </div>
+        <div class="summary-card summary-card--warning" @click="$router.push('/deviations')">
+          <div class="summary-card-value">{{ stats.openDeviations ?? '--' }}</div>
+          <div class="summary-card-label">未关闭偏差</div>
+          <div class="summary-card-hint">影响进度或成果质量的异常</div>
+        </div>
+        <div class="summary-card summary-card--danger" @click="$router.push('/supports')">
+          <div class="summary-card-value">{{ stats.pendingSupports ?? '--' }}</div>
+          <div class="summary-card-label">待处理支持事项</div>
+          <div class="summary-card-hint">需协调解决的支持请求</div>
+        </div>
+        <div class="summary-card summary-card--success" @click="$router.push('/projects')">
+          <div class="summary-card-value">{{ stats.nearDeadline ?? '--' }}</div>
+          <div class="summary-card-label">本周临近节点</div>
+          <div class="summary-card-hint">7天内计划完成阶段</div>
+        </div>
+      </template>
 
-    <!-- Engineer warnings -->
-    <div v-if="auth.user?.role=='engineer' && (stats.overdue || stats.nearDeadline)" class="stat-grid" style="margin-top:16px">
-      <el-card v-if="stats.overdue" class="stat-card warning-card" shadow="hover" @click="$router.push('/my-tasks')">
-        <div class="stat-num" style="color:#f56c6c">{{ stats.overdue }}</div>
-        <div class="stat-label">已逾期阶段</div>
-      </el-card>
-      <el-card v-if="stats.nearDeadline" class="stat-card warning-card" shadow="hover" @click="$router.push('/my-tasks')">
-        <div class="stat-num" style="color:#e6a23c">{{ stats.nearDeadline }}</div>
-        <div class="stat-label">即将到期</div>
-      </el-card>
-    </div>
+      <!-- Engineer cards -->
+      <template v-if="auth.user?.role=='engineer'">
+        <div class="summary-card summary-card--primary" @click="$router.push('/my-tasks')">
+          <div class="summary-card-value">{{ stats.todo ?? '--' }}</div>
+          <div class="summary-card-label">待填报阶段</div>
+          <div class="summary-card-hint">需要提交进度汇报的阶段</div>
+        </div>
+        <div class="summary-card summary-card--warning" @click="$router.push('/my-tasks')">
+          <div class="summary-card-value">{{ stats.returned ?? '--' }}</div>
+          <div class="summary-card-label">被退回待补充</div>
+          <div class="summary-card-hint">需修改后重新提交</div>
+        </div>
+        <div class="summary-card summary-card--danger" @click="$router.push('/my-tasks')">
+          <div class="summary-card-value">{{ stats.overdue ?? '--' }}</div>
+          <div class="summary-card-label">已逾期</div>
+          <div class="summary-card-hint">超过计划完成时间</div>
+        </div>
+        <div class="summary-card summary-card--success" @click="$router.push('/my-tasks')">
+          <div class="summary-card-value">{{ stats.nearDeadline ?? '--' }}</div>
+          <div class="summary-card-label">本周临近节点</div>
+          <div class="summary-card-hint">7天内计划完成阶段</div>
+        </div>
+      </template>
 
-    <!-- Manager stats -->
-    <div v-if="auth.user?.role=='manager'" class="stat-grid">
-      <div class="stat-card stat-card--blue" @click="$router.push('/pending-review')" style="animation-delay:0ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingReview ?? '--' }}</div>
-          <div class="stat-label">待审阅填报</div>
+      <!-- Leader cards (kept as-is, unified style) -->
+      <template v-if="auth.user?.role=='leader'">
+        <div class="summary-card summary-card--warning" @click="$router.push('/deviations')">
+          <div class="summary-card-value">{{ stats.openDeviations ?? '--' }}</div>
+          <div class="summary-card-label">未关闭偏差</div>
+          <div class="summary-card-hint">影响进度或成果质量的异常</div>
         </div>
-      </div>
-      <div class="stat-card stat-card--green" @click="$router.push('/pending-review')" style="animation-delay:60ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingAchievement ?? '--' }}</div>
-          <div class="stat-label">待审核成果</div>
+        <div class="summary-card summary-card--danger" @click="$router.push('/supports')">
+          <div class="summary-card-value">{{ stats.pendingSupports ?? '--' }}</div>
+          <div class="summary-card-label">待处理支持事项</div>
+          <div class="summary-card-hint">需协调解决的支持请求</div>
         </div>
-      </div>
-      <div class="stat-card stat-card--gray" @click="$router.push('/projects')" style="animation-delay:90ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingChanges ?? '--' }}</div>
-          <div class="stat-label">待确认变更</div>
+        <div class="summary-card summary-card--primary" @click="$router.push('/pending-review')">
+          <div class="summary-card-value">{{ stats.pendingReview ?? '--' }}</div>
+          <div class="summary-card-label">待审阅填报</div>
+          <div class="summary-card-hint">需要处理的审核事项</div>
         </div>
-      </div>
-      <div class="stat-card stat-card--amber" @click="$router.push('/deviations')" style="animation-delay:120ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.openDeviations ?? '--' }}</div>
-          <div class="stat-label">未关闭偏差</div>
+        <div class="summary-card summary-card--success" @click="$router.push('/leader-dashboard')">
+          <div class="summary-card-value">{{ stats.pendingChanges ?? '--' }}</div>
+          <div class="summary-card-label">待审批变更</div>
+          <div class="summary-card-hint">待审批的变更申请</div>
         </div>
-      </div>
-      <div class="stat-card stat-card--red" @click="$router.push('/supports')" style="animation-delay:180ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingSupports ?? '--' }}</div>
-          <div class="stat-label">待处理支持</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Manager pending review warnings -->
-    <div v-if="auth.user?.role=='manager' && stats.reviewOverdue" class="stat-grid" style="margin-top:16px">
-      <el-card class="stat-card warning-card" shadow="hover" @click="$router.push('/pending-review')">
-        <div class="stat-num" style="color:#f56c6c">{{ stats.reviewOverdue }}</div>
-        <div class="stat-label">审阅超时(>48h)</div>
-      </el-card>
-    </div>
-
-    <!-- Leader stats -->
-    <div v-if="auth.user?.role=='leader'" class="stat-grid">
-      <div class="stat-card stat-card--amber" @click="$router.push('/deviations')" style="animation-delay:0ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.openDeviations ?? '--' }}</div>
-          <div class="stat-label">未关闭偏差</div>
-        </div>
-      </div>
-      <div class="stat-card stat-card--red" @click="$router.push('/supports')" style="animation-delay:60ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingSupports ?? '--' }}</div>
-          <div class="stat-label">待处理支持事项</div>
-        </div>
-      </div>
-      <div class="stat-card stat-card--blue" @click="$router.push('/pending-review')" style="animation-delay:90ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingReview ?? '--' }}</div>
-          <div class="stat-label">待审阅填报</div>
-        </div>
-      </div>
-      <div class="stat-card stat-card--green" @click="$router.push('/leader-dashboard')" style="animation-delay:120ms">
-        <div class="stat-inner">
-          <div class="stat-num">{{ stats.pendingChanges ?? '--' }}</div>
-          <div class="stat-label">待审批变更</div>
-        </div>
-      </div>
-    </div>
+      </template>
+    </section>
 
     <!-- Friendly empty state when all stats are 0 -->
-    <div v-if="allStatsZero" style="margin-top:16px;text-align:center;padding:40px 0">
+    <div v-if="allStatsZero" style="text-align:center;padding:40px 0">
       <el-empty description="暂无待办事项，一切正常" :image-size="80" />
     </div>
 
-    <!-- Quick actions row -->
-    <div class="quick-actions">
-      <el-button class="quick-action-btn" @click="$router.push('/projects')">
-        <el-icon><Folder /></el-icon>
-        <span>项目列表</span>
-      </el-button>
-      <el-button v-if="auth.user?.role=='engineer'" class="quick-action-btn" @click="$router.push('/my-tasks')">
-        <el-icon><Edit /></el-icon>
-        <span>我的待填报</span>
-      </el-button>
-      <el-button v-if="auth.user?.role=='manager'" class="quick-action-btn" @click="$router.push('/pending-review')">
-        <el-icon><View /></el-icon>
-        <span>待审阅</span>
-      </el-button>
-    </div>
+    <!-- Section 3: Key Projects (manager & engineer only; leader view changes in Task 3) -->
+    <section v-if="stats.myProjects && stats.myProjects.length" class="section-block">
+      <div class="section-title">重点项目</div>
+      <el-table v-if="stats.myProjects && stats.myProjects.length" :data="enrichedProjects" size="small" stripe
+        style="width:100%">
+        <el-table-column prop="name" label="项目名称" min-width="180">
+          <template #default="{ row }">
+            <el-link type="primary" @click="$router.push(`/projects/${row.projectId}`)">{{ row.projectName }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column prop="currentStage" label="当前阶段" min-width="120" />
+        <el-table-column prop="stagePlanEnd" label="计划节点" min-width="120">
+          <template #default="{ row }">
+            <span v-if="row.stagePlanEnd">{{ formatDate(row.stagePlanEnd) }}</span>
+            <span v-else style="color:var(--pm-text-muted)">—</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="风险状态" min-width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.hasDeviation" type="danger" size="small">有偏差</el-tag>
+            <el-tag v-else type="success" size="small">正常</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="下一动作" min-width="100" align="center">
+          <template #default="{ row }">
+            <el-button v-if="row.nextAction==='审阅'" type="primary" size="small" link
+              @click="$router.push('/pending-review')">审阅</el-button>
+            <el-button v-else-if="row.nextAction==='填报'" type="primary" size="small" link
+              @click="$router.push('/my-tasks')">填报</el-button>
+            <el-button v-else type="primary" size="small" link
+              @click="$router.push(`/projects/${row.projectId}`)">查看</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-else description="暂无项目数据" :image-size="60" />
+    </section>
+
+    <!-- Section 4: Tasks & Anomalies -->
+    <section
+      v-if="(auth.user?.role==='manager' && stats.pendingReviewItems && stats.pendingReviewItems.length) || (auth.user?.role==='engineer' && stats.pendingStages && stats.pendingStages.length)"
+      class="section-block">
+      <div class="section-title">待办与异常</div>
+
+      <!-- Manager: pending review items -->
+      <template v-if="auth.user?.role==='manager' && stats.pendingReviewItems">
+        <el-table :data="stats.pendingReviewItems" size="small" stripe style="width:100%">
+          <el-table-column prop="projectName" label="项目名称" min-width="160" />
+          <el-table-column prop="stageName" label="阶段" min-width="120" />
+          <el-table-column prop="submitUserName" label="提交人" min-width="100" />
+          <el-table-column label="提交时间" min-width="160">
+            <template #default="{ row }">
+              <span v-if="row.submitTime">{{ formatDateTime(row.submitTime) }}</span>
+              <span v-else style="color:var(--pm-text-muted)">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80" align="center">
+            <template #default="{ row }">
+              <el-button type="primary" size="small" link
+                @click="$router.push(`/projects/${row.projectId}`)">审阅</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
+
+      <!-- Engineer: pending stages -->
+      <template v-if="auth.user?.role==='engineer' && stats.pendingStages">
+        <el-table :data="stats.pendingStages" size="small" stripe style="width:100%">
+          <el-table-column prop="projectName" label="项目名称" min-width="160" />
+          <el-table-column prop="stageName" label="阶段" min-width="120" />
+          <el-table-column label="计划完成" min-width="120">
+            <template #default="{ row }">
+              <span v-if="row.planEnd">{{ formatDate(row.planEnd) }}</span>
+              <span v-else style="color:var(--pm-text-muted)">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="90" align="center">
+            <template #default="{ row }">
+              <el-tag v-if="row.status==='in_progress'" type="primary" size="small">进行中</el-tag>
+              <el-tag v-else-if="row.status==='pending'" type="info" size="small">待开始</el-tag>
+              <el-tag v-else size="small">{{ row.status }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80" align="center">
+            <template #default="{ row }">
+              <el-button type="primary" size="small" link
+                @click="$router.push(`/projects/${row.projectId}`)">填报</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
+    </section>
   </div>
 </template>
 
@@ -152,7 +211,7 @@ const allStatsZero = computed(() => {
     return !s.todo && !s.returned && !s.overdue && !s.nearDeadline
   }
   if (auth.user?.role === 'manager') {
-    return !s.pendingReview && !s.pendingAchievement && !s.pendingChanges && !s.openDeviations && !s.pendingSupports && !s.reviewOverdue
+    return !s.pendingReview && !s.pendingAchievement && !s.pendingChanges && !s.openDeviations && !s.pendingSupports && !s.reviewOverdue && !s.nearDeadline
   }
   if (auth.user?.role === 'leader') {
     return !s.openDeviations && !s.pendingSupports && !s.pendingReview && !s.pendingChanges
@@ -160,18 +219,53 @@ const allStatsZero = computed(() => {
   return false
 })
 
+// Enrich project cards with computed nextAction based on role
+const enrichedProjects = computed(() => {
+  const projects = stats.value.myProjects || []
+  if (auth.user?.role === 'engineer') {
+    return projects.map(p => ({ ...p, nextAction: '填报' }))
+  }
+  // manager: check if project has pending review items
+  const reviewItems = stats.value.pendingReviewItems || []
+  const reviewProjectIds = new Set(reviewItems.map(r => r.projectId))
+  return projects.map(p => ({
+    ...p,
+    nextAction: reviewProjectIds.has(p.projectId) ? '审阅' : '查看'
+  }))
+})
+
+function formatDate(val) {
+  if (!val) return ''
+  const d = new Date(val)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function formatDateTime(val) {
+  if (!val) return ''
+  const d = new Date(val)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${y}-${m}-${day} ${h}:${min}`
+}
+
 async function loadStats() {
   try {
     const res = await request.get('/dashboard')
     stats.value = res.data
-  } catch {}
+  } catch { }
 }
 
 async function loadPendingInvites() {
   try {
     const res = await request.get('/projects/members/pending')
     pendingInvites.value = res.data || []
-  } catch {}
+  } catch { }
 }
 
 async function handleAcceptInvite(inv) {
@@ -179,123 +273,44 @@ async function handleAcceptInvite(inv) {
     await request.put(`/projects/${inv.projectId}/members/${inv.id}/confirm`)
     ElMessage.success('已接受邀请')
     loadPendingInvites()
-  } catch {}
+  } catch { }
 }
 
 onMounted(() => { loadStats(); loadPendingInvites() })
 </script>
 
 <style scoped>
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: var(--pm-space-xl);
-}
-
-/* Double-bezel stat card */
-.stat-card {
+/* Page-specific: all summary cards are clickable */
+.summary-card {
   cursor: pointer;
-  padding: 4px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));
-  transition: transform var(--pm-duration-fast) var(--pm-ease),
-              box-shadow var(--pm-duration-fast) var(--pm-ease);
-  animation: cardEnter 0.5s var(--pm-ease) both;
-  position: relative;
-  overflow: hidden;
 }
 
-.stat-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  z-index: 2;
+/* Color accent variants via left border */
+.summary-card--primary {
+  border-left: 3px solid var(--pm-accent);
+}
+.summary-card--primary .summary-card-value {
+  color: var(--pm-accent);
 }
 
-.stat-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--pm-shadow);
+.summary-card--warning {
+  border-left: 3px solid #F59E0B;
+}
+.summary-card--warning .summary-card-value {
+  color: #F59E0B;
 }
 
-.stat-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 28px 24px 24px;
-  background: var(--pm-surface);
-  border-radius: 10px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-  height: 100%;
-  position: relative;
+.summary-card--danger {
+  border-left: 3px solid var(--pm-red-text);
+}
+.summary-card--danger .summary-card-value {
+  color: var(--pm-red-text);
 }
 
-/* Semantic color bars */
-.stat-card--blue::after  { background: var(--pm-accent); }
-.stat-card--amber::after { background: #F59E0B; }
-.stat-card--green::after { background: var(--pm-green-text); }
-.stat-card--red::after   { background: var(--pm-red-text); }
-.stat-card--gray::after  { background: #8E8E93; }
-
-/* Stat number colors */
-.stat-card--blue .stat-num  { color: var(--pm-accent); }
-.stat-card--amber .stat-num { color: var(--pm-amber-text); }
-.stat-card--green .stat-num { color: var(--pm-green-text); }
-.stat-card--red .stat-num   { color: var(--pm-red-text); }
-.stat-card--gray .stat-num  { color: #8E8E93; }
-
-.stat-num {
-  font-size: 60px;
-  font-weight: 700;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+.summary-card--success {
+  border-left: 3px solid var(--pm-green-text);
 }
-
-.stat-label {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--pm-text-secondary);
-  margin-top: 10px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.summary-card--success .summary-card-value {
+  color: var(--pm-green-text);
 }
-
-/* Quick actions */
-.quick-actions {
-  display: flex;
-  gap: 16px;
-  margin-top: var(--pm-space-lg);
-}
-
-.quick-action-btn {
-  flex: 1;
-  height: 56px;
-  border: 1px solid var(--pm-border);
-  background: var(--pm-surface);
-  color: var(--pm-text);
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: var(--pm-radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-shadow: var(--pm-shadow);
-  transition: all var(--pm-duration-fast) var(--pm-ease);
-}
-
-.quick-action-btn:hover {
-  border-color: var(--pm-primary);
-  color: var(--pm-primary);
-  background: var(--pm-primary-light);
-  box-shadow: var(--pm-shadow);
-  transform: translateY(-1px);
-}
-
-.warning-card { border: 1px solid rgba(245,108,108,0.2); }
 </style>
