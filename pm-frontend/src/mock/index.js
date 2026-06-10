@@ -761,6 +761,15 @@ async function getMockResponse(config) {
   else if (url === '/leader-dashboard' && method === 'get') {
     var openDevList = mockData.deviations.filter(function(d) { return d.status === 'open' })
     var pendingSupList = mockData.supportItems.filter(function(s) { return s.status === 'pending' })
+    var pendingChangeList = []
+    Object.values(mockData.changes || {}).forEach(function(clist) {
+      clist.forEach(function(c) { if (c.status === 'pending') pendingChangeList.push(c) })
+    })
+    // Enrich changes with project names
+    pendingChangeList.forEach(function(c) {
+      var p = mockData.projects.find(function(x) { return x.id === c.projectId })
+      if (p) c.projectName = p.name
+    })
     result = {
       code: 200, message: 'success', data: {
         activeProjects: mockData.projects.filter(function(p) { return p.status === 'active' }).length,
@@ -769,6 +778,8 @@ async function getMockResponse(config) {
         openDeviationList: openDevList,
         pendingSupports: pendingSupList.length,
         pendingSupportList: pendingSupList,
+        pendingChanges: pendingChangeList,
+        pendingReports: [],
         projects: mockData.projects
       }
     }
