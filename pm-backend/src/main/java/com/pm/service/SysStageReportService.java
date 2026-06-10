@@ -8,6 +8,6 @@ public interface SysStageReportService extends IService<SysStageReport> {
     SysStageReport submit(Long stageId, SysStageReport report, Long userId);
     List<SysStageReport> listByStageId(Long stageId);
     SysStageReport review(Long reportId, String reviewStatus, String reviewComment, Long reviewerId);
-    List<SysStageReport> listPendingReview(Long reviewerId);
+    List<SysStageReport> listPendingReview(Long reviewerId, String role);
     byte[] downloadAttachment(Long reportId);
 }

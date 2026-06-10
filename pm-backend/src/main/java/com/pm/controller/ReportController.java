@@ -3,6 +3,7 @@ package com.pm.controller;
 import com.pm.common.Result;
 import com.pm.entity.SysStageReport;
 import com.pm.security.LoginUser;
+import com.pm.service.ProjectAccessService;
 import com.pm.service.SysStageReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -25,9 +26,12 @@ import java.util.Map;
 public class ReportController {
 
     private final SysStageReportService reportService;
+    private final ProjectAccessService accessService;
 
     @GetMapping("/stages/{stageId}/reports")
-    public Result<List<SysStageReport>> listReports(@PathVariable Long stageId) {
+    public Result<List<SysStageReport>> listReports(@PathVariable Long stageId,
+                                                    @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireStageView(stageId, loginUser.getUser());
         List<SysStageReport> list = reportService.listByStageId(stageId);
         list.forEach(r -> r.setAttachmentData(null));
         return Result.ok(list);
@@ -48,6 +52,7 @@ public class ReportController {
             @RequestParam(value = "file", required = false) MultipartFile file,
             @AuthenticationPrincipal LoginUser loginUser) throws IOException {
 
+        accessService.requireStageReport(stageId, loginUser.getUser());
         SysStageReport report = new SysStageReport();
         report.setContent(content);
         report.setProgressRate(progressRate);
@@ -69,13 +74,15 @@ public class ReportController {
 
     @GetMapping("/reports/pending")
     public Result<List<SysStageReport>> pendingReview(@AuthenticationPrincipal LoginUser loginUser) {
-        List<SysStageReport> list = reportService.listPendingReview(loginUser.getUser().getId());
+        List<SysStageReport> list = reportService.listPendingReview(loginUser.getUser().getId(), loginUser.getUser().getRole());
         list.forEach(r -> r.setAttachmentData(null));
         return Result.ok(list);
     }
 
     @GetMapping("/reports/{reportId}/attachment")
-    public ResponseEntity<byte[]> downloadAttachment(@PathVariable Long reportId) {
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable Long reportId,
+                                                     @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireReportView(reportId, loginUser.getUser());
         byte[] data = reportService.downloadAttachment(reportId);
         SysStageReport report = reportService.getById(reportId);
         String filename = report.getAttachmentName();
@@ -90,6 +97,7 @@ public class ReportController {
     public Result<SysStageReport> review(@PathVariable Long reportId,
                                          @RequestBody Map<String, String> body,
                                          @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireReportReview(reportId, loginUser.getUser());
         String status = body.get("reviewStatus");
         String comment = body.get("reviewComment");
         return Result.ok(reportService.review(reportId, status, comment, loginUser.getUser().getId()));

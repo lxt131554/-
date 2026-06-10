@@ -3,6 +3,7 @@ package com.pm.controller;
 import com.pm.common.Result;
 import com.pm.entity.SysChange;
 import com.pm.security.LoginUser;
+import com.pm.service.ProjectAccessService;
 import com.pm.service.SysChangeService;
 import com.pm.service.SysProjectService;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,12 @@ public class ChangeController {
 
     private final SysChangeService changeService;
     private final SysProjectService projectService;
+    private final ProjectAccessService accessService;
 
     @GetMapping("/api/projects/{projectId}/changes")
-    public Result<List<SysChange>> listByProject(@PathVariable Long projectId) {
+    public Result<List<SysChange>> listByProject(@PathVariable Long projectId,
+                                                 @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectView(projectId, loginUser.getUser());
         List<SysChange> list = changeService.listByProject(projectId);
         return Result.ok(list);
     }
@@ -28,6 +32,7 @@ public class ChangeController {
     public Result<SysChange> create(@PathVariable Long projectId,
                                     @RequestBody SysChange change,
                                     @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectManager(projectId, loginUser.getUser());
         change.setProjectId(projectId);
         change.setStatus("pending");
         change.setCreateUserId(loginUser.getUser().getId());
@@ -36,11 +41,13 @@ public class ChangeController {
     }
 
     @GetMapping("/api/changes/{id}")
-    public Result<SysChange> getById(@PathVariable Long id) {
+    public Result<SysChange> getById(@PathVariable Long id,
+                                     @AuthenticationPrincipal LoginUser loginUser) {
         SysChange c = changeService.getById(id);
         if (c == null) {
             return Result.fail("变更不存在");
         }
+        accessService.requireProjectView(c.getProjectId(), loginUser.getUser());
         com.pm.entity.SysProject p = projectService.getById(c.getProjectId());
         if (p != null) {
             c.setProjectName(p.getName());
@@ -49,7 +56,9 @@ public class ChangeController {
     }
 
     @PutMapping("/api/changes/{id}/confirm")
-    public Result<?> confirm(@PathVariable Long id) {
+    public Result<?> confirm(@PathVariable Long id,
+                             @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireLeaderOrAdmin(loginUser.getUser());
         changeService.confirm(id);
         return Result.ok();
     }

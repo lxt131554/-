@@ -3,8 +3,10 @@ package com.pm.controller;
 import com.pm.common.Result;
 import com.pm.entity.*;
 import com.pm.mapper.*;
+import com.pm.security.LoginUser;
 import com.pm.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -21,9 +23,11 @@ public class StatisticsController {
     private final SysUserMapper userMapper;
     private final SysProjectStageMapper stageMapper;
     private final SysExperienceMapper experienceMapper;
+    private final ProjectAccessService accessService;
 
     @GetMapping("/statistics")
-    public Result<Map<String, Object>> stats() {
+    public Result<Map<String, Object>> stats(@AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireLeaderOrAdmin(loginUser.getUser());
         Map<String, Object> data = new HashMap<>();
 
         // 1. Project counts

@@ -3,7 +3,10 @@ package com.pm.controller;
 import com.pm.common.Result;
 import com.pm.entity.SysUser;
 import com.pm.mapper.SysUserMapper;
+import com.pm.security.LoginUser;
+import com.pm.service.ProjectAccessService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +20,20 @@ public class UserController {
 
     private final SysUserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ProjectAccessService accessService;
 
     @GetMapping
-    public Result<List<SysUser>> list() {
+    public Result<List<SysUser>> list(@AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireAdmin(loginUser.getUser());
         List<SysUser> users = userMapper.selectList(null);
         users.forEach(u -> u.setPassword(null)); // never expose password
         return Result.ok(users);
     }
 
     @PostMapping
-    public Result<SysUser> create(@RequestBody SysUser user) {
+    public Result<SysUser> create(@RequestBody SysUser user,
+                                  @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireAdmin(loginUser.getUser());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setEnabled(true);
         userMapper.insert(user);
@@ -35,7 +42,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public Result<SysUser> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public Result<SysUser> update(@PathVariable Long id, @RequestBody Map<String, Object> body,
+                                  @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireAdmin(loginUser.getUser());
         SysUser user = userMapper.selectById(id);
         if (user == null) return Result.fail("用户不存在");
         if (body.get("realName") != null) user.setRealName((String) body.get("realName"));
@@ -51,7 +60,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}/toggle")
-    public Result<?> toggle(@PathVariable Long id) {
+    public Result<?> toggle(@PathVariable Long id,
+                            @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireAdmin(loginUser.getUser());
         SysUser user = userMapper.selectById(id);
         if (user == null) return Result.fail("用户不存在");
         user.setEnabled(!(user.getEnabled() != null && user.getEnabled()));

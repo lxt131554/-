@@ -10,6 +10,7 @@ import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysStageReportMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
+import com.pm.service.ProjectAccessService;
 import com.pm.service.SysProjectStageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,15 +31,20 @@ public class StageController {
     private final SysProjectMapper projectMapper;
     private final SysUserMapper userMapper;
     private final SysDeviationMapper deviationMapper;
+    private final ProjectAccessService accessService;
 
     @GetMapping("/projects/{projectId}/stages")
-    public Result<List<SysProjectStage>> listStages(@PathVariable Long projectId) {
+    public Result<List<SysProjectStage>> listStages(@PathVariable Long projectId,
+                                                    @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectView(projectId, loginUser.getUser());
         return Result.ok(stageService.listByProjectId(projectId));
     }
 
     @PostMapping("/projects/{projectId}/stages")
     public Result<SysProjectStage> addStage(@PathVariable Long projectId,
-                                            @RequestBody SysProjectStage stage) {
+                                            @RequestBody SysProjectStage stage,
+                                            @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectManager(projectId, loginUser.getUser());
         stage.setProjectId(projectId);
         stage.setStatus("pending");
         stageService.save(stage);
@@ -48,7 +54,13 @@ public class StageController {
     @PutMapping("/projects/{projectId}/stages/{stageId}")
     public Result<SysProjectStage> updateStage(@PathVariable Long projectId,
                                                @PathVariable Long stageId,
-                                               @RequestBody SysProjectStage stage) {
+                                               @RequestBody SysProjectStage stage,
+                                               @AuthenticationPrincipal LoginUser loginUser) {
+        SysProjectStage existing = stageService.getById(stageId);
+        if (existing == null || !projectId.equals(existing.getProjectId())) {
+            return Result.fail("阶段不存在");
+        }
+        accessService.requireStageManager(stageId, loginUser.getUser());
         stage.setId(stageId);
         stage.setProjectId(projectId);
         stageService.updateById(stage);
@@ -56,7 +68,13 @@ public class StageController {
     }
 
     @DeleteMapping("/projects/{projectId}/stages/{stageId}")
-    public Result<?> deleteStage(@PathVariable Long projectId, @PathVariable Long stageId) {
+    public Result<?> deleteStage(@PathVariable Long projectId, @PathVariable Long stageId,
+                                 @AuthenticationPrincipal LoginUser loginUser) {
+        SysProjectStage existing = stageService.getById(stageId);
+        if (existing == null || !projectId.equals(existing.getProjectId())) {
+            return Result.fail("阶段不存在");
+        }
+        accessService.requireStageManager(stageId, loginUser.getUser());
         stageService.removeById(stageId);
         return Result.ok();
     }
@@ -68,7 +86,9 @@ public class StageController {
 
     @PostMapping("/stages/template/{projectId}")
     public Result<List<SysProjectStage>> applyTemplate(@PathVariable Long projectId,
-                                                       @RequestBody List<SysProjectStage> templateStages) {
+                                                       @RequestBody List<SysProjectStage> templateStages,
+                                                       @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectManager(projectId, loginUser.getUser());
         List<SysProjectStage> created = new ArrayList<>();
         for (int i = 0; i < templateStages.size(); i++) {
             SysProjectStage stage = templateStages.get(i);
@@ -85,7 +105,9 @@ public class StageController {
     }
 
     @GetMapping("/stages/{id}/detail")
-    public Result<Map<String, Object>> stageDetail(@PathVariable Long id) {
+    public Result<Map<String, Object>> stageDetail(@PathVariable Long id,
+                                                   @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireStageView(id, loginUser.getUser());
         SysProjectStage stage = stageService.getById(id);
         if (stage == null) return Result.fail("阶段不存在");
 

@@ -23,6 +23,7 @@ public class NotificationController {
     private final SysDeviationService deviationService;
     private final SysSupportItemService supportService;
     private final SysChangeService changeService;
+    private final ProjectAccessService accessService;
 
     @GetMapping("/notifications")
     public Result<List<Map<String, Object>>> list(@AuthenticationPrincipal LoginUser loginUser) {
@@ -50,13 +51,13 @@ public class NotificationController {
 
         if ("manager".equals(role)) {
             // Pending reviews
-            long pendingReview = reportService.listPendingReview(user.getId()).size();
+            long pendingReview = reportService.listPendingReview(user.getId(), user.getRole()).size();
             if (pendingReview > 0) {
                 list.add(Map.of("type", "review", "message", pendingReview + " 条阶段填报待审阅",
                     "url", "/pending-review", "time", LocalDateTime.now().toString()));
             }
             // Pending achievements
-            long pendingAchievement = reportService.listPendingReview(user.getId()).stream()
+            long pendingAchievement = reportService.listPendingReview(user.getId(), user.getRole()).stream()
                 .filter(r -> r.getAttachmentName() != null).count();
             if (pendingAchievement > 0) {
                 list.add(Map.of("type", "achievement", "message", pendingAchievement + " 项成果待审核",
@@ -64,13 +65,17 @@ public class NotificationController {
             }
             // Open deviations
             long openDev = deviationService.listByProject(null).stream()
-                .filter(d -> "open".equals(d.getStatus())).count();
+                .filter(d -> "open".equals(d.getStatus()))
+                .filter(d -> accessService.canViewProject(d.getProjectId(), user))
+                .count();
             if (openDev > 0) {
                 list.add(Map.of("type", "deviation", "message", openDev + " 项偏差未关闭",
                     "url", "/deviations", "time", LocalDateTime.now().toString()));
             }
             // Pending supports
-            long pendingSup = supportService.listAll("pending").size();
+            long pendingSup = supportService.listAll("pending").stream()
+                .filter(s -> accessService.canViewProject(s.getProjectId(), user) || user.getId().equals(s.getApplicantId()))
+                .count();
             if (pendingSup > 0) {
                 list.add(Map.of("type", "support", "message", pendingSup + " 项支持事项待处理",
                     "url", "/supports", "time", LocalDateTime.now().toString()));

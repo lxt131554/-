@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
+import com.pm.entity.SysProjectMember;
+import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysProjectStageMapper;
 import com.pm.mapper.SysStageReportMapper;
 import com.pm.service.SysStageReportService;
@@ -20,6 +22,7 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
         implements SysStageReportService {
 
     private final SysProjectStageMapper stageMapper;
+    private final SysProjectMemberMapper memberMapper;
     private final com.pm.mapper.SysProjectMapper projectMapper;
     private final com.pm.mapper.SysUserMapper userMapper;
 
@@ -79,12 +82,15 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
     }
 
     @Override
-    public List<SysStageReport> listPendingReview(Long reviewerId) {
+    public List<SysStageReport> listPendingReview(Long reviewerId, String role) {
         var reports = baseMapper.selectList(
             new LambdaQueryWrapper<SysStageReport>()
                 .eq(SysStageReport::getReviewStatus, "pending")
                 .orderByDesc(SysStageReport::getSubmitTime)
         );
+        if (!"admin".equals(role) && !"leader".equals(role)) {
+            reports.removeIf(r -> !isProjectManager(r.getProjectId(), reviewerId));
+        }
         for (var r : reports) {
             var stage = stageMapper.selectById(r.getStageId());
             if (stage != null) r.setStageName(stage.getStageName());
@@ -94,6 +100,15 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
             if (user != null) r.setSubmitUserName(user.getRealName());
         }
         return reports;
+    }
+
+    private boolean isProjectManager(Long projectId, Long userId) {
+        Long count = memberMapper.selectCount(new LambdaQueryWrapper<SysProjectMember>()
+            .eq(SysProjectMember::getProjectId, projectId)
+            .eq(SysProjectMember::getUserId, userId)
+            .eq(SysProjectMember::getRoleInProject, "manager")
+            .eq(SysProjectMember::getStatus, "confirmed"));
+        return count != null && count > 0;
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.pm.entity.SysUser;
 import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
+import com.pm.service.ProjectAccessService;
 import com.pm.service.SysProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +28,7 @@ public class ProjectController {
     private final SysProjectService projectService;
     private final SysUserMapper userMapper;
     private final SysProjectMemberMapper memberMapper;
+    private final ProjectAccessService accessService;
 
     @GetMapping
     public Result<IPage<SysProject>> list(
@@ -41,7 +43,9 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public Result<SysProject> detail(@PathVariable Long id) {
+    public Result<SysProject> detail(@PathVariable Long id,
+                                     @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectView(id, loginUser.getUser());
         SysProject project = projectService.getById(id);
         if (project == null) {
             return Result.fail("项目不存在");
@@ -52,6 +56,7 @@ public class ProjectController {
     @PostMapping
     public Result<SysProject> create(@RequestBody SysProject project,
                                      @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectCreator(loginUser.getUser());
         project.setCreateUserId(loginUser.getUser().getId());
         project.setStatus("active");
         projectService.save(project);
@@ -60,20 +65,26 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public Result<SysProject> update(@PathVariable Long id, @RequestBody SysProject project) {
+    public Result<SysProject> update(@PathVariable Long id, @RequestBody SysProject project,
+                                     @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectManager(id, loginUser.getUser());
         project.setId(id);
         projectService.updateById(project);
         return Result.ok(project);
     }
 
     @DeleteMapping("/{id}")
-    public Result<?> delete(@PathVariable Long id) {
+    public Result<?> delete(@PathVariable Long id,
+                            @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireAdmin(loginUser.getUser());
         projectService.removeById(id);
         return Result.ok();
     }
 
     @GetMapping("/{id}/members")
-    public Result<List<Map<String, Object>>> members(@PathVariable Long id) {
+    public Result<List<Map<String, Object>>> members(@PathVariable Long id,
+                                                     @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectView(id, loginUser.getUser());
         List<SysProjectMember> members = projectService.getMembers(id);
         List<Map<String, Object>> list = new ArrayList<>();
         for (SysProjectMember m : members) {
@@ -92,16 +103,7 @@ public class ProjectController {
     @PostMapping("/{id}/members")
     public Result<?> addMember(@PathVariable Long id, @RequestBody Map<String, Object> body,
                                @AuthenticationPrincipal LoginUser loginUser) {
-        // Only project manager or admin can add members
-        String role = loginUser.getUser().getRole();
-        if (!"admin".equals(role)) {
-            List<SysProjectMember> members = projectService.getMembers(id);
-            boolean isManager = members.stream().anyMatch(m ->
-                m.getUserId().equals(loginUser.getUser().getId()) && "manager".equals(m.getRoleInProject()));
-            if (!isManager) {
-                return Result.fail(403, "只有项目负责人才能添加成员");
-            }
-        }
+        accessService.requireProjectManager(id, loginUser.getUser());
         Long userId = Long.valueOf(body.get("userId").toString());
         String roleInProject = body.get("roleInProject").toString();
         projectService.addMember(id, userId, roleInProject, "pending");
@@ -109,7 +111,9 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}/members/{memberId}")
-    public Result<?> removeMember(@PathVariable Long id, @PathVariable Long memberId) {
+    public Result<?> removeMember(@PathVariable Long id, @PathVariable Long memberId,
+                                  @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectManager(id, loginUser.getUser());
         projectService.removeMember(id, memberId);
         return Result.ok();
     }

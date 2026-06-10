@@ -7,6 +7,7 @@ import com.pm.service.SysProjectService;
 import com.pm.service.SysSupportItemService;
 import com.pm.service.SysChangeService;
 import com.pm.service.SysStageReportService;
+import com.pm.service.ProjectAccessService;
 import com.pm.security.LoginUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,9 +27,11 @@ public class LeaderDashboardController {
     private final SysSupportItemService supportItemService;
     private final SysChangeService changeService;
     private final SysStageReportService reportService;
+    private final ProjectAccessService accessService;
 
     @GetMapping("/api/leader-dashboard")
     public Result<Map<String, Object>> stats(@AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireLeaderOrAdmin(loginUser.getUser());
         Map<String, Object> data = new HashMap<>();
         List<SysProject> allProjects = projectService.list();
         long activeProjects = allProjects.stream().filter(p -> "active".equals(p.getStatus())).count();
@@ -44,7 +47,7 @@ public class LeaderDashboardController {
             if (p != null) c.setProjectName(p.getName());
         });
         
-        var pendingReports = reportService.listPendingReview(loginUser.getUser().getId());
+        var pendingReports = reportService.listPendingReview(loginUser.getUser().getId(), loginUser.getUser().getRole());
         pendingReports.forEach(r -> r.setAttachmentData(null));
 
         data.put("activeProjects", activeProjects);
