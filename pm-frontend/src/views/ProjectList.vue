@@ -5,7 +5,7 @@
     </div>
     <section class="page-summary-grid" style="margin-bottom:16px">
       <div class="summary-card summary-card--primary">
-        <div class="summary-card-value">{{ total }}</div>
+        <div class="summary-card-value">{{ summaryTotal }}</div>
         <div class="summary-card-label">全部项目</div>
       </div>
       <div class="summary-card summary-card--success">
@@ -28,6 +28,10 @@
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
         <div>
+          <input ref="oaFileInput" class="hidden-file-input" type="file" accept=".xls,.xlsx" @change="handleOaFileSelected" />
+          <el-button :loading="importingOa" @click="triggerOaImport" v-if="auth.user?.role==='admin'">
+            <el-icon><Upload /></el-icon> 导入 OA 项目
+          </el-button>
           <el-button type="primary" @click="router.push('/projects/create')" v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">
             <el-icon><Plus /></el-icon> 新建项目
           </el-button>
@@ -39,6 +43,14 @@
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
             <el-link type="primary" @click="router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
+          </template>
+        </el-table-column>
+        <el-table-column label="项目负责人" min-width="120">
+          <template #default="{row}">{{ row.managerName || managerText(row) }}</template>
+        </el-table-column>
+        <el-table-column label="负责人状态" min-width="100" align="center">
+          <template #default="{row}">
+            <el-tag :type="managerStatus(row).type" size="small">{{ managerStatus(row).text }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="description" label="描述" min-width="240" show-overflow-tooltip />
@@ -67,10 +79,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { getProjects, deleteProject } from '../api/project'
+import { getProjects, deleteProject, importProjectsFromOa } from '../api/project'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
@@ -79,12 +91,14 @@ const loading = ref(false)
 const tableData = ref([])
 const page = ref(1)
 const total = ref(0)
+const summaryTotal = ref(0)
 const size = ref(10)
 const keyword = ref('')
 const statusFilter = ref('')
-
-const activeCount = computed(() => tableData.value.filter(r => r.status === 'active').length)
-const completedCount = computed(() => tableData.value.filter(r => r.status === 'completed').length)
+const oaFileInput = ref(null)
+const importingOa = ref(false)
+const activeCount = ref(0)
+const completedCount = ref(0)
 
 async function loadData() {
   loading.value = true
@@ -92,7 +106,20 @@ async function loadData() {
     const res = await getProjects({ page: page.value, size: size.value, keyword: keyword.value, status: statusFilter.value })
     tableData.value = res.data.records
     total.value = res.data.total
+    await loadSummaryCounts()
   } finally { loading.value = false }
+}
+
+async function loadSummaryCounts() {
+  const params = { page: 1, size: 1, keyword: keyword.value }
+  const [allRes, activeRes, completedRes] = await Promise.all([
+    getProjects(params),
+    getProjects({ ...params, status: 'active' }),
+    getProjects({ ...params, status: 'completed' })
+  ])
+  summaryTotal.value = allRes.data.total || 0
+  activeCount.value = activeRes.data.total || 0
+  completedCount.value = completedRes.data.total || 0
 }
 
 async function handleDelete(row) {
@@ -102,12 +129,58 @@ async function handleDelete(row) {
   loadData()
 }
 
+function triggerOaImport() {
+  oaFileInput.value?.click()
+}
+
+function managerText(row) {
+  return oaManagerName(row) || '未填写'
+}
+
+function managerStatus(row) {
+  if (row.managerName) return { text: '已匹配', type: 'success' }
+  if (oaManagerName(row)) return { text: '待匹配', type: 'warning' }
+  return { text: '未填写', type: 'info' }
+}
+
+function oaManagerName(row) {
+  const text = row.hrAllocation || ''
+  const match = text.match(/项目负责人[:：]\s*([^\n]+)/)
+  return match ? match[1] : ''
+}
+
+async function handleOaFileSelected(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+
+  importingOa.value = true
+  try {
+    const res = await importProjectsFromOa(file)
+    const data = res.data || {}
+    const missingManagers = data.missingManagers?.length ? data.missingManagers.join('、') : '无'
+    await ElMessageBox.alert(
+      `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missingManagers}`,
+      'OA 项目导入结果',
+      { confirmButtonText: '知道了' }
+    )
+    page.value = 1
+    await loadData()
+  } finally {
+    importingOa.value = false
+  }
+}
+
 onMounted(loadData)
 </script>
 
 <style scoped>
 .pm-table {
   width: 100%;
+}
+
+.hidden-file-input {
+  display: none;
 }
 
 .summary-card--primary {

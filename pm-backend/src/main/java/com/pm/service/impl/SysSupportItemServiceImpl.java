@@ -3,16 +3,27 @@ package com.pm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pm.entity.SysSupportItem;
+import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysSupportItemMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.service.SysSupportItemService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class SysSupportItemServiceImpl extends ServiceImpl<SysSupportItemMapper, SysSupportItem>
         implements SysSupportItemService {
+
+    private final SysProjectMapper projectMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public List<SysSupportItem> listAll(String status) {
@@ -21,7 +32,14 @@ public class SysSupportItemServiceImpl extends ServiceImpl<SysSupportItemMapper,
             wrapper.eq(SysSupportItem::getStatus, status);
         }
         wrapper.orderByDesc(SysSupportItem::getCreateTime);
-        return baseMapper.selectList(wrapper);
+        return enrich(baseMapper.selectList(wrapper));
+    }
+
+    @Override
+    public List<SysSupportItem> listByProject(Long projectId) {
+        return enrich(baseMapper.selectList(new LambdaQueryWrapper<SysSupportItem>()
+                .eq(SysSupportItem::getProjectId, projectId)
+                .orderByDesc(SysSupportItem::getCreateTime)));
     }
 
     @Override
@@ -33,5 +51,44 @@ public class SysSupportItemServiceImpl extends ServiceImpl<SysSupportItemMapper,
         item.setReply(reply);
         item.setResolveNote(resolveNote);
         baseMapper.updateById(item);
+    }
+
+    private List<SysSupportItem> enrich(List<SysSupportItem> items) {
+        if (items == null || items.isEmpty()) {
+            return items;
+        }
+
+        Set<Long> projectIds = new HashSet<>();
+        Set<Long> userIds = new HashSet<>();
+        for (SysSupportItem item : items) {
+            if (item.getProjectId() != null) {
+                projectIds.add(item.getProjectId());
+            }
+            if (item.getApplicantId() != null) {
+                userIds.add(item.getApplicantId());
+            }
+            if (item.getHandlerId() != null) {
+                userIds.add(item.getHandlerId());
+            }
+        }
+
+        Map<Long, String> projectNameMap = new HashMap<>();
+        if (!projectIds.isEmpty()) {
+            projectMapper.selectBatchIds(projectIds)
+                    .forEach(project -> projectNameMap.put(project.getId(), project.getName()));
+        }
+
+        Map<Long, String> userNameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            userMapper.selectBatchIds(userIds)
+                    .forEach(user -> userNameMap.put(user.getId(), user.getRealName()));
+        }
+
+        for (SysSupportItem item : items) {
+            item.setProjectName(projectNameMap.getOrDefault(item.getProjectId(), ""));
+            item.setApplicantName(userNameMap.getOrDefault(item.getApplicantId(), ""));
+            item.setHandlerName(userNameMap.getOrDefault(item.getHandlerId(), ""));
+        }
+        return items;
     }
 }

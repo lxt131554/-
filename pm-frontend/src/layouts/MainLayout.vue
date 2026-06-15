@@ -21,22 +21,22 @@
         </el-menu-item>
 
         <!-- 项目管理 -->
-        <el-sub-menu index="sub-project" v-if="auth.user?.role!=='leader'">
+        <el-sub-menu index="sub-project">
           <template #title><el-icon><Folder /></el-icon><span>项目管理</span></template>
-          <el-menu-item index="/projects">项目列表</el-menu-item>
+          <el-menu-item index="/projects">{{ auth.user?.role === 'leader' ? '全院项目' : '项目列表' }}</el-menu-item>
           <el-menu-item v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" index="/projects/create">新建项目</el-menu-item>
         </el-sub-menu>
 
         <!-- 任务中心 -->
-        <el-sub-menu index="sub-task" v-if="auth.user?.role=='engineer'||auth.user?.role=='manager'">
+        <el-sub-menu index="sub-task" v-if="auth.user?.role=='engineer'||auth.user?.role=='manager'||auth.user?.role=='admin'">
           <template #title><el-icon><Edit /></el-icon><span>任务中心</span></template>
           <el-menu-item v-if="auth.user?.role=='engineer'" index="/my-tasks">我的待填报</el-menu-item>
           <el-menu-item v-if="auth.user?.role=='engineer'" index="/supports">发起支持申请</el-menu-item>
-          <el-menu-item v-if="auth.user?.role=='manager'" index="/pending-review">待审阅填报</el-menu-item>
+          <el-menu-item v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" index="/pending-review">待审阅填报</el-menu-item>
         </el-sub-menu>
 
         <!-- 过程管控 -->
-        <el-sub-menu index="sub-control" v-if="auth.user?.role=='manager'||auth.user?.role=='admin'">
+        <el-sub-menu index="sub-control" v-if="auth.user?.role=='manager'||auth.user?.role=='admin'||auth.user?.role=='leader'">
           <template #title><el-icon><Warning /></el-icon><span>过程管控</span></template>
           <el-menu-item index="/deviations">偏差台账</el-menu-item>
           <el-menu-item index="/supports">支持事项</el-menu-item>
@@ -45,7 +45,7 @@
         <!-- 领导视图 -->
         <el-sub-menu index="sub-leader" v-if="auth.user?.role=='leader'||auth.user?.role=='admin'">
           <template #title><el-icon><DataAnalysis /></el-icon><span>领导视图</span></template>
-          <el-menu-item v-if="auth.user?.role=='leader'" index="/leader-dashboard">领导看板</el-menu-item>
+          <el-menu-item index="/leader-dashboard">领导看板</el-menu-item>
           <el-menu-item index="/statistics">统计分析</el-menu-item>
         </el-sub-menu>
 

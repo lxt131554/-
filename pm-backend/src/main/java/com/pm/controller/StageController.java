@@ -114,6 +114,12 @@ public class StageController {
         // Populate project name
         var project = projectMapper.selectById(stage.getProjectId());
         if (project != null) stage.setProjectName(project.getName());
+        if (stage.getAssigneeId() != null) {
+            var assignee = userMapper.selectById(stage.getAssigneeId());
+            if (assignee != null) {
+                stage.setAssigneeName(assignee.getRealName());
+            }
+        }
 
         // Get all reports for this stage
         List<SysStageReport> reports = reportMapper.selectList(

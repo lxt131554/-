@@ -116,6 +116,22 @@ async function getMockResponse(config) {
     mockData.stages[newProject.id] = []
     result = { code: 200, message: 'success', data: newProject }
   }
+  else if (url === '/projects/import/oa' && method === 'post') {
+    result = {
+      code: 200,
+      message: 'success',
+      data: {
+        totalRows: 0,
+        createdCount: 0,
+        updatedCount: 0,
+        skippedCount: 0,
+        matchedManagerCount: 0,
+        missingManagerCount: 0,
+        missingManagers: [],
+        items: []
+      }
+    }
+  }
   else if (url?.match(/^\/projects\/\d+$/) && method === 'put') {
     const id = parseInt(url.split('/')[2])
     const project = mockData.projects.find(p => p.id === id)

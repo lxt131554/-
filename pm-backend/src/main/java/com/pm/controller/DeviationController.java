@@ -41,7 +41,11 @@ public class DeviationController {
             return Result.fail("偏差不存在");
         }
         accessService.requireProjectView(d.getProjectId(), loginUser.getUser());
-        return Result.ok(d);
+        SysDeviation detail = deviationService.listByProject(d.getProjectId()).stream()
+                .filter(item -> id.equals(item.getId()))
+                .findFirst()
+                .orElse(d);
+        return Result.ok(detail);
     }
 
     @PostMapping

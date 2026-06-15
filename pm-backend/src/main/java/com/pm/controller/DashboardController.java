@@ -191,6 +191,8 @@ public class DashboardController {
             Map<String, Object> card = new LinkedHashMap<>();
             card.put("id", p.getId());
             card.put("name", p.getName());
+            card.put("projectId", p.getId());
+            card.put("projectName", p.getName());
             card.put("status", p.getStatus());
             // Find current active stage (first non-completed, ordered by sortOrder)
             List<SysProjectStage> stages = stageService.list(
@@ -200,7 +202,7 @@ public class DashboardController {
             SysProjectStage currentStage = stages.stream()
                     .filter(s -> !"completed".equals(s.getStatus()))
                     .findFirst().orElse(null);
-            card.put("currentStage", currentStage != null ? currentStage.getStageName() : "—");
+            card.put("currentStage", currentStage != null ? currentStage.getStageName() : "-");
             card.put("stagePlanEnd", currentStage != null ? currentStage.getPlanEnd() : null);
             card.put("hasDeviation", devProjectIds.contains(p.getId()));
             return card;

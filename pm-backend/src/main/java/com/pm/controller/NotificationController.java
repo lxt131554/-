@@ -1,17 +1,30 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.pm.common.Result;
-import com.pm.entity.*;
+import com.pm.entity.SysProjectStage;
+import com.pm.entity.SysStageReport;
+import com.pm.entity.SysUser;
 import com.pm.security.LoginUser;
-import com.pm.service.*;
+import com.pm.service.ProjectAccessService;
+import com.pm.service.SysChangeService;
+import com.pm.service.SysDeviationService;
+import com.pm.service.SysProjectStageService;
+import com.pm.service.SysStageReportService;
+import com.pm.service.SysSupportItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -32,74 +45,122 @@ public class NotificationController {
         String role = user.getRole();
 
         if ("engineer".equals(role)) {
-            // Returned reports (need re-submit)
+            Map<Long, SysStageReport> latestReturnedByStage = new LinkedHashMap<>();
+            reportService.list(new LambdaQueryWrapper<SysStageReport>()
+                    .eq(SysStageReport::getSubmitUserId, user.getId())
+                    .eq(SysStageReport::getReviewStatus, "returned")
+                    .orderByDesc(SysStageReport::getReviewTime)
+                    .orderByDesc(SysStageReport::getSubmitTime))
+                .forEach(report -> latestReturnedByStage.putIfAbsent(report.getStageId(), report));
+
+            latestReturnedByStage.values().forEach(report -> {
+                SysProjectStage stage = stageService.getById(report.getStageId());
+                if (stage != null) {
+                    list.add(Map.of(
+                            "type", "returned",
+                            "message", "Stage [" + stage.getStageName() + "] was returned and needs resubmission",
+                            "url", "/my-tasks/" + stage.getId() + "/report",
+                            "time", report.getReviewTime() != null ? report.getReviewTime().toString() : ""
+                    ));
+                }
+            });
+
             stageService.listMyTasks(user.getId()).stream()
-                .filter(s -> "in_progress".equals(s.getStatus()))
-                .forEach(s -> list.add(Map.of(
-                    "type", "returned", "message", "「" + s.getStageName() + "」被退回，需重新填报",
-                    "url", "/my-tasks/" + s.getId() + "/report", "time", s.getUpdateTime() != null ? s.getUpdateTime().toString() : ""
-                )));
-            // Overdue stages
-            stageService.listMyTasks(user.getId()).stream()
-                .filter(s -> s.getPlanEnd() != null && s.getPlanEnd().isBefore(LocalDate.now()) && !"completed".equals(s.getStatus()))
-                .forEach(s -> list.add(Map.of(
-                    "type", "overdue", "message", "「" + s.getStageName() + "」已逾期 " +
-                        ChronoUnit.DAYS.between(s.getPlanEnd(), LocalDate.now()) + " 天",
-                    "url", "/my-tasks/" + s.getId() + "/report", "time", s.getPlanEnd().toString()
-                )));
+                    .filter(s -> s.getPlanEnd() != null
+                            && s.getPlanEnd().isBefore(LocalDate.now())
+                            && !"completed".equals(s.getStatus()))
+                    .forEach(s -> list.add(Map.of(
+                            "type", "overdue",
+                            "message", "Stage [" + s.getStageName() + "] is overdue by "
+                                    + ChronoUnit.DAYS.between(s.getPlanEnd(), LocalDate.now()) + " day(s)",
+                            "url", "/my-tasks/" + s.getId() + "/report",
+                            "time", s.getPlanEnd().toString()
+                    )));
         }
 
         if ("manager".equals(role)) {
-            // Pending reviews
             long pendingReview = reportService.listPendingReview(user.getId(), user.getRole()).size();
             if (pendingReview > 0) {
-                list.add(Map.of("type", "review", "message", pendingReview + " 条阶段填报待审阅",
-                    "url", "/pending-review", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "review",
+                        "message", pendingReview + " stage report(s) pending review",
+                        "url", "/pending-review",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
-            // Pending achievements
+
             long pendingAchievement = reportService.listPendingReview(user.getId(), user.getRole()).stream()
-                .filter(r -> r.getAttachmentName() != null).count();
+                    .filter(r -> r.getAttachmentName() != null)
+                    .count();
             if (pendingAchievement > 0) {
-                list.add(Map.of("type", "achievement", "message", pendingAchievement + " 项成果待审核",
-                    "url", "/pending-review", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "achievement",
+                        "message", pendingAchievement + " deliverable review(s) pending",
+                        "url", "/pending-review",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
-            // Open deviations
+
             long openDev = deviationService.listByProject(null).stream()
-                .filter(d -> "open".equals(d.getStatus()))
-                .filter(d -> accessService.canViewProject(d.getProjectId(), user))
-                .count();
+                    .filter(d -> "open".equals(d.getStatus()))
+                    .filter(d -> accessService.canViewProject(d.getProjectId(), user))
+                    .count();
             if (openDev > 0) {
-                list.add(Map.of("type", "deviation", "message", openDev + " 项偏差未关闭",
-                    "url", "/deviations", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "deviation",
+                        "message", openDev + " deviation(s) still open",
+                        "url", "/deviations",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
-            // Pending supports
+
             long pendingSup = supportService.listAll("pending").stream()
-                .filter(s -> accessService.canViewProject(s.getProjectId(), user) || user.getId().equals(s.getApplicantId()))
-                .count();
+                    .filter(s -> accessService.canViewProject(s.getProjectId(), user)
+                            || user.getId().equals(s.getApplicantId()))
+                    .count();
             if (pendingSup > 0) {
-                list.add(Map.of("type", "support", "message", pendingSup + " 项支持事项待处理",
-                    "url", "/supports", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "support",
+                        "message", pendingSup + " support item(s) pending",
+                        "url", "/supports",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
         }
 
         if ("leader".equals(role)) {
             long openDev = deviationService.listByProject(null).stream()
-                .filter(d -> "open".equals(d.getStatus())).count();
+                    .filter(d -> "open".equals(d.getStatus()))
+                    .count();
             if (openDev > 0) {
-                list.add(Map.of("type", "deviation", "message", openDev + " 项偏差未关闭",
-                    "url", "/deviations", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "deviation",
+                        "message", openDev + " deviation(s) still open",
+                        "url", "/deviations",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
+
             long pendingSup = supportService.listAll("pending").size();
             if (pendingSup > 0) {
-                list.add(Map.of("type", "support", "message", pendingSup + " 项支持事项待处理",
-                    "url", "/supports", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "support",
+                        "message", pendingSup + " support item(s) pending",
+                        "url", "/supports",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
-            // Pending changes to confirm
+
             long pendingChanges = changeService.list().stream()
-                .filter(c -> "pending".equals(c.getStatus())).count();
+                    .filter(c -> "pending".equals(c.getStatus()))
+                    .count();
             if (pendingChanges > 0) {
-                list.add(Map.of("type", "change", "message", pendingChanges + " 项变更待确认",
-                    "url", "/leader-dashboard", "time", LocalDateTime.now().toString()));
+                list.add(Map.of(
+                        "type", "change",
+                        "message", pendingChanges + " change request(s) pending confirmation",
+                        "url", "/leader-dashboard",
+                        "time", LocalDateTime.now().toString()
+                ));
             }
         }
 

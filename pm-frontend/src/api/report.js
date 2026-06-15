@@ -5,9 +5,7 @@ export function getReports(stageId) {
 }
 
 export function submitReport(stageId, data) {
-  return request.post(`/stages/${stageId}/reports`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+  return request.post(`/stages/${stageId}/reports`, data)
 }
 
 export function getPendingReviews() {

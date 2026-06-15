@@ -20,6 +20,14 @@ export function deleteProject(id) {
   return request.delete(`/projects/${id}`)
 }
 
+export function importProjectsFromOa(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/projects/import/oa', formData, {
+    timeout: 60000
+  })
+}
+
 export function getProjectMembers(id) {
   return request.get(`/projects/${id}/members`)
 }

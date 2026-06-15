@@ -59,7 +59,7 @@
         <el-table-column prop="createTime" label="创建时间" min-width="170" />
         <el-table-column label="操作" min-width="80" fixed="right" align="center">
           <template #default="{row}">
-            <el-button v-if="row.status=='open'" text type="primary" size="small" @click="handleClose(row)">
+            <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="primary" size="small" @click="handleClose(row)">
               关闭
             </el-button>
           </template>

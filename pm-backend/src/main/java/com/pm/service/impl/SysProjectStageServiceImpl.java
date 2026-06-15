@@ -6,11 +6,17 @@ import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.mapper.SysProjectStageMapper;
 import com.pm.mapper.SysStageReportMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.service.SysProjectStageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +25,7 @@ public class SysProjectStageServiceImpl extends ServiceImpl<SysProjectStageMappe
 
     private final SysStageReportMapper reportMapper;
     private final com.pm.mapper.SysProjectMapper projectMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public List<SysProjectStage> listByProjectId(Long projectId) {
@@ -27,13 +34,26 @@ public class SysProjectStageServiceImpl extends ServiceImpl<SysProjectStageMappe
                 .eq(SysProjectStage::getProjectId, projectId)
                 .orderByAsc(SysProjectStage::getSortOrder)
         );
+        String projectName = null;
+        var project = projectMapper.selectById(projectId);
+        if (project != null) {
+            projectName = project.getName();
+        }
+        Map<Long, String> assigneeNameMap = buildUserNameMap(stages.stream()
+                .map(SysProjectStage::getAssigneeId)
+                .collect(Collectors.toSet()));
         for (SysProjectStage stage : stages) {
+            stage.setProjectName(projectName);
+            stage.setAssigneeName(assigneeNameMap.getOrDefault(stage.getAssigneeId(), ""));
             SysStageReport latestReport = reportMapper.selectOne(
                 new LambdaQueryWrapper<SysStageReport>()
                     .eq(SysStageReport::getStageId, stage.getId())
                     .orderByDesc(SysStageReport::getCreateTime)
                     .last("LIMIT 1")
             );
+            if (latestReport != null) {
+                latestReport.setAttachmentData(null);
+            }
             stage.setLatestReport(latestReport);
         }
         return stages;
@@ -47,10 +67,39 @@ public class SysProjectStageServiceImpl extends ServiceImpl<SysProjectStageMappe
                 .orderByAsc(SysProjectStage::getStatus)
                 .orderByDesc(SysProjectStage::getCreateTime)
         );
+        Map<Long, String> projectNameMap = new HashMap<>();
+        Set<Long> projectIds = new HashSet<>();
+        for (SysProjectStage stage : stages) {
+            if (stage.getProjectId() != null) {
+                projectIds.add(stage.getProjectId());
+            }
+        }
+        if (!projectIds.isEmpty()) {
+            projectMapper.selectBatchIds(projectIds)
+                    .forEach(project -> projectNameMap.put(project.getId(), project.getName()));
+        }
+        Set<Long> assigneeIds = new HashSet<>();
+        assigneeIds.add(userId);
+        Map<Long, String> assigneeNameMap = buildUserNameMap(assigneeIds);
         for (SysProjectStage s : stages) {
-            var project = projectMapper.selectById(s.getProjectId());
-            if (project != null) s.setProjectName(project.getName());
+            s.setProjectName(projectNameMap.getOrDefault(s.getProjectId(), ""));
+            s.setAssigneeName(assigneeNameMap.getOrDefault(s.getAssigneeId(), ""));
         }
         return stages;
+    }
+
+    private Map<Long, String> buildUserNameMap(Set<Long> userIds) {
+        Map<Long, String> userNameMap = new HashMap<>();
+        Set<Long> nonNullUserIds = new HashSet<>();
+        for (Long userId : userIds) {
+            if (userId != null) {
+                nonNullUserIds.add(userId);
+            }
+        }
+        if (!nonNullUserIds.isEmpty()) {
+            userMapper.selectBatchIds(nonNullUserIds)
+                    .forEach(user -> userNameMap.put(user.getId(), user.getRealName()));
+        }
+        return userNameMap;
     }
 }

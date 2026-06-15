@@ -3,6 +3,7 @@ package com.pm.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @TableName("sys_project")
@@ -41,4 +42,15 @@ public class SysProject {
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    @TableField(exist = false)
+    private List<SysDeviation> deviations;
+    @TableField(exist = false)
+    private List<SysSupportItem> supportItems;
+    @TableField(exist = false)
+    private List<SysSupportItem> supports;
+    @TableField(exist = false)
+    private String managerName;
+    @TableField(exist = false)
+    private String currentStageName;
 }

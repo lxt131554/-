@@ -8,12 +8,16 @@ import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectMember;
 import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysProjectMemberMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.service.SysProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +26,7 @@ import java.util.stream.Collectors;
 public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProject> implements SysProjectService {
 
     private final SysProjectMemberMapper memberMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public IPage<SysProject> pageWithMembers(int page, int size, String keyword, String status, Long userId, String role) {
@@ -46,7 +51,9 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
             }
         }
         wrapper.orderByDesc(SysProject::getCreateTime);
-        return baseMapper.selectPage(new Page<>(page, size), wrapper);
+        IPage<SysProject> result = baseMapper.selectPage(new Page<>(page, size), wrapper);
+        fillManagerNames(result.getRecords());
+        return result;
     }
 
     @Override
@@ -70,5 +77,36 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
         return memberMapper.selectList(
             new LambdaQueryWrapper<SysProjectMember>().eq(SysProjectMember::getProjectId, projectId)
         );
+    }
+
+    private void fillManagerNames(List<SysProject> projects) {
+        if (projects == null || projects.isEmpty()) {
+            return;
+        }
+        Set<Long> projectIds = projects.stream().map(SysProject::getId).collect(Collectors.toSet());
+        List<SysProjectMember> managers = memberMapper.selectList(new LambdaQueryWrapper<SysProjectMember>()
+                .in(SysProjectMember::getProjectId, projectIds)
+                .eq(SysProjectMember::getRoleInProject, "manager")
+                .eq(SysProjectMember::getStatus, "confirmed"));
+
+        Set<Long> userIds = new HashSet<>();
+        for (SysProjectMember manager : managers) {
+            if (manager.getUserId() != null) {
+                userIds.add(manager.getUserId());
+            }
+        }
+        Map<Long, String> userNameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            userMapper.selectBatchIds(userIds)
+                    .forEach(user -> userNameMap.put(user.getId(), user.getRealName()));
+        }
+
+        Map<Long, String> projectManagerMap = new HashMap<>();
+        for (SysProjectMember manager : managers) {
+            projectManagerMap.putIfAbsent(manager.getProjectId(), userNameMap.getOrDefault(manager.getUserId(), ""));
+        }
+        for (SysProject project : projects) {
+            project.setManagerName(projectManagerMap.getOrDefault(project.getId(), ""));
+        }
     }
 }
