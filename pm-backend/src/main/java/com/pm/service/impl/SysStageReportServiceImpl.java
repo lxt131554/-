@@ -41,8 +41,6 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
         baseMapper.insert(report);
 
         stage.setStatus("submitted");
-        stage.setActualStart(report.getActualStart());
-        stage.setActualEnd(report.getActualEnd());
         stageMapper.updateById(stage);
         return report;
     }
@@ -72,7 +70,13 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
         SysProjectStage stage = stageMapper.selectById(report.getStageId());
         if (stage != null) {
             if ("passed".equals(reviewStatus)) {
-                stage.setStatus("completed");
+                if (stage.getActualStart() == null && report.getActualStart() != null) {
+                    stage.setActualStart(report.getActualStart());
+                }
+                if (report.getActualEnd() != null) {
+                    stage.setActualEnd(report.getActualEnd());
+                }
+                stage.setStatus(isStageCompleted(report) ? "completed" : "in_progress");
             } else {
                 stage.setStatus("in_progress");
             }
@@ -93,9 +97,17 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
         }
         for (var r : reports) {
             var stage = stageMapper.selectById(r.getStageId());
-            if (stage != null) r.setStageName(stage.getStageName());
+            if (stage != null) {
+                r.setStageName(stage.getStageName());
+            } else {
+                r.setStageName("(阶段已删除)");
+            }
             var project = projectMapper.selectById(r.getProjectId());
-            if (project != null) r.setProjectName(project.getName());
+            if (project != null) {
+                r.setProjectName(project.getName());
+            } else {
+                r.setProjectName("(项目已删除)");
+            }
             var user = userMapper.selectById(r.getSubmitUserId());
             if (user != null) r.setSubmitUserName(user.getRealName());
         }
@@ -118,5 +130,10 @@ public class SysStageReportServiceImpl extends ServiceImpl<SysStageReportMapper,
             throw new RuntimeException("附件不存在");
         }
         return report.getAttachmentData();
+    }
+
+    private boolean isStageCompleted(SysStageReport report) {
+        return (report.getProgressRate() != null && report.getProgressRate() >= 100)
+                || report.getActualEnd() != null;
     }
 }

@@ -1,18 +1,26 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h2>领导看板</h2>
-      <p style="color:var(--pm-text-secondary);margin-top:4px">全院项目总览</p>
+      <div>
+        <h2>领导看板</h2>
+        <p style="color:var(--pm-text-secondary);margin-top:4px">全院项目总览</p>
+      </div>
+      <div class="page-header-actions" v-if="auth.user?.role==='leader'||auth.user?.role==='admin'">
+        <input ref="oaFileInput" class="hidden-file-input" type="file" accept=".xls,.xlsx" @change="handleOaFileSelected" />
+        <el-button :loading="importingOa" @click="triggerOaImport">
+          <el-icon><Upload /></el-icon> 导入 OA 项目
+        </el-button>
+      </div>
     </div>
 
     <!-- Tier 1: 全院概览 — summary cards -->
     <section class="page-summary-grid">
-      <div class="summary-card summary-card--primary">
+      <div class="summary-card summary-card--primary clickable" @click="$router.push('/projects')">
         <div class="summary-card-value">{{ stats.activeProjects ?? '--' }}</div>
         <div class="summary-card-label">在建项目</div>
         <div class="summary-card-hint">当前执行中的项目数量</div>
       </div>
-      <div class="summary-card summary-card--danger">
+      <div class="summary-card summary-card--danger clickable" @click="$router.push('/deviations')">
         <div class="summary-card-value">{{ highRiskProjectCount }}</div>
         <div class="summary-card-label">高风险项目</div>
         <div class="summary-card-hint">存在未关闭偏差的项目</div>
@@ -27,7 +35,7 @@
         <div class="summary-card-label">待处理支持事项</div>
         <div class="summary-card-hint">需院级协调解决的事项</div>
       </div>
-      <div class="summary-card summary-card--success">
+      <div class="summary-card summary-card--success clickable" @click="$router.push('/projects')">
         <div class="summary-card-value">{{ stats.completedProjects ?? '--' }}</div>
         <div class="summary-card-label">已结项项目</div>
         <div class="summary-card-hint">已完成并归档的项目</div>
@@ -75,7 +83,12 @@
 
     <!-- All projects — compact table at bottom -->
     <div class="section-block">
-      <div class="section-title">全院项目</div>
+      <div class="section-title">
+        全院项目
+        <el-button text type="primary" size="small" style="float:right" @click="$router.push('/projects')">
+          查看全部 →
+        </el-button>
+      </div>
       <el-table v-if="allProjects.length" :data="allProjects" size="small" stripe style="width:100%" v-loading="loading">
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{ row }">
@@ -84,7 +97,7 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status==='active'?'':'success'" size="small">{{ row.status==='active'?'进行中':'已完成' }}</el-tag>
+            <el-tag :type="row.status==='active'?'success':'info'" size="small">{{ row.status==='active'?'进行中':'已完成' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="managerName" label="负责人" min-width="100" />
@@ -98,9 +111,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import request from '../api/index'
+import { importProjectsFromOa } from '../api/project'
+import { ElMessageBox } from 'element-plus'
+import { useAuthStore } from '../stores/auth'
 
 const stats = ref({})
 const loading = ref(false)
+const oaFileInput = ref(null)
+const importingOa = ref(false)
+const auth = useAuthStore()
 
 const allProjects = computed(() => stats.value.projects || [])
 
@@ -193,14 +212,57 @@ async function loadData() {
   }
 }
 
+function triggerOaImport() {
+  oaFileInput.value?.click()
+}
+
+async function handleOaFileSelected(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+
+  importingOa.value = true
+  try {
+    const res = await importProjectsFromOa(file)
+    const data = res.data || {}
+    const missingManagers = data.missingManagers?.length ? data.missingManagers.join('、') : '无'
+    await ElMessageBox.alert(
+      `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missingManagers}`,
+      'OA 项目导入结果',
+      { confirmButtonText: '知道了' }
+    )
+    await loadData()
+  } finally {
+    importingOa.value = false
+  }
+}
+
 onMounted(loadData)
 </script>
 
 <style scoped>
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
 /* Clickable cards get pointer cursor */
 .summary-card {
   cursor: default;
 }
+.summary-card.clickable,
 .summary-card[class*='summary-card--warning'],
 .summary-card[class*='summary-card--danger'] {
   cursor: pointer;
