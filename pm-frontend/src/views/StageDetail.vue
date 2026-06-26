@@ -64,6 +64,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import request from '../api/index'
+import { showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -82,7 +83,9 @@ async function loadData() {
     stage.value = res.data.stage
     reports.value = res.data.reports || []
     deviations.value = res.data.deviations || []
-  } catch {}
+  } catch (error) {
+    showActionError(error, '阶段详情加载失败')
+  }
 }
 
 onMounted(loadData)

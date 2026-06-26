@@ -34,6 +34,7 @@ import { useRoute, useRouter } from 'vue-router'
 import request from '../api/index'
 import { getProjectDetail } from '../api/project'
 import { ElMessage } from 'element-plus'
+import { showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,7 +55,9 @@ async function loadData() {
       Object.assign(form, res.data)
     }
     form.projectId = parseInt(projectId)
-  } catch {}
+  } catch (error) {
+    showActionError(error, '经验总结加载失败')
+  }
 }
 
 async function handleSave() {
@@ -63,6 +66,8 @@ async function handleSave() {
     await request.post(`/projects/${projectId}/experience`, { ...form, projectId: parseInt(projectId) })
     ElMessage.success('经验总结已保存')
     router.back()
+  } catch (error) {
+    showActionError(error, '经验总结保存失败')
   } finally { saving.value = false }
 }
 

@@ -1,12 +1,45 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      timeout: ${SESSION_TIMEOUT:2h}
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/pm_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
+    url: ${DB_URL:jdbc:mysql://localhost:3306/pm_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+  servlet:
+    multipart:
+      max-file-size: ${APP_UPLOAD_MAX_FILE_SIZE:20MB}
+      max-request-size: ${APP_UPLOAD_MAX_REQUEST_SIZE:25MB}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+
+app:
+  cors:
+    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173}
+  request-log:
+    enabled: ${APP_REQUEST_LOG_ENABLED:true}
+
+logging:
+  level:
+    root: INFO
+    com.pm: INFO
+  file:
+    path: ${LOG_PATH:./logs}
 
 mybatis-plus:
   type-aliases-package: com.pm.entity

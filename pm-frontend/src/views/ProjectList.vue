@@ -4,15 +4,15 @@
       <h2>项目列表</h2>
     </div>
     <section class="page-summary-grid" style="margin-bottom:16px">
-      <div class="summary-card summary-card--primary">
+      <div class="summary-card summary-card--primary clickable" :class="{ active: statusFilter==='' }" @click="setStatusFilter('')">
         <div class="summary-card-value">{{ summaryTotal }}</div>
         <div class="summary-card-label">全部项目</div>
       </div>
-      <div class="summary-card summary-card--success">
+      <div class="summary-card summary-card--success clickable" :class="{ active: statusFilter==='active' }" @click="setStatusFilter('active')">
         <div class="summary-card-value">{{ activeCount }}</div>
         <div class="summary-card-label">进行中</div>
       </div>
-      <div class="summary-card summary-card--primary">
+      <div class="summary-card summary-card--primary clickable" :class="{ active: statusFilter==='completed' }" @click="setStatusFilter('completed')">
         <div class="summary-card-value">{{ completedCount }}</div>
         <div class="summary-card-label">已完成</div>
       </div>
@@ -83,7 +83,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { getProjects, deleteProject, importProjectsFromOa } from '../api/project'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -107,6 +108,8 @@ async function loadData() {
     tableData.value = res.data.records
     total.value = res.data.total
     await loadSummaryCounts()
+  } catch (error) {
+    showActionError(error, '项目列表加载失败')
   } finally { loading.value = false }
 }
 
@@ -122,11 +125,21 @@ async function loadSummaryCounts() {
   completedCount.value = completedRes.data.total || 0
 }
 
-async function handleDelete(row) {
-  await ElMessageBox.confirm('确定删除该项目？', '提示', { type: 'warning' })
-  await deleteProject(row.id)
-  ElMessage.success('删除成功')
+function setStatusFilter(status) {
+  statusFilter.value = status
+  page.value = 1
   loadData()
+}
+
+async function handleDelete(row) {
+  try {
+    await confirmDanger(`确定删除项目“${row.name || row.id}”？`, '删除项目')
+    await deleteProject(row.id)
+    ElMessage.success('删除成功')
+    loadData()
+  } catch (error) {
+    showActionError(error, '删除项目失败')
+  }
 }
 
 function triggerOaImport() {
@@ -166,6 +179,8 @@ async function handleOaFileSelected(event) {
     )
     page.value = 1
     await loadData()
+  } catch (error) {
+    showActionError(error, 'OA 项目导入失败')
   } finally {
     importingOa.value = false
   }
@@ -195,5 +210,10 @@ onMounted(loadData)
 }
 .summary-card--success .summary-card-value {
   color: var(--pm-green-text);
+}
+
+.summary-card.clickable.active {
+  border-color: var(--pm-accent);
+  box-shadow: inset 0 0 0 1px rgba(37,99,235,0.18), var(--pm-shadow);
 }
 </style>

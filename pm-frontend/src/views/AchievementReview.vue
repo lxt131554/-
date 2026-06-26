@@ -51,6 +51,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPendingReviews, reviewReport } from '../api/report'
 import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,9 +61,14 @@ const comment = ref('')
 const submitting = ref(false)
 
 async function loadReport() {
-  const res = await getPendingReviews()
-  const found = res.data.find(r => r.id == reportId)
-  if (found) report.value = found
+  try {
+    const res = await getPendingReviews()
+    const found = res.data.find(r => r.id == reportId)
+    if (found) report.value = found
+    else ElMessage.warning('未找到该成果审核填报，可能已被处理')
+  } catch (error) {
+    showActionError(error, '成果审核详情加载失败')
+  }
 }
 
 function downloadAttachment() {
@@ -75,9 +81,12 @@ async function doReview(status) {
   }
   submitting.value = true
   try {
+    await confirmDanger(status === 'passed' ? '确认通过该成果审核？' : '确认退回该成果审核？')
     await reviewReport(reportId, { reviewStatus: status, reviewComment: comment.value })
     ElMessage.success(status === 'passed' ? '审核已通过' : '已退回')
     router.back()
+  } catch (error) {
+    showActionError(error, '成果审核操作失败')
   } finally { submitting.value = false }
 }
 

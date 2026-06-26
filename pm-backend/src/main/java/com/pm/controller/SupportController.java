@@ -5,6 +5,7 @@ import com.pm.entity.SysSupportItem;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.SysSupportItemService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class SupportController {
     }
 
     @PostMapping
-    public Result<SysSupportItem> create(@RequestBody SysSupportItem item,
+    public Result<SysSupportItem> create(@Valid @RequestBody SysSupportItem item,
                                           @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectView(item.getProjectId(), loginUser.getUser());
         item.setApplicantId(loginUser.getUser().getId());
@@ -57,7 +58,14 @@ public class SupportController {
         }
         String reply = body.get("reply");
         String resolveNote = body.get("resolveNote");
+        if (!hasText(reply)) {
+            throw new IllegalArgumentException("处理回复不能为空");
+        }
         supportItemService.resolve(id, reply, resolveNote);
         return Result.ok();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

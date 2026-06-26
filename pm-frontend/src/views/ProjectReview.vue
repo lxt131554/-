@@ -10,6 +10,9 @@
         <el-form-item label="项目整体执行偏差">
           <el-input v-model="form.overallDeviation" type="textarea" :rows="4" placeholder="描述项目整体执行偏差情况，如：外业延迟15天、内业延迟30天、成果延迟30天" />
         </el-form-item>
+        <el-form-item label="上级支持事项自评">
+          <el-input v-model="form.supportEvaluation" type="textarea" :rows="3" placeholder="评价项目过程中上级支持事项的提出、响应、协调和解决情况" />
+        </el-form-item>
         <el-form-item label="项目综合效率评价">
           <el-input v-model="form.efficiencyRating" type="textarea" :rows="3" placeholder="评价项目综合效率，如人力资源利用、时间管理、成本控制等方面" />
         </el-form-item>
@@ -34,6 +37,7 @@ import { useRoute, useRouter } from 'vue-router'
 import request from '../api/index'
 import { getProjectDetail } from '../api/project'
 import { ElMessage } from 'element-plus'
+import { showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,7 +46,7 @@ const projectName = ref('')
 const saving = ref(false)
 const formRef = ref(null)
 const form = reactive({
-  projectId: null, overallDeviation: '', efficiencyRating: '', qualityRating: '', communicationNote: ''
+  projectId: null, overallDeviation: '', supportEvaluation: '', efficiencyRating: '', qualityRating: '', communicationNote: ''
 })
 
 async function loadData() {
@@ -54,7 +58,9 @@ async function loadData() {
       Object.assign(form, res.data)
     }
     form.projectId = parseInt(projectId)
-  } catch {}
+  } catch (error) {
+    showActionError(error, '项目自评加载失败')
+  }
 }
 
 async function handleSave() {
@@ -63,6 +69,8 @@ async function handleSave() {
     await request.post(`/projects/${projectId}/review`, { ...form, projectId: parseInt(projectId) })
     ElMessage.success('自评已保存')
     router.back()
+  } catch (error) {
+    showActionError(error, '项目自评保存失败')
   } finally { saving.value = false }
 }
 

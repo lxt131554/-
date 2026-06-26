@@ -33,6 +33,7 @@ import { useRoute, useRouter } from 'vue-router'
 import request from '../api/index'
 import { getProjectDetail } from '../api/project'
 import { ElMessage } from 'element-plus'
+import { showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -47,7 +48,9 @@ async function loadData() {
     projectName.value = proj.data.name
     const res = await request.get(`/projects/${projectId}/approval`)
     if (res.data) Object.assign(form, res.data)
-  } catch {}
+  } catch (error) {
+    showActionError(error, '成果评审记录加载失败')
+  }
 }
 async function handleSave() {
   saving.value = true
@@ -55,6 +58,8 @@ async function handleSave() {
     await request.post(`/projects/${projectId}/approval`, { ...form })
     ElMessage.success('评审记录已保存')
     router.back()
+  } catch (error) {
+    showActionError(error, '成果评审记录保存失败')
   } finally { saving.value = false }
 }
 

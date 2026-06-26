@@ -1,18 +1,21 @@
 package com.pm.common;
 
 import lombok.Data;
+import org.slf4j.MDC;
 
 @Data
 public class Result<T> {
     private int code;
     private String message;
     private T data;
+    private String requestId;
 
     public static <T> Result<T> ok(T data) {
         Result<T> r = new Result<>();
         r.code = 200;
         r.message = "success";
         r.data = data;
+        r.requestId = MDC.get("requestId");
         return r;
     }
 
@@ -24,6 +27,7 @@ public class Result<T> {
         Result<T> r = new Result<>();
         r.code = code;
         r.message = message;
+        r.requestId = MDC.get("requestId");
         return r;
     }
 

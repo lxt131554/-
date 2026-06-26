@@ -138,6 +138,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { createProject } from '../api/project'
 import { ElMessage } from 'element-plus'
+import { showActionError } from '../utils/actionGuards'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -172,7 +173,9 @@ async function handleCreate() {
     await createProject({ ...form })
     ElMessage.success('项目创建成功')
     router.push('/projects')
-  } catch {} finally { creating.value = false }
+  } catch (error) {
+    showActionError(error, '项目创建失败')
+  } finally { creating.value = false }
 }
 </script>
 

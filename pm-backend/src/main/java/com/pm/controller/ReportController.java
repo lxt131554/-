@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,11 +30,17 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class ReportController {
+
+    private static final long MAX_ATTACHMENT_BYTES = 10L * 1024 * 1024;
+    private static final Set<String> ALLOWED_ATTACHMENT_EXTENSIONS = Set.of(
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".zip", ".rar"
+    );
 
     private final SysStageReportService reportService;
     private final SysDeviationService deviationService;
@@ -50,6 +57,7 @@ public class ReportController {
     }
 
     @PostMapping("/stages/{stageId}/reports")
+    @Transactional
     public Result<SysStageReport> submit(
             @PathVariable Long stageId,
             @RequestParam(value = "content", required = false) String content,
@@ -73,6 +81,18 @@ public class ReportController {
             @AuthenticationPrincipal LoginUser loginUser) throws IOException {
 
         accessService.requireStageReport(stageId, loginUser.getUser());
+        if (progressRate == null || progressRate < 0 || progressRate > 100) {
+            throw new IllegalArgumentException("进度必须在 0-100 之间");
+        }
+        if (!hasText(content) && !hasText(problem) && !hasText(resultSummary) && !hasText(qualityControl)) {
+            throw new IllegalArgumentException("请至少填写填报内容、问题、成果摘要或质量控制信息");
+        }
+        if (isDeviation && !hasText(problem) && !hasText(content)) {
+            throw new IllegalArgumentException("标记偏差时请填写问题或填报内容");
+        }
+        if (needSupport && !hasText(supportTitle) && !hasText(supportContent)) {
+            throw new IllegalArgumentException("需要支持时请填写支持标题或内容");
+        }
         SysStageReport report = new SysStageReport();
         report.setContent(content);
         report.setProgressRate(progressRate);
@@ -89,6 +109,7 @@ public class ReportController {
         }
 
         if (file != null && !file.isEmpty()) {
+            validateAttachment(file);
             report.setAttachmentName(file.getOriginalFilename());
             report.setAttachmentData(file.getBytes());
         }
@@ -115,7 +136,7 @@ public class ReportController {
         if (needSupport && (hasText(supportTitle) || hasText(supportContent))) {
             SysSupportItem supportItem = new SysSupportItem();
             supportItem.setProjectId(saved.getProjectId());
-            supportItem.setTitle(hasText(supportTitle) ? supportTitle : content);
+            supportItem.setTitle(hasText(supportTitle) ? supportTitle : "阶段支持申请");
             supportItem.setContent(hasText(supportContent) ? supportContent : problem);
             supportItem.setApplicantId(loginUser.getUser().getId());
             supportItem.setHandlerId(supportHandlerId);
@@ -159,7 +180,28 @@ public class ReportController {
         accessService.requireReportReview(reportId, loginUser.getUser());
         String status = body.get("reviewStatus");
         String comment = body.get("reviewComment");
+        if (!"passed".equals(status) && !"returned".equals(status)) {
+            throw new IllegalArgumentException("审核状态只能是通过或退回");
+        }
+        if ("returned".equals(status) && !hasText(comment)) {
+            throw new IllegalArgumentException("退回填报时请填写审核意见");
+        }
         return Result.ok(reportService.review(reportId, status, comment, loginUser.getUser().getId()));
+    }
+
+    private void validateAttachment(MultipartFile file) {
+        if (file.getSize() > MAX_ATTACHMENT_BYTES) {
+            throw new IllegalArgumentException("附件不能超过 10MB");
+        }
+        String filename = file.getOriginalFilename();
+        if (!hasText(filename)) {
+            throw new IllegalArgumentException("附件文件名不能为空");
+        }
+        String lowerName = filename.toLowerCase();
+        boolean allowed = ALLOWED_ATTACHMENT_EXTENSIONS.stream().anyMatch(lowerName::endsWith);
+        if (!allowed) {
+            throw new IllegalArgumentException("附件格式仅支持 pdf、doc、docx、xls、xlsx、jpg、png、zip、rar");
+        }
     }
 
     private boolean hasText(String value) {

@@ -248,7 +248,7 @@
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/my-tasks/${row.id}/report`)"
               v-if="auth.user?.role==='engineer'">填报</el-button>
-            <el-button text type="danger" @click="handleDeleteStage(row)" v-if="auth.user?.role==='admin'">删除</el-button>
+            <el-button text type="danger" @click="handleDeleteStage(row)" v-if="auth.user?.role=='manager'||auth.user?.role=='admin'">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -281,7 +281,7 @@
         <el-table-column label="操作" min-width="170" align="center">
           <template #default="{row}">
             <el-button text type="primary" size="small" @click="router.push(`/changes/${row.id}`)">查看详情</el-button>
-            <el-button v-if="row.status=='pending' && (auth.user?.role=='leader'||auth.user?.role=='admin')" text type="success" size="small"
+            <el-button v-if="row.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="success" size="small"
               @click="handleConfirmChange(row)">确认变更</el-button>
           </template>
         </el-table-column>
@@ -327,7 +327,7 @@
       </div>
     </div>
 
-    <div class="section-block" v-if="project.status=='completed'" style="margin-top:16px">
+    <div class="section-block" v-if="project.status=='completed' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:16px">
       <div class="page-toolbar">
         <span class="section-title">收尾复盘</span>
       </div>
@@ -434,6 +434,7 @@ import { getStages, addStage, deleteStage } from '../api/stage'
 import { getProjectMembers, addProjectMember, removeProjectMember } from '../api/project'
 import request from '../api/index'
 import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -534,7 +535,9 @@ async function handleSavePlanning() {
     ElMessage.success('启动信息已保存')
     planningEditMode.value = false
     loadProject()
-  } catch {} finally { savingPlanning.value = false }
+  } catch (error) {
+    showActionError(error, '启动信息保存失败')
+  } finally { savingPlanning.value = false }
 }
 
 async function loadProject() {
@@ -562,12 +565,19 @@ async function handleAddStage() {
     showAddStage.value = false
     Object.assign(stageForm, { stageName: '', description: '', assigneeId: null, planStart: '', planEnd: '', sortOrder: 0 })
     loadStages()
+  } catch (error) {
+    showActionError(error, '阶段添加失败')
   } finally { addingStage.value = false }
 }
 async function handleDeleteStage(row) {
-  await deleteStage(projectId, row.id)
-  ElMessage.success('删除成功')
-  loadStages()
+  try {
+    await confirmDanger(`确认删除阶段“${row.stageName || row.id}”？删除后相关填报也可能受到影响。`, '删除阶段')
+    await deleteStage(projectId, row.id)
+    ElMessage.success('删除成功')
+    loadStages()
+  } catch (error) {
+    showActionError(error, '删除阶段失败')
+  }
 }
 const showTemplateDialog = ref(false)
 const applyingTemplate = ref(false)
@@ -600,7 +610,9 @@ async function handleApplyTemplate() {
     ElMessage.success(`已创建 ${res.data.length} 个阶段`)
     showTemplateDialog.value = false
     loadStages()
-  } catch {} finally { applyingTemplate.value = false }
+  } catch (error) {
+    showActionError(error, '标准模板创建失败')
+  } finally { applyingTemplate.value = false }
 }
 async function handleAddMember() {
   if (!newMember.userId) { ElMessage.warning('请输入用户ID'); return }
@@ -611,19 +623,28 @@ async function handleAddMember() {
     showAddMember.value = false
     newMember.userId = ''
     loadMembers()
+  } catch (error) {
+    showActionError(error, '成员添加失败')
   } finally { addingMember.value = false }
 }
 async function handleRemoveMember(m) {
-  await removeProjectMember(projectId, m.id)
-  ElMessage.success('移除成功')
-  loadMembers()
+  try {
+    await confirmDanger(`确认将“${m.realName || m.userId}”移出项目成员？`, '移除成员')
+    await removeProjectMember(projectId, m.id)
+    ElMessage.success('移除成功')
+    loadMembers()
+  } catch (error) {
+    showActionError(error, '移除成员失败')
+  }
 }
 
 async function loadChanges() {
   try {
     const res = await request.get(`/projects/${projectId}/changes`)
     changes.value = res.data || []
-  } catch {}
+  } catch (error) {
+    showActionError(error, '变更记录加载失败')
+  }
 }
 async function handleAddChange() {
   if (!changeForm.content) { ElMessage.warning('请填写变更内容'); return }
@@ -634,20 +655,30 @@ async function handleAddChange() {
     showAddChange.value = false
     Object.assign(changeForm, { content: '', confirmTime: '', impact: '' })
     loadChanges()
+  } catch (error) {
+    showActionError(error, '变更记录保存失败')
   } finally { addingChange.value = false }
 }
 async function handleConfirmChange(row) {
-  await request.put(`/changes/${row.id}/confirm`)
-  ElMessage.success('变更已确认')
-  loadChanges()
+  try {
+    await confirmDanger('确认该项目变更已完成审核，可以进入后续执行？', '确认变更')
+    await request.put(`/changes/${row.id}/confirm`)
+    ElMessage.success('变更已确认')
+    loadChanges()
+  } catch (error) {
+    showActionError(error, '确认变更失败')
+  }
 }
 
 async function handleCompleteProject() {
   try {
+    await confirmDanger('确认将项目标记为已完成？完成后将进入收尾复盘相关流程。', '完成项目')
     await updateProject(projectId, { ...project.value, status: 'completed' })
     ElMessage.success('项目已完成')
     loadProject()
-  } catch {}
+  } catch (error) {
+    showActionError(error, '完成项目失败')
+  }
 }
 
 function handleExport() {

@@ -4,18 +4,18 @@
       <h2>偏差台账</h2>
     </div>
     <section class="page-summary-grid" style="margin-bottom:16px">
-      <div class="summary-card summary-card--danger">
+      <div class="summary-card summary-card--danger clickable" :class="{ active: filterStatus==='open' }" @click="setStatusFilter('open')">
         <div class="summary-card-value">{{ openCount }}</div>
         <div class="summary-card-label">未关闭偏差</div>
         <div class="summary-card-hint">需要跟进处理</div>
       </div>
-      <div class="summary-card summary-card--success">
+      <div class="summary-card summary-card--success clickable" :class="{ active: filterStatus==='closed' }" @click="setStatusFilter('closed')">
         <div class="summary-card-value">{{ closedCount }}</div>
         <div class="summary-card-label">已关闭</div>
         <div class="summary-card-hint">已处理完成的偏差</div>
       </div>
-      <div class="summary-card summary-card--primary">
-        <div class="summary-card-value">{{ tableData.length }}</div>
+      <div class="summary-card summary-card--primary clickable" :class="{ active: filterStatus==='' }" @click="setStatusFilter('')">
+        <div class="summary-card-value">{{ allData.length }}</div>
         <div class="summary-card-label">全部偏差</div>
       </div>
     </section>
@@ -101,10 +101,12 @@ import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
 import { getProjects } from '../api/project'
 import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
+const allData = ref([])
 const tableData = ref([])
 const filterStatus = ref('')
 const showCreate = ref(false)
@@ -113,23 +115,36 @@ const createFormRef = ref(null)
 const projects = ref([])
 const form = reactive({ projectId: null, description: '', reason: '', impact: '' })
 
-const openCount = computed(() => tableData.value.filter(d => d.status === 'open').length)
-const closedCount = computed(() => tableData.value.filter(d => d.status === 'closed').length)
+const openCount = computed(() => allData.value.filter(d => d.status === 'open').length)
+const closedCount = computed(() => allData.value.filter(d => d.status === 'closed').length)
 
 async function loadData() {
   loading.value = true
   try {
     const res = await request.get('/deviations')
-    let list = res.data || []
+    allData.value = res.data || []
+    let list = allData.value
     if (filterStatus.value) list = list.filter(d => d.status === filterStatus.value)
     tableData.value = list
+  } catch (error) {
+    showActionError(error, '偏差台账加载失败')
   } finally { loading.value = false }
 }
 
-async function handleClose(row) {
-  await request.put(`/deviations/${row.id}/close`)
-  ElMessage.success('偏差已关闭')
+function setStatusFilter(status) {
+  filterStatus.value = status
   loadData()
+}
+
+async function handleClose(row) {
+  try {
+    await confirmDanger('确认关闭该偏差？关闭后将记录为已处理。')
+    await request.put(`/deviations/${row.id}/close`)
+    ElMessage.success('偏差已关闭')
+    loadData()
+  } catch (error) {
+    showActionError(error, '关闭偏差失败')
+  }
 }
 
 async function handleCreate() {
@@ -141,6 +156,8 @@ async function handleCreate() {
     showCreate.value = false
     Object.assign(form, { projectId: null, description: '', reason: '', impact: '' })
     loadData()
+  } catch (error) {
+    showActionError(error, '偏差记录保存失败')
   } finally { creating.value = false }
 }
 
@@ -150,10 +167,14 @@ onMounted(async () => {
     try {
       const res = await getProjects({ page: 1, size: 100 })
       projects.value = res.data.records || []
-    } catch {}
+    } catch (error) { showActionError(error, '项目列表加载失败') }
   }
 })
 </script>
 
 <style scoped>
+.summary-card.clickable.active {
+  border-color: var(--pm-accent);
+  box-shadow: inset 0 0 0 1px rgba(37,99,235,0.18), var(--pm-shadow);
+}
 </style>

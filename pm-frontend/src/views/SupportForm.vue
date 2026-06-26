@@ -51,7 +51,7 @@
         <el-descriptions-item label="处理回复" :span="2" v-if="detail.reply">{{ detail.reply }}</el-descriptions-item>
       </el-descriptions>
 
-      <div v-if="detail?.status=='pending'" style="margin-top:24px">
+      <div v-if="detail?.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">
         <el-form label-width="90px">
           <el-form-item label="处理回复" required>
             <el-input v-model="reply" type="textarea" :rows="4" placeholder="输入处理意见、解决方案或协调结果" />
@@ -78,12 +78,15 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
 import { getProjects } from '../api/project'
 import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const isEdit = ref(!!route.params.id)
 const formRef = ref(null)
 const submitting = ref(false)
@@ -101,14 +104,18 @@ async function loadFormData() {
       getProjects({ page: 1, size: 100 })
     ])
     projects.value = projRes.data.records || []
-  } catch {}
+  } catch (error) {
+    showActionError(error, '项目列表加载失败')
+  }
 }
 
 async function loadDetail() {
   try {
     const res = await request.get('/supports')
     detail.value = (res.data || []).find(s => s.id == route.params.id)
-  } catch {}
+  } catch (error) {
+    showActionError(error, '支持事项详情加载失败')
+  }
 }
 
 async function handleSubmit() {
@@ -118,6 +125,8 @@ async function handleSubmit() {
     await request.post('/supports', { ...form })
     ElMessage.success('支持申请已提交')
     router.back()
+  } catch (error) {
+    showActionError(error, '提交支持申请失败')
   } finally { submitting.value = false }
 }
 
@@ -125,9 +134,12 @@ async function handleResolve() {
   if (!reply.value.trim()) { ElMessage.warning('请填写处理回复'); return }
   submitting.value = true
   try {
+    await confirmDanger('确认将该支持事项标记为已解决？')
     await request.put(`/supports/${route.params.id}/resolve`, { reply: reply.value, resolveNote: resolveNote.value })
     ElMessage.success('已标记为已解决')
     router.back()
+  } catch (error) {
+    showActionError(error, '解决支持事项失败')
   } finally { submitting.value = false }
 }
 

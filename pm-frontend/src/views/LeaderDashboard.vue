@@ -114,6 +114,7 @@ import request from '../api/index'
 import { importProjectsFromOa } from '../api/project'
 import { ElMessageBox } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
+import { showActionError } from '../utils/actionGuards'
 
 const stats = ref({})
 const loading = ref(false)
@@ -207,6 +208,8 @@ async function loadData() {
   try {
     const res = await request.get('/leader-dashboard')
     stats.value = res.data
+  } catch (error) {
+    showActionError(error, '领导看板加载失败')
   } finally {
     loading.value = false
   }
@@ -232,6 +235,8 @@ async function handleOaFileSelected(event) {
       { confirmButtonText: '知道了' }
     )
     await loadData()
+  } catch (error) {
+    showActionError(error, 'OA 项目导入失败')
   } finally {
     importingOa.value = false
   }

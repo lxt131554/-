@@ -5,6 +5,7 @@ import com.pm.entity.SysDeviation;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.SysDeviationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -36,20 +37,16 @@ public class DeviationController {
     @GetMapping("/{id}")
     public Result<SysDeviation> getById(@PathVariable Long id,
                                         @AuthenticationPrincipal LoginUser loginUser) {
-        SysDeviation d = deviationService.getById(id);
+        SysDeviation d = deviationService.getDetail(id);
         if (d == null) {
             return Result.fail("偏差不存在");
         }
         accessService.requireProjectView(d.getProjectId(), loginUser.getUser());
-        SysDeviation detail = deviationService.listByProject(d.getProjectId()).stream()
-                .filter(item -> id.equals(item.getId()))
-                .findFirst()
-                .orElse(d);
-        return Result.ok(detail);
+        return Result.ok(d);
     }
 
     @PostMapping
-    public Result<SysDeviation> create(@RequestBody SysDeviation deviation,
+    public Result<SysDeviation> create(@Valid @RequestBody SysDeviation deviation,
                                        @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectView(deviation.getProjectId(), loginUser.getUser());
         deviation.setType("manual");

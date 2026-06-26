@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,15 @@ public class SysDeviationServiceImpl extends ServiceImpl<SysDeviationMapper, Sys
         }
         wrapper.orderByDesc(SysDeviation::getCreateTime);
         return enrich(baseMapper.selectList(wrapper));
+    }
+
+    @Override
+    public SysDeviation getDetail(Long id) {
+        SysDeviation item = baseMapper.selectById(id);
+        if (item == null) {
+            return null;
+        }
+        return enrich(Collections.singletonList(item)).get(0);
     }
 
     @Override

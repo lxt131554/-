@@ -66,27 +66,37 @@
     <!-- Main area -->
     <el-container>
       <el-header class="layout-header">
-        <el-popover ref="notifyPopover" placement="bottom-end" :width="320" trigger="click">
-          <template #reference>
-            <el-badge :value="notifications.length" :hidden="!notifications.length" :max="99" style="margin-right:20px;cursor:pointer">
-              <el-icon :size="20"><Bell /></el-icon>
-            </el-badge>
-          </template>
-          <div v-if="notifications.length" style="max-height:400px;overflow-y:auto">
-            <div v-for="(n, i) in notifications" :key="i"
-              style="padding:12px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer"
-              @click="goNotify(n.url)">
-              <div style="font-size:14px;color:var(--pm-text)">{{ n.message }}</div>
-              <div style="font-size:12px;color:#999;margin-top:4px">{{ n.time?.substring(0,16) }}</div>
+        <div class="header-location">
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item v-for="item in breadcrumbItems" :key="item.title" :to="item.path ? { path: item.path } : undefined">
+              {{ item.title }}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
+          <div class="header-page-title">{{ currentTitle }}</div>
+        </div>
+        <div class="header-actions">
+          <el-popover ref="notifyPopover" placement="bottom-end" :width="320" trigger="click">
+            <template #reference>
+              <el-badge :value="notifications.length" :hidden="!notifications.length" :max="99" class="header-notify">
+                <el-icon :size="20"><Bell /></el-icon>
+              </el-badge>
+            </template>
+            <div v-if="notifications.length" style="max-height:400px;overflow-y:auto">
+              <div v-for="(n, i) in notifications" :key="i"
+                style="padding:12px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer"
+                @click="goNotify(n.url)">
+                <div style="font-size:14px;color:var(--pm-text)">{{ n.message }}</div>
+                <div style="font-size:12px;color:#999;margin-top:4px">{{ n.time?.substring(0,16) }}</div>
+              </div>
             </div>
+            <el-empty v-else description="暂无待办事项" :image-size="60" />
+          </el-popover>
+          <div class="header-user">
+            <span class="header-name">{{ auth.user?.realName }}</span>
+            <span class="header-role">{{ roleLabel }}</span>
+            <span class="header-divider"></span>
+            <el-button type="danger" text size="small" @click="handleLogout">退出</el-button>
           </div>
-          <el-empty v-else description="暂无待办事项" :image-size="60" />
-        </el-popover>
-        <div class="header-user">
-          <span class="header-name">{{ auth.user?.realName }}</span>
-          <span class="header-role">{{ roleLabel }}</span>
-          <span class="header-divider"></span>
-          <el-button type="danger" text size="small" @click="handleLogout">退出</el-button>
         </div>
       </el-header>
       <el-main class="layout-main">
@@ -102,6 +112,7 @@ import { useAuthStore } from '../stores/auth'
 import { computed, ref, onMounted } from 'vue'
 import { Bell } from '@element-plus/icons-vue'
 import request from '../api/index'
+import { showActionError } from '../utils/actionGuards'
 
 const router = useRouter()
 const route = useRoute()
@@ -115,11 +126,29 @@ const roleLabel = computed(() => {
 
 const notifications = ref([])
 
+const currentTitle = computed(() => route.meta?.title || '工作台')
+const breadcrumbItems = computed(() => {
+  const items = [{ title: '首页', path: defaultPathForRole(auth.user?.role) }]
+  if (route.meta?.parentTitle) {
+    items.push({ title: route.meta.parentTitle, path: route.meta.parentPath })
+  }
+  if (currentTitle.value !== '工作台') {
+    items.push({ title: currentTitle.value })
+  }
+  return items
+})
+
+function defaultPathForRole(role) {
+  return role === 'leader' ? '/leader-dashboard' : '/dashboard'
+}
+
 async function loadNotifications() {
   try {
     const res = await request.get('/notifications')
     notifications.value = res.data || []
-  } catch {}
+  } catch (error) {
+    showActionError(error, '通知加载失败')
+  }
 }
 
 function goNotify(url) {
@@ -170,9 +199,35 @@ function handleLogout() {
   border-bottom: 1px solid var(--pm-border);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   padding: 0 var(--pm-space-lg);
-  height: 52px;
+  height: 58px;
+}
+
+.header-location {
+  min-width: 0;
+}
+
+.header-page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pm-text);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.header-notify {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* User info */

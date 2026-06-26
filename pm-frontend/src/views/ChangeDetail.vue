@@ -14,7 +14,7 @@
         <el-descriptions-item label="变更内容" :span="2">{{ detail.content }}</el-descriptions-item>
         <el-descriptions-item label="影响范围" :span="2">{{ detail.impact || '无' }}</el-descriptions-item>
       </el-descriptions>
-      <div v-if="detail?.status=='pending' && (auth.user?.role=='leader'||auth.user?.role=='admin')" style="margin-top:24px">
+      <div v-if="detail?.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">
         <el-button type="primary" @click="handleConfirm" :loading="confirming">确认变更</el-button>
       </div>
     </div>
@@ -27,6 +27,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
 import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,15 +39,20 @@ async function loadDetail() {
   try {
     const res = await request.get(`/changes/${route.params.id}`)
     detail.value = res.data
-  } catch {}
+  } catch (error) {
+    showActionError(error, '变更详情加载失败')
+  }
 }
 
 async function handleConfirm() {
   confirming.value = true
   try {
+    await confirmDanger('确认通过该变更？确认后该变更将进入已确认状态。')
     await request.put(`/changes/${route.params.id}/confirm`)
     ElMessage.success('变更已确认')
     router.back()
+  } catch (error) {
+    showActionError(error, '确认变更失败')
   } finally { confirming.value = false }
 }
 

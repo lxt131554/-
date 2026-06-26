@@ -67,6 +67,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import request from '../api/index'
+import { showActionError } from '../utils/actionGuards'
 
 const stats = ref({})
 
@@ -74,7 +75,9 @@ async function loadStats() {
   try {
     const res = await request.get('/statistics')
     stats.value = res.data
-  } catch {}
+  } catch (error) {
+    showActionError(error, '统计数据加载失败')
+  }
 }
 
 onMounted(loadStats)

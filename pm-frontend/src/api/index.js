@@ -3,16 +3,20 @@ import { ElMessage } from 'element-plus'
 import { setupMock } from '../mock/index'
 
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 15000,
   withCredentials: true
 })
+
+function withRequestId(message, data) {
+  return data?.requestId ? `${message} [requestId: ${data.requestId}]` : message
+}
 
 request.interceptors.response.use(
   res => {
     if (res.data.code !== 200) {
       if (res.data.code !== 401) {
-        ElMessage.error(res.data.message || '请求失败')
+        ElMessage.error(withRequestId(res.data.message || '请求失败', res.data))
       }
       return Promise.reject(new Error(res.data.message))
     }
@@ -24,7 +28,7 @@ request.interceptors.response.use(
     } else if (err.response?.status === 403) {
       ElMessage.error('没有权限')
     } else if (err.response?.data?.message) {
-      ElMessage.error(err.response.data.message)
+      ElMessage.error(withRequestId(err.response.data.message, err.response.data))
     } else {
       ElMessage.error('网络错误')
     }

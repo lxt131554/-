@@ -6,7 +6,7 @@
         <div></div>
         <el-button type="primary" @click="openCreate"><el-icon><Plus /></el-icon> 新增用户</el-button>
       </div>
-      <el-table :data="users" border stripe v-loading="loading">
+      <el-table v-if="users.length" :data="users" border stripe v-loading="loading">
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="realName" label="姓名" min-width="100" />
         <el-table-column prop="role" label="角色" min-width="100">
@@ -29,6 +29,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-else-if="!loading" description="暂无用户数据" />
     </div>
 
     <el-dialog v-model="showDialog" :title="isEdit?'编辑用户':'新增用户'" width="500px" :close-on-click-modal="false">
@@ -59,7 +60,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '../api/index'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const users = ref([])
 const loading = ref(false)
@@ -73,6 +75,7 @@ const roleMap = { admin:'管理员', manager:'项目负责人', engineer:'工程
 async function loadUsers() {
   loading.value = true
   try { const res = await request.get('/users'); users.value = res.data || [] }
+  catch (error) { showActionError(error, '用户列表加载失败') }
   finally { loading.value = false }
 }
 
@@ -102,14 +105,20 @@ async function handleSave() {
       ElMessage.success('用户已创建')
     }
     showDialog.value = false; loadUsers()
+  } catch (error) {
+    showActionError(error, '用户保存失败')
   } finally { saving.value = false }
 }
 
 async function toggleUser(row) {
-  await ElMessageBox.confirm(`确定${row.enabled?'禁用':'启用'}该用户？`)
-  await request.put(`/users/${row.id}/toggle`)
-  ElMessage.success('状态已更新')
-  loadUsers()
+  try {
+    await confirmDanger(`确定${row.enabled ? '禁用' : '启用'}用户“${row.realName || row.username}”？`)
+    await request.put(`/users/${row.id}/toggle`)
+    ElMessage.success('状态已更新')
+    loadUsers()
+  } catch (error) {
+    showActionError(error, '用户状态更新失败')
+  }
 }
 
 onMounted(loadUsers)

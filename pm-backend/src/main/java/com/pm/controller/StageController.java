@@ -12,6 +12,7 @@ import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.SysProjectStageService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +43,7 @@ public class StageController {
 
     @PostMapping("/projects/{projectId}/stages")
     public Result<SysProjectStage> addStage(@PathVariable Long projectId,
-                                            @RequestBody SysProjectStage stage,
+                                            @Valid @RequestBody SysProjectStage stage,
                                             @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(projectId, loginUser.getUser());
         stage.setProjectId(projectId);
@@ -54,7 +55,7 @@ public class StageController {
     @PutMapping("/projects/{projectId}/stages/{stageId}")
     public Result<SysProjectStage> updateStage(@PathVariable Long projectId,
                                                @PathVariable Long stageId,
-                                               @RequestBody SysProjectStage stage,
+                                               @Valid @RequestBody SysProjectStage stage,
                                                @AuthenticationPrincipal LoginUser loginUser) {
         SysProjectStage existing = stageService.getById(stageId);
         if (existing == null || !projectId.equals(existing.getProjectId())) {
@@ -86,7 +87,7 @@ public class StageController {
 
     @PostMapping("/stages/template/{projectId}")
     public Result<List<SysProjectStage>> applyTemplate(@PathVariable Long projectId,
-                                                       @RequestBody List<SysProjectStage> templateStages,
+                                                       @Valid @RequestBody List<@Valid SysProjectStage> templateStages,
                                                        @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(projectId, loginUser.getUser());
         List<SysProjectStage> created = new ArrayList<>();

@@ -17,6 +17,7 @@ import com.pm.service.ProjectAccessService;
 import com.pm.service.SysDeviationService;
 import com.pm.service.SysProjectService;
 import com.pm.service.SysSupportItemService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -78,7 +79,7 @@ public class ProjectController {
     }
 
     @PostMapping
-    public Result<SysProject> create(@RequestBody SysProject project,
+    public Result<SysProject> create(@Valid @RequestBody SysProject project,
                                      @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectCreator(loginUser.getUser());
         project.setCreateUserId(loginUser.getUser().getId());
@@ -97,7 +98,7 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public Result<SysProject> update(@PathVariable Long id, @RequestBody SysProject project,
+    public Result<SysProject> update(@PathVariable Long id, @Valid @RequestBody SysProject project,
                                      @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
         project.setId(id);
@@ -137,8 +138,21 @@ public class ProjectController {
     public Result<?> addMember(@PathVariable Long id, @RequestBody Map<String, Object> body,
                                @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
-        Long userId = Long.valueOf(body.get("userId").toString());
-        String roleInProject = body.get("roleInProject").toString();
+        Object userIdValue = body.get("userId");
+        Object roleValue = body.get("roleInProject");
+        if (userIdValue == null || roleValue == null) {
+            throw new IllegalArgumentException("请选择成员和项目角色");
+        }
+        Long userId;
+        try {
+            userId = Long.valueOf(userIdValue.toString());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("成员ID格式错误");
+        }
+        String roleInProject = roleValue.toString();
+        if (!"manager".equals(roleInProject) && !"engineer".equals(roleInProject)) {
+            throw new IllegalArgumentException("项目角色只能是负责人或工程师");
+        }
         projectService.addMember(id, userId, roleInProject, "pending");
         return Result.ok();
     }

@@ -11,6 +11,7 @@ public class SysReview {
     private Long id;
     private Long projectId;
     private String overallDeviation;
+    private String supportEvaluation;
     private String efficiencyRating;
     private String qualityRating;
     private String communicationNote;
