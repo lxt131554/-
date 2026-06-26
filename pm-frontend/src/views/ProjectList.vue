@@ -5,15 +5,15 @@
     </div>
     <section class="page-summary-grid" style="margin-bottom:16px">
       <div class="summary-card summary-card--primary clickable" :class="{ active: statusFilter==='' }" @click="setStatusFilter('')">
-        <div class="summary-card-value">{{ summaryTotal }}</div>
+        <div class="summary-card-value">{{ summaryTotal ?? '--' }}</div>
         <div class="summary-card-label">全部项目</div>
       </div>
       <div class="summary-card summary-card--success clickable" :class="{ active: statusFilter==='active' }" @click="setStatusFilter('active')">
-        <div class="summary-card-value">{{ activeCount }}</div>
+        <div class="summary-card-value">{{ activeCount ?? '--' }}</div>
         <div class="summary-card-label">进行中</div>
       </div>
       <div class="summary-card summary-card--primary clickable" :class="{ active: statusFilter==='completed' }" @click="setStatusFilter('completed')">
-        <div class="summary-card-value">{{ completedCount }}</div>
+        <div class="summary-card-value">{{ completedCount ?? '--' }}</div>
         <div class="summary-card-label">已完成</div>
       </div>
     </section>
@@ -89,14 +89,14 @@ const loading = ref(false)
 const tableData = ref([])
 const page = ref(1)
 const total = ref(0)
-const summaryTotal = ref(0)
+const summaryTotal = ref(null)
 const size = ref(10)
 const keyword = ref('')
 const statusFilter = ref('')
 const oaFileInput = ref(null)
 const importingOa = ref(false)
-const activeCount = ref(0)
-const completedCount = ref(0)
+const activeCount = ref(null)
+const completedCount = ref(null)
 
 async function loadData() {
   loading.value = true

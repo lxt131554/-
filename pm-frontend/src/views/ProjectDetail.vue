@@ -45,7 +45,7 @@
     <div class="card-box" style="margin-bottom:16px">
       <div class="page-toolbar">
         <span class="section-title">启动与策划信息</span>
-        <el-button v-if="!planningEditMode && (auth.user?.role=='manager'||auth.user?.role=='admin')"
+        <el-button v-if="!planningEditMode && (auth.user?.role=='manager'||auth.user?.role=='admin') && project.status !== 'completed'"
           size="small" @click="startPlanningEdit">
           <el-icon><Edit /></el-icon> {{ hasPlanningData ? '编辑' : '填写' }}
         </el-button>
@@ -98,7 +98,7 @@
         </section>
       </template>
       <el-empty v-else-if="!planningEditMode" description="暂未填写启动与策划信息" :image-size="80">
-        <el-button v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" type="primary" @click="startPlanningEdit">
+        <el-button v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status !== 'completed'" type="primary" @click="startPlanningEdit">
           立即填写
         </el-button>
       </el-empty>
@@ -312,13 +312,13 @@
       <div class="page-toolbar">
         <span class="section-title">项目成员</span>
         <el-button type="primary" size="small" @click="showAddMember=true"
-          v-if="isProjectManager || auth.user?.role=='admin'">
+          v-if="(isProjectManager || auth.user?.role=='admin') && project.status !== 'completed'">
           <el-icon><Plus /></el-icon> 添加成员
         </el-button>
       </div>
       <div class="member-tags">
         <el-tag v-for="m in members" :key="m.id"
-          :closable="isProjectManager || auth.user?.role=='admin'"
+          :closable="(isProjectManager || auth.user?.role=='admin') && project.status !== 'completed'"
           :type="m.roleInProject==='manager'?'warning':'success'"
           @close="handleRemoveMember(m)" size="large">
           {{ m.realName }}（{{ m.roleInProject==='manager'?'负责人':'工程师' }}）

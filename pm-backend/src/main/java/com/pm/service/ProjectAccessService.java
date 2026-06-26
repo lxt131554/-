@@ -1,10 +1,12 @@
 package com.pm.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectMember;
 import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.entity.SysUser;
+import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysProjectStageMapper;
 import com.pm.mapper.SysStageReportMapper;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ProjectAccessService {
 
+    private final SysProjectMapper projectMapper;
     private final SysProjectMemberMapper memberMapper;
     private final SysProjectStageMapper stageMapper;
     private final SysStageReportMapper reportMapper;
@@ -61,6 +64,8 @@ public class ProjectAccessService {
     public boolean canReportStage(Long stageId, SysUser user) {
         SysProjectStage stage = stageMapper.selectById(stageId);
         if (stage == null || user == null) return false;
+        // 仅待填报/进行中/被退回阶段可填报，已提交和已完成不可再填报
+        if ("submitted".equals(stage.getStatus()) || "completed".equals(stage.getStatus())) return false;
         if (isAdmin(user)) return true;
         if (stage.getAssigneeId() != null && stage.getAssigneeId().equals(user.getId())) return true;
         return canManageProject(stage.getProjectId(), user);
@@ -94,6 +99,13 @@ public class ProjectAccessService {
 
     public void requireProjectManager(Long projectId, SysUser user) {
         if (!canManageProject(projectId, user)) deny();
+    }
+
+    public void requireProjectActive(Long projectId) {
+        SysProject project = projectMapper.selectById(projectId);
+        if (project != null && "completed".equals(project.getStatus())) {
+            throw new AccessDeniedException("已完成项目不允许修改阶段、成员或填报");
+        }
     }
 
     public void requireStageView(Long stageId, SysUser user) {

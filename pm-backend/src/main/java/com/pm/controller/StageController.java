@@ -46,6 +46,7 @@ public class StageController {
                                             @Valid @RequestBody SysProjectStage stage,
                                             @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(projectId, loginUser.getUser());
+        accessService.requireProjectActive(projectId);
         stage.setProjectId(projectId);
         stage.setStatus("pending");
         stageService.save(stage);
@@ -62,6 +63,7 @@ public class StageController {
             return Result.fail("阶段不存在");
         }
         accessService.requireStageManager(stageId, loginUser.getUser());
+        accessService.requireProjectActive(projectId);
         stage.setId(stageId);
         stage.setProjectId(projectId);
         stageService.updateById(stage);
@@ -76,6 +78,7 @@ public class StageController {
             return Result.fail("阶段不存在");
         }
         accessService.requireStageManager(stageId, loginUser.getUser());
+        accessService.requireProjectActive(projectId);
         stageService.removeById(stageId);
         return Result.ok();
     }
@@ -90,6 +93,7 @@ public class StageController {
                                                        @Valid @RequestBody List<@Valid SysProjectStage> templateStages,
                                                        @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(projectId, loginUser.getUser());
+        accessService.requireProjectActive(projectId);
         List<SysProjectStage> created = new ArrayList<>();
         for (int i = 0; i < templateStages.size(); i++) {
             SysProjectStage stage = templateStages.get(i);
