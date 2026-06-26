@@ -5,12 +5,6 @@
         <h2>领导看板</h2>
         <p style="color:var(--pm-text-secondary);margin-top:4px">全院项目总览</p>
       </div>
-      <div class="page-header-actions" v-if="auth.user?.role==='leader'||auth.user?.role==='admin'">
-        <input ref="oaFileInput" class="hidden-file-input" type="file" accept=".xls,.xlsx" @change="handleOaFileSelected" />
-        <el-button :loading="importingOa" @click="triggerOaImport">
-          <el-icon><Upload /></el-icon> 导入 OA 项目
-        </el-button>
-      </div>
     </div>
 
     <!-- Tier 1: 全院概览 — summary cards -->
@@ -55,7 +49,9 @@
         </el-table-column>
         <el-table-column prop="projectName" label="所属项目" min-width="160" />
         <el-table-column prop="summary" label="事项概要" min-width="280" show-overflow-tooltip />
-        <el-table-column prop="createTime" label="时间" width="160" />
+        <el-table-column label="时间" width="160">
+          <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="80" align="center">
           <template #default="{ row }">
             <el-button size="small" text type="primary" @click="$router.push(row.linkUrl)">查看</el-button>
@@ -111,15 +107,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import request from '../api/index'
-import { importProjectsFromOa } from '../api/project'
-import { ElMessageBox } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import { showActionError } from '../utils/actionGuards'
 
 const stats = ref({})
 const loading = ref(false)
-const oaFileInput = ref(null)
-const importingOa = ref(false)
 const auth = useAuthStore()
 
 const allProjects = computed(() => stats.value.projects || [])
@@ -203,6 +195,11 @@ const attentionProjects = computed(() => {
   })
 })
 
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
+}
+
 async function loadData() {
   loading.value = true
   try {
@@ -215,33 +212,6 @@ async function loadData() {
   }
 }
 
-function triggerOaImport() {
-  oaFileInput.value?.click()
-}
-
-async function handleOaFileSelected(event) {
-  const file = event.target.files?.[0]
-  event.target.value = ''
-  if (!file) return
-
-  importingOa.value = true
-  try {
-    const res = await importProjectsFromOa(file)
-    const data = res.data || {}
-    const missingManagers = data.missingManagers?.length ? data.missingManagers.join('、') : '无'
-    await ElMessageBox.alert(
-      `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missingManagers}`,
-      'OA 项目导入结果',
-      { confirmButtonText: '知道了' }
-    )
-    await loadData()
-  } catch (error) {
-    showActionError(error, 'OA 项目导入失败')
-  } finally {
-    importingOa.value = false
-  }
-}
-
 onMounted(loadData)
 </script>
 
@@ -251,16 +221,6 @@ onMounted(loadData)
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-}
-
-.page-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hidden-file-input {
-  display: none;
 }
 
 /* Clickable cards get pointer cursor */

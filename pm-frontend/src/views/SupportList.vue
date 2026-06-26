@@ -37,7 +37,9 @@
         </el-table-column>
         <el-table-column prop="applicantName" label="申请人" min-width="100" />
         <el-table-column prop="handlerName" label="处理人" min-width="100" />
-        <el-table-column prop="expectTime" label="期望时间" min-width="120" />
+        <el-table-column label="期望时间" min-width="120">
+          <template #default="{row}">{{ formatTime(row.expectTime) }}</template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" min-width="90" align="center">
           <template #default="{row}">
             <el-tag :type="row.status=='pending'?'warning':'success'" size="small">
@@ -83,6 +85,11 @@ function canResolve(row) {
 function setStatusFilter(status) {
   filterStatus.value = status
   loadData()
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 async function loadData() {

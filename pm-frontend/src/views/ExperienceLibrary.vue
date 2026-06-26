@@ -30,16 +30,36 @@
         </el-input>
       </div>
       <el-table v-if="filteredData.length" :data="filteredData" border stripe v-loading="loading">
-        <el-table-column prop="projectName" label="项目名称" min-width="200">
+        <el-table-column label="项目名称" min-width="160">
           <template #default="{row}">
-            <el-link v-if="row.projectId" type="primary" @click="router.push(`/projects/${row.projectId}`)">{{ row.projectName || '-' }}</el-link>
-            <span v-else>{{ row.projectName || '-' }}</span>
+            <el-link v-if="row.projectId" type="primary" @click="router.push(`/projects/${row.projectId}`)">{{ row.projectName && row.projectName !== '-' ? row.projectName : (row.projectId || '-') }}</el-link>
+            <span v-else>{{ row.projectName && row.projectName !== '-' ? row.projectName : (row.projectId || '-') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="reusableExperience" label="值得复用的经验" min-width="240" show-overflow-tooltip />
-        <el-table-column prop="shortcomings" label="短板或缺陷" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="improvement" label="改进建议" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column label="可复用经验" min-width="200">
+          <template #default="{row}">
+            <div class="line-clamp-2">{{ row.reusableExperience || '-' }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="短板或缺陷" min-width="180">
+          <template #default="{row}">
+            <div class="line-clamp-2">{{ row.shortcomings || '-' }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="改进建议" min-width="180">
+          <template #default="{row}">
+            <div class="line-clamp-2">{{ row.improvement || '-' }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="150">
+          <template #default="{row}">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right" align="center">
+          <template #default="{row}">
+            <el-button v-if="row.projectId" text type="primary" size="small" @click="router.push(`/projects/${row.projectId}`)">查看详情</el-button>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="暂无经验总结" />
     </div>
@@ -84,6 +104,11 @@ async function loadData() {
   } finally { loading.value = false }
 }
 
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
+}
+
 onMounted(loadData)
 </script>
 
@@ -105,5 +130,12 @@ onMounted(loadData)
 }
 .summary-card--warning .summary-card-value {
   color: var(--pm-amber-text);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>

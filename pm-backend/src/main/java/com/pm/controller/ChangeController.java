@@ -58,7 +58,11 @@ public class ChangeController {
     @PutMapping("/api/changes/{id}/confirm")
     public Result<?> confirm(@PathVariable Long id,
                              @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireLeaderOrAdmin(loginUser.getUser());
+        SysChange c = changeService.getById(id);
+        if (c == null) {
+            return Result.fail("变更不存在");
+        }
+        accessService.requireProjectManager(c.getProjectId(), loginUser.getUser());
         changeService.confirm(id);
         return Result.ok();
     }

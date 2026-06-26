@@ -63,7 +63,7 @@
         <el-table-column label="操作" min-width="120">
           <template #default="{row}">
             <el-button v-if="row.status!=='completed'" type="primary" size="small" @click="router.push(`/my-tasks/${row.id}/report`)">填报</el-button>
-            <el-button v-else type="primary" plain size="small" @click="router.push(`/stages/${row.id}`)">查看</el-button>
+            <el-button v-else type="primary" size="small" link @click="router.push(`/stages/${row.id}`)">查看</el-button>
           </template>
         </el-table-column>
       </el-table>

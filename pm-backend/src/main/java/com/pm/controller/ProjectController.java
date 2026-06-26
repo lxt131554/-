@@ -4,12 +4,26 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.pm.common.Result;
 import com.pm.dto.OaProjectImportResult;
+import com.pm.entity.SysApproval;
+import com.pm.entity.SysChange;
 import com.pm.entity.SysDeviation;
+import com.pm.entity.SysExperience;
 import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectMember;
+import com.pm.entity.SysProjectStage;
+import com.pm.entity.SysReview;
+import com.pm.entity.SysStageReport;
 import com.pm.entity.SysSupportItem;
 import com.pm.entity.SysUser;
+import com.pm.mapper.SysApprovalMapper;
+import com.pm.mapper.SysChangeMapper;
+import com.pm.mapper.SysDeviationMapper;
+import com.pm.mapper.SysExperienceMapper;
 import com.pm.mapper.SysProjectMemberMapper;
+import com.pm.mapper.SysProjectStageMapper;
+import com.pm.mapper.SysReviewMapper;
+import com.pm.mapper.SysStageReportMapper;
+import com.pm.mapper.SysSupportItemMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.OaProjectImportService;
@@ -44,6 +58,14 @@ public class ProjectController {
     private final SysProjectService projectService;
     private final SysUserMapper userMapper;
     private final SysProjectMemberMapper memberMapper;
+    private final SysProjectStageMapper stageMapper;
+    private final SysStageReportMapper reportMapper;
+    private final SysDeviationMapper deviationMapper;
+    private final SysSupportItemMapper supportItemMapper;
+    private final SysChangeMapper changeMapper;
+    private final SysReviewMapper reviewMapper;
+    private final SysExperienceMapper experienceMapper;
+    private final SysApprovalMapper approvalMapper;
     private final SysDeviationService deviationService;
     private final SysSupportItemService supportItemService;
     private final OaProjectImportService oaProjectImportService;
@@ -110,6 +132,16 @@ public class ProjectController {
     public Result<?> delete(@PathVariable Long id,
                             @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireAdmin(loginUser.getUser());
+        // 级联清理子表数据，避免孤儿记录
+        memberMapper.delete(new LambdaQueryWrapper<SysProjectMember>().eq(SysProjectMember::getProjectId, id));
+        stageMapper.delete(new LambdaQueryWrapper<SysProjectStage>().eq(SysProjectStage::getProjectId, id));
+        reportMapper.delete(new LambdaQueryWrapper<SysStageReport>().eq(SysStageReport::getProjectId, id));
+        deviationMapper.delete(new LambdaQueryWrapper<SysDeviation>().eq(SysDeviation::getProjectId, id));
+        supportItemMapper.delete(new LambdaQueryWrapper<SysSupportItem>().eq(SysSupportItem::getProjectId, id));
+        changeMapper.delete(new LambdaQueryWrapper<SysChange>().eq(SysChange::getProjectId, id));
+        reviewMapper.delete(new LambdaQueryWrapper<SysReview>().eq(SysReview::getProjectId, id));
+        experienceMapper.delete(new LambdaQueryWrapper<SysExperience>().eq(SysExperience::getProjectId, id));
+        approvalMapper.delete(new LambdaQueryWrapper<SysApproval>().eq(SysApproval::getProjectId, id));
         projectService.removeById(id);
         return Result.ok();
     }

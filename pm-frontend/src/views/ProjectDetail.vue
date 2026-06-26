@@ -208,7 +208,7 @@
       <div class="page-toolbar">
         <span class="section-title">项目阶段</span>
         <el-button type="primary" size="small" @click="showAddStage=true"
-          v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">
+          v-if="(auth.user?.role==='manager'||auth.user?.role==='admin') && project.status!=='completed'">
           <el-icon><Plus /></el-icon> 添加阶段
         </el-button>
         <el-button v-if="!stages.length && (auth.user?.role=='manager'||auth.user?.role=='admin')"
@@ -247,8 +247,8 @@
         <el-table-column label="操作" min-width="180">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/my-tasks/${row.id}/report`)"
-              v-if="auth.user?.role==='engineer'">填报</el-button>
-            <el-button text type="danger" @click="handleDeleteStage(row)" v-if="auth.user?.role=='manager'||auth.user?.role=='admin'">删除</el-button>
+              v-if="auth.user?.role==='engineer' && row.status!=='completed'">填报</el-button>
+            <el-button text type="danger" @click="handleDeleteStage(row)" v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status!=='completed'">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -259,7 +259,7 @@
       <div class="page-toolbar">
         <span class="section-title">变更控制</span>
         <el-button type="primary" size="small" @click="showAddChange=true"
-          v-if="auth.user?.role=='manager'||auth.user?.role=='admin'">
+          v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status!=='completed'">
           <el-icon><Plus /></el-icon> 新增变更
         </el-button>
       </div>

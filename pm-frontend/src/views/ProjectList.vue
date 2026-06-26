@@ -39,21 +39,16 @@
       </div>
 
       <el-table v-if="tableData.length" :data="tableData" v-loading="loading" class="pm-table">
-        <el-table-column prop="id" label="编号" min-width="80" />
+        <el-table-column prop="id" label="编号" width="70" />
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
             <el-link type="primary" @click="router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
           </template>
         </el-table-column>
-        <el-table-column label="项目负责人" min-width="120">
+        <el-table-column label="负责人" min-width="120">
           <template #default="{row}">{{ row.managerName || managerText(row) }}</template>
         </el-table-column>
-        <el-table-column label="负责人状态" min-width="100" align="center">
-          <template #default="{row}">
-            <el-tag :type="managerStatus(row).type" size="small">{{ managerStatus(row).text }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="description" label="描述" min-width="240" show-overflow-tooltip />
+        <el-table-column prop="currentStageName" label="当前阶段" min-width="120" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" min-width="100">
           <template #default="{row}">
             <el-tag :type="row.status==='active'?'success':'info'" size="small">
@@ -61,7 +56,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column label="创建时间" width="150">
+          <template #default="{row}">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" min-width="120" fixed="right">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/projects/${row.id}`)">查看</el-button>
@@ -114,15 +111,24 @@ async function loadData() {
 }
 
 async function loadSummaryCounts() {
-  const params = { page: 1, size: 1, keyword: keyword.value }
-  const [allRes, activeRes, completedRes] = await Promise.all([
-    getProjects(params),
-    getProjects({ ...params, status: 'active' }),
-    getProjects({ ...params, status: 'completed' })
-  ])
-  summaryTotal.value = allRes.data.total || 0
-  activeCount.value = activeRes.data.total || 0
-  completedCount.value = completedRes.data.total || 0
+  try {
+    const allRes = await getProjects({ page: 1, size: 999, status: '' })
+    const allRecords = allRes?.data?.records || []
+    summaryTotal.value = allRes?.data?.total || allRecords.length
+
+    const activeRes = await getProjects({ page: 1, size: 1, status: 'active' })
+    activeCount.value = activeRes?.data?.total || 0
+
+    const completedRes = await getProjects({ page: 1, size: 1, status: 'completed' })
+    completedCount.value = completedRes?.data?.total || 0
+  } catch (e) {
+    summaryTotal.value = total.value
+  }
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 function setStatusFilter(status) {

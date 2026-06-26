@@ -56,7 +56,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column label="创建时间" min-width="170">
+          <template #default="{row}">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
         <el-table-column label="操作" min-width="80" fixed="right" align="center">
           <template #default="{row}">
             <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="primary" size="small" @click="handleClose(row)">
@@ -134,6 +136,11 @@ async function loadData() {
 function setStatusFilter(status) {
   filterStatus.value = status
   loadData()
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 async function handleClose(row) {
