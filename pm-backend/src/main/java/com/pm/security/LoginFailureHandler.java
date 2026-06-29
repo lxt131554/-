@@ -21,6 +21,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(401);
         response.getWriter().write(objectMapper.writeValueAsString(Result.fail(401, "用户名或密码错误")));
     }
 }

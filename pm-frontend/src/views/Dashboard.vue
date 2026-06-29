@@ -279,7 +279,7 @@ async function handleAcceptInvite(inv) {
 
 async function handleRejectInvite(inv) {
   try {
-    await request.delete(`/projects/${inv.projectId}/members/${inv.id}`)
+    await request.put(`/projects/${inv.projectId}/members/${inv.id}/reject`)
     ElMessage.info('已拒绝邀请')
     loadPendingInvites()
   } catch { }

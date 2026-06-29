@@ -63,6 +63,9 @@ public class UserController {
     public Result<?> toggle(@PathVariable Long id,
                             @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireAdmin(loginUser.getUser());
+        if (loginUser.getUser().getId().equals(id)) {
+            return Result.fail(400, "不能停用自己");
+        }
         SysUser user = userMapper.selectById(id);
         if (user == null) return Result.fail("用户不存在");
         user.setEnabled(!(user.getEnabled() != null && user.getEnabled()));

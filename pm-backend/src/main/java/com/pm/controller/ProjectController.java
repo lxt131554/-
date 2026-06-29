@@ -78,6 +78,7 @@ public class ProjectController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @AuthenticationPrincipal LoginUser loginUser) {
+        if (size > 100) size = 100;
         SysUser user = loginUser.getUser();
         IPage<SysProject> result = projectService.pageWithMembers(
                 page, size, keyword, status, user.getId(), user.getRole());
@@ -87,11 +88,11 @@ public class ProjectController {
     @GetMapping("/{id}")
     public Result<SysProject> detail(@PathVariable Long id,
                                      @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireProjectView(id, loginUser.getUser());
         SysProject project = projectService.getById(id);
         if (project == null) {
-            return Result.fail("project not found");
+            return Result.fail(404, "项目不存在");
         }
+        accessService.requireProjectView(id, loginUser.getUser());
         List<SysDeviation> deviations = deviationService.listByProject(id);
         List<SysSupportItem> supportItems = supportItemService.listByProject(id);
         project.setDeviations(deviations);
@@ -121,7 +122,7 @@ public class ProjectController {
     public Result<OaProjectImportResult> importFromOa(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireLeaderOrAdmin(loginUser.getUser());
+        accessService.requireAdmin(loginUser.getUser());
         return Result.ok(oaProjectImportService.importProjects(file, loginUser.getUser().getId()));
     }
 
@@ -219,6 +220,22 @@ public class ProjectController {
         }
         member.setStatus("confirmed");
         memberMapper.updateById(member);
+        return Result.ok();
+    }
+
+    @PutMapping("/{projectId}/members/{memberId}/reject")
+    public Result<?> rejectMember(@PathVariable Long projectId, @PathVariable Long memberId,
+                                   @AuthenticationPrincipal LoginUser loginUser) {
+        SysProjectMember member = memberMapper.selectById(memberId);
+        if (member == null
+                || !projectId.equals(member.getProjectId())
+                || !member.getUserId().equals(loginUser.getUser().getId())) {
+            return Result.fail("无权操作");
+        }
+        if (!"pending".equals(member.getStatus())) {
+            return Result.fail("只能拒绝待确认的邀请");
+        }
+        memberMapper.deleteById(memberId);
         return Result.ok();
     }
 

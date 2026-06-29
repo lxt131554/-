@@ -169,11 +169,11 @@ public class ReportController {
     @GetMapping("/reports/{reportId}/attachment")
     public ResponseEntity<byte[]> downloadAttachment(@PathVariable Long reportId,
                                                      @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireReportView(reportId, loginUser.getUser());
         SysStageReport report = reportService.getById(reportId);
         if (report == null || report.getAttachmentName() == null || report.getAttachmentData() == null) {
             return ResponseEntity.notFound().build();
         }
+        accessService.requireReportView(reportId, loginUser.getUser());
         String filename = report.getAttachmentName();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
