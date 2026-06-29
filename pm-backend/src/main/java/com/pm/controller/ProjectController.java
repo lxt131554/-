@@ -235,4 +235,78 @@ public class ProjectController {
         }
         return Result.ok(result);
     }
+
+    @PutMapping("/{id}/complete")
+    public Result<?> complete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectManager(id, loginUser.getUser());
+
+        List<String> reasons = new ArrayList<>();
+
+        // Check incomplete stages
+        long incompleteStages = stageMapper.selectCount(
+            new LambdaQueryWrapper<SysProjectStage>()
+                .eq(SysProjectStage::getProjectId, id)
+                .ne(SysProjectStage::getStatus, "completed"));
+        if (incompleteStages > 0) {
+            reasons.add(incompleteStages + " 个阶段尚未完成");
+        }
+
+        // Check pending reports
+        long pendingReports = reportMapper.selectCount(
+            new LambdaQueryWrapper<SysStageReport>()
+                .eq(SysStageReport::getProjectId, id)
+                .ne(SysStageReport::getReviewStatus, "passed"));
+        if (pendingReports > 0) {
+            reasons.add(pendingReports + " 条填报尚未审核通过");
+        }
+
+        // Check open deviations
+        long openDeviations = deviationMapper.selectCount(
+            new LambdaQueryWrapper<SysDeviation>()
+                .eq(SysDeviation::getProjectId, id)
+                .eq(SysDeviation::getStatus, "open"));
+        if (openDeviations > 0) {
+            reasons.add(openDeviations + " 项偏差尚未关闭");
+        }
+
+        // Check pending supports
+        long pendingSupports = supportItemMapper.selectCount(
+            new LambdaQueryWrapper<SysSupportItem>()
+                .eq(SysSupportItem::getProjectId, id)
+                .eq(SysSupportItem::getStatus, "pending"));
+        if (pendingSupports > 0) {
+            reasons.add(pendingSupports + " 项支持事项尚未处理");
+        }
+
+        // Check pending changes
+        long pendingChanges = changeMapper.selectCount(
+            new LambdaQueryWrapper<SysChange>()
+                .eq(SysChange::getProjectId, id)
+                .eq(SysChange::getStatus, "pending"));
+        if (pendingChanges > 0) {
+            reasons.add(pendingChanges + " 项变更尚未确认");
+        }
+
+        if (!reasons.isEmpty()) {
+            return Result.fail("项目不满足结项条件：\n" + String.join("\n", reasons));
+        }
+
+        SysProject project = projectService.getById(id);
+        project.setStatus("completed");
+        projectService.updateById(project);
+
+        return Result.ok(project);
+    }
+
+    @PutMapping("/{id}/reopen")
+    public Result<?> reopen(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireAdmin(loginUser.getUser());
+        SysProject project = projectService.getById(id);
+        if (project == null || !"completed".equals(project.getStatus())) {
+            return Result.fail("只能重新打开已完成的项目");
+        }
+        project.setStatus("active");
+        projectService.updateById(project);
+        return Result.ok(project);
+    }
 }

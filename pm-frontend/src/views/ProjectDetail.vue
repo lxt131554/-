@@ -11,6 +11,10 @@
         type="warning" size="small" @click="handleCompleteProject" style="margin-left:12px">
         完成项目
       </el-button>
+      <el-button v-if="project.status=='completed' && auth.user?.role=='admin'"
+        type="warning" size="small" @click="handleReopenProject" style="margin-left:8px">
+        重新打开
+      </el-button>
       <el-button size="small" @click="handleExport" style="margin-left:8px">
         <el-icon><Download /></el-icon> 导出 Excel
       </el-button>
@@ -672,12 +676,25 @@ async function handleConfirmChange(row) {
 
 async function handleCompleteProject() {
   try {
-    await confirmDanger('确认将项目标记为已完成？完成后将进入收尾复盘相关流程。', '完成项目')
-    await updateProject(projectId, { ...project.value, status: 'completed' })
+    await confirmDanger('确认完成该项目？系统将检查结项条件。', '完成项目')
+    const res = await request.put(`/projects/${projectId}/complete`)
     ElMessage.success('项目已完成')
     loadProject()
+    loadStages()
+    loadMembers()
   } catch (error) {
-    showActionError(error, '完成项目失败')
+    showActionError(error, '项目结项失败')
+  }
+}
+
+async function handleReopenProject() {
+  try {
+    await confirmDanger('确认重新打开该项目？', '重新打开项目')
+    await request.put(`/projects/${projectId}/reopen`)
+    ElMessage.success('项目已重新打开')
+    loadProject()
+  } catch (error) {
+    showActionError(error, '重新打开失败')
   }
 }
 
