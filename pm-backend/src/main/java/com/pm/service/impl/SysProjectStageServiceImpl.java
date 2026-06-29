@@ -74,18 +74,28 @@ public class SysProjectStageServiceImpl extends ServiceImpl<SysProjectStageMappe
                 projectIds.add(stage.getProjectId());
             }
         }
+        Map<Long, String> projectStatusMap = new HashMap<>();
         if (!projectIds.isEmpty()) {
             projectMapper.selectBatchIds(projectIds)
-                    .forEach(project -> projectNameMap.put(project.getId(), project.getName()));
+                    .forEach(project -> {
+                        projectNameMap.put(project.getId(), project.getName());
+                        projectStatusMap.put(project.getId(), project.getStatus());
+                    });
         }
         Set<Long> assigneeIds = new HashSet<>();
         assigneeIds.add(userId);
         Map<Long, String> assigneeNameMap = buildUserNameMap(assigneeIds);
+        List<SysProjectStage> result = new ArrayList<>();
         for (SysProjectStage s : stages) {
+            // Skip stages from completed projects
+            if ("completed".equals(projectStatusMap.get(s.getProjectId()))) {
+                continue;
+            }
             s.setProjectName(projectNameMap.getOrDefault(s.getProjectId(), ""));
             s.setAssigneeName(assigneeNameMap.getOrDefault(s.getAssigneeId(), ""));
+            result.add(s);
         }
-        return stages;
+        return result;
     }
 
     private Map<Long, String> buildUserNameMap(Set<Long> userIds) {

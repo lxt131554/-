@@ -288,7 +288,7 @@ public class ProjectController {
         }
 
         if (!reasons.isEmpty()) {
-            return Result.fail("项目不满足结项条件：\n" + String.join("\n", reasons));
+            return Result.fail(400, "项目不满足结项条件：\n" + String.join("\n", reasons));
         }
 
         SysProject project = projectService.getById(id);
