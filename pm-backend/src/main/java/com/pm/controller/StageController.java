@@ -3,10 +3,12 @@ package com.pm.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
+import com.pm.entity.SysProjectMember;
 import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.mapper.SysDeviationMapper;
 import com.pm.mapper.SysProjectMapper;
+import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysStageReportMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
@@ -30,6 +32,7 @@ public class StageController {
     private final SysProjectStageService stageService;
     private final SysStageReportMapper reportMapper;
     private final SysProjectMapper projectMapper;
+    private final SysProjectMemberMapper memberMapper;
     private final SysUserMapper userMapper;
     private final SysDeviationMapper deviationMapper;
     private final ProjectAccessService accessService;
@@ -47,6 +50,21 @@ public class StageController {
                                             @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(projectId, loginUser.getUser());
         accessService.requireProjectActive(projectId);
+        // 校验阶段日期
+        if (stage.getPlanStart() != null && stage.getPlanEnd() != null
+                && stage.getPlanStart().isAfter(stage.getPlanEnd())) {
+            return Result.fail(400, "计划开始时间不能晚于结束时间");
+        }
+        // 校验阶段负责人必须是已确认项目成员
+        if (stage.getAssigneeId() != null) {
+            Long assigneeCount = memberMapper.selectCount(new LambdaQueryWrapper<SysProjectMember>()
+                    .eq(SysProjectMember::getProjectId, projectId)
+                    .eq(SysProjectMember::getUserId, stage.getAssigneeId())
+                    .eq(SysProjectMember::getStatus, "confirmed"));
+            if (assigneeCount == null || assigneeCount == 0) {
+                return Result.fail(400, "阶段负责人必须是已确认的项目成员");
+            }
+        }
         stage.setProjectId(projectId);
         stage.setStatus("pending");
         stageService.save(stage);
@@ -64,6 +82,21 @@ public class StageController {
         }
         accessService.requireStageManager(stageId, loginUser.getUser());
         accessService.requireProjectActive(projectId);
+        // 校验阶段日期
+        if (stage.getPlanStart() != null && stage.getPlanEnd() != null
+                && stage.getPlanStart().isAfter(stage.getPlanEnd())) {
+            return Result.fail(400, "计划开始时间不能晚于结束时间");
+        }
+        // 校验阶段负责人必须是已确认项目成员
+        if (stage.getAssigneeId() != null) {
+            Long assigneeCount = memberMapper.selectCount(new LambdaQueryWrapper<SysProjectMember>()
+                    .eq(SysProjectMember::getProjectId, projectId)
+                    .eq(SysProjectMember::getUserId, stage.getAssigneeId())
+                    .eq(SysProjectMember::getStatus, "confirmed"));
+            if (assigneeCount == null || assigneeCount == 0) {
+                return Result.fail(400, "阶段负责人必须是已确认的项目成员");
+            }
+        }
         stage.setId(stageId);
         stage.setProjectId(projectId);
         stageService.updateById(stage);
@@ -79,6 +112,12 @@ public class StageController {
         }
         accessService.requireStageManager(stageId, loginUser.getUser());
         accessService.requireProjectActive(projectId);
+        // 校验是否有填报记录
+        long reportCount = reportMapper.selectCount(new LambdaQueryWrapper<SysStageReport>()
+                .eq(SysStageReport::getStageId, stageId));
+        if (reportCount > 0) {
+            return Result.fail(400, "该阶段已有 " + reportCount + " 条填报记录，不能直接删除。请先清理相关填报");
+        }
         stageService.removeById(stageId);
         return Result.ok();
     }

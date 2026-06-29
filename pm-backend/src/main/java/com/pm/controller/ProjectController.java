@@ -104,6 +104,12 @@ public class ProjectController {
     public Result<SysProject> create(@Valid @RequestBody SysProject project,
                                      @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectCreator(loginUser.getUser());
+        // 校验项目名称重复
+        long nameCount = projectService.count(new LambdaQueryWrapper<SysProject>()
+                .eq(SysProject::getName, project.getName()));
+        if (nameCount > 0) {
+            return Result.fail(400, "项目名称已存在，请使用不同的名称");
+        }
         project.setCreateUserId(loginUser.getUser().getId());
         project.setStatus("active");
         projectService.save(project);
