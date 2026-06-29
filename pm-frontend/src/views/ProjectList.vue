@@ -39,7 +39,7 @@
       </div>
 
       <el-table v-if="tableData.length" :data="tableData" v-loading="loading" class="pm-table">
-        <el-table-column prop="id" label="编号" width="70" />
+        <el-table-column prop="id" label="编号" width="60" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{row}">
             <el-link type="primary" @click="router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>

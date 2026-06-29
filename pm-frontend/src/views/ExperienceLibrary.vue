@@ -137,5 +137,7 @@ onMounted(loadData)
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-all;
+  max-height: 3em;
 }
 </style>

@@ -16,6 +16,9 @@
       </el-card>
     </div>
 
+    <!-- Sections 2-4 wrapped with loading -->
+    <div v-loading="loading" style="min-height:200px">
+
     <!-- Section 2: Summary Cards -->
     <section class="page-summary-grid">
       <!-- Manager cards -->
@@ -192,6 +195,9 @@
         </el-table>
       </template>
     </section>
+
+    </div><!-- end v-loading wrapper -->
+
   </div>
 </template>
 
@@ -204,6 +210,7 @@ import { ElMessage } from 'element-plus'
 const auth = useAuthStore()
 const stats = ref({})
 const pendingInvites = ref([])
+const loading = ref(true)
 
 const allStatsZero = computed(() => {
   const s = stats.value
@@ -259,7 +266,7 @@ async function loadStats() {
   try {
     const res = await request.get('/dashboard')
     stats.value = res.data
-  } catch { }
+  } catch { } finally { loading.value = false }
 }
 
 async function loadPendingInvites() {

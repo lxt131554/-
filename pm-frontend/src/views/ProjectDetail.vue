@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" v-loading="loading">
     <div class="page-header">
       <el-button text @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon> 返回列表</el-button>
       <h2 style="margin-top:8px">{{ project.name }}</h2>
@@ -215,7 +215,7 @@
           v-if="(auth.user?.role==='manager'||auth.user?.role==='admin') && project.status!=='completed'">
           <el-icon><Plus /></el-icon> 添加阶段
         </el-button>
-        <el-button v-if="!stages.length && (auth.user?.role=='manager'||auth.user?.role=='admin')"
+        <el-button v-if="!stages.length && (auth.user?.role=='manager'||auth.user?.role=='admin') && project.status !== 'completed'"
           type="success" size="small" @click="openTemplateDialog" style="margin-left:8px">
           使用标准模板
         </el-button>
@@ -445,6 +445,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const projectId = route.params.id
 
+const loading = ref(true)
 const project = ref({})
 const stages = ref([])
 const members = ref([])
@@ -545,8 +546,11 @@ async function handleSavePlanning() {
 }
 
 async function loadProject() {
-  const res = await getProjectDetail(projectId)
-  project.value = res.data
+  loading.value = true
+  try {
+    const res = await getProjectDetail(projectId)
+    project.value = res.data
+  } finally { loading.value = false }
 }
 async function loadStages() {
   const res = await getStages(projectId)
