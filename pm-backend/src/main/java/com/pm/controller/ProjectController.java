@@ -129,6 +129,10 @@ public class ProjectController {
     @PutMapping("/{id}")
     public Result<SysProject> update(@PathVariable Long id, @Valid @RequestBody SysProject project,
                                      @AuthenticationPrincipal LoginUser loginUser) {
+        SysProject existing = projectService.getById(id);
+        if (existing == null) {
+            return Result.fail(404, "项目不存在");
+        }
         accessService.requireProjectManager(id, loginUser.getUser());
         accessService.requireProjectActive(id);
         project.setId(id);
@@ -192,6 +196,12 @@ public class ProjectController {
         String roleInProject = roleValue.toString();
         if (!"manager".equals(roleInProject) && !"engineer".equals(roleInProject)) {
             throw new IllegalArgumentException("项目角色只能是负责人或工程师");
+        }
+        Long existing = memberMapper.selectCount(new LambdaQueryWrapper<SysProjectMember>()
+                .eq(SysProjectMember::getProjectId, id)
+                .eq(SysProjectMember::getUserId, userId));
+        if (existing != null && existing > 0) {
+            return Result.fail(400, "该成员已在项目中，不能重复邀请");
         }
         projectService.addMember(id, userId, roleInProject, "pending");
         return Result.ok();

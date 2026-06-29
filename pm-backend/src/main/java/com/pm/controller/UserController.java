@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @PostMapping
-    public Result<SysUser> create(@RequestBody SysUser user,
+    public Result<SysUser> create(@Valid @RequestBody SysUser user,
                                   @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireAdmin(loginUser.getUser());
         user.setPassword(passwordEncoder.encode(user.getPassword()));

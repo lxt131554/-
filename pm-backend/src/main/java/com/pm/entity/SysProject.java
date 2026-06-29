@@ -2,6 +2,7 @@ package com.pm.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +13,7 @@ public class SysProject {
     @TableId(type = IdType.AUTO)
     private Long id;
     @NotBlank(message = "项目名称不能为空")
+    @Size(max = 255, message = "项目名称不能超过255个字符")
     private String name;
     private String description;
     private String status;

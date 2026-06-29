@@ -89,7 +89,7 @@ public class ReportController {
             accessService.requireProjectActive(stage.getProjectId());
         }
         if (progressRate == null || progressRate < 0 || progressRate > 100) {
-            throw new IllegalArgumentException("进度必须在 0-100 之间");
+            return Result.fail(400, "进度必须在0-100之间");
         }
         if (!hasText(content) && !hasText(problem) && !hasText(resultSummary) && !hasText(qualityControl)) {
             throw new IllegalArgumentException("请至少填写填报内容、问题、成果摘要或质量控制信息");
@@ -186,6 +186,10 @@ public class ReportController {
     public Result<SysStageReport> review(@PathVariable Long reportId,
                                          @RequestBody Map<String, String> body,
                                          @AuthenticationPrincipal LoginUser loginUser) {
+        SysStageReport report = reportService.getById(reportId);
+        if (report == null) {
+            return Result.fail(404, "填报记录不存在");
+        }
         accessService.requireReportReview(reportId, loginUser.getUser());
         String status = body.get("reviewStatus");
         String comment = body.get("reviewComment");
