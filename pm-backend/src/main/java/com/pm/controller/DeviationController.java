@@ -48,7 +48,8 @@ public class DeviationController {
     @PostMapping
     public Result<SysDeviation> create(@Valid @RequestBody SysDeviation deviation,
                                        @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireProjectView(deviation.getProjectId(), loginUser.getUser());
+        accessService.requireProjectManager(deviation.getProjectId(), loginUser.getUser());
+        accessService.requireProjectActive(deviation.getProjectId());
         deviation.setType("manual");
         deviation.setStatus("open");
         deviation.setCreateUserId(loginUser.getUser().getId());

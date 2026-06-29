@@ -123,6 +123,7 @@ public class ProjectController {
     public Result<SysProject> update(@PathVariable Long id, @Valid @RequestBody SysProject project,
                                      @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
+        accessService.requireProjectActive(id);
         project.setId(id);
         projectService.updateById(project);
         return Result.ok(project);
@@ -193,6 +194,10 @@ public class ProjectController {
     public Result<?> removeMember(@PathVariable Long id, @PathVariable Long memberId,
                                   @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
+        SysProjectMember member = memberMapper.selectById(memberId);
+        if (member == null || !member.getProjectId().equals(id)) {
+            return Result.fail("成员不属于该项目");
+        }
         projectService.removeMember(id, memberId);
         return Result.ok();
     }

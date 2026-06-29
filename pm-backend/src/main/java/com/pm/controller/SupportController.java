@@ -38,7 +38,8 @@ public class SupportController {
     @PostMapping
     public Result<SysSupportItem> create(@Valid @RequestBody SysSupportItem item,
                                           @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireProjectView(item.getProjectId(), loginUser.getUser());
+        accessService.requireProjectManager(item.getProjectId(), loginUser.getUser());
+        accessService.requireProjectActive(item.getProjectId());
         item.setApplicantId(loginUser.getUser().getId());
         item.setStatus("pending");
         supportItemService.save(item);

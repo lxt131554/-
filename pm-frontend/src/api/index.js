@@ -27,6 +27,8 @@ request.interceptors.response.use(
       // silent - auth errors handled by router
     } else if (err.response?.status === 403) {
       ElMessage.error('没有权限')
+    } else if (err.response?.status === 409) {
+      ElMessage.error(err.response?.data?.message || '数据冲突，请检查是否重复操作')
     } else if (err.response?.data?.message) {
       ElMessage.error(withRequestId(err.response.data.message, err.response.data))
     } else {

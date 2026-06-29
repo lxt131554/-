@@ -2,8 +2,10 @@ package com.pm.controller;
 
 import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
+import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.entity.SysSupportItem;
+import com.pm.mapper.SysProjectStageMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.SysDeviationService;
@@ -45,6 +47,7 @@ public class ReportController {
     private final SysStageReportService reportService;
     private final SysDeviationService deviationService;
     private final SysSupportItemService supportItemService;
+    private final SysProjectStageMapper stageMapper;
     private final ProjectAccessService accessService;
 
     @GetMapping("/stages/{stageId}/reports")
@@ -81,6 +84,10 @@ public class ReportController {
             @AuthenticationPrincipal LoginUser loginUser) throws IOException {
 
         accessService.requireStageReport(stageId, loginUser.getUser());
+        SysProjectStage stage = stageMapper.selectById(stageId);
+        if (stage != null) {
+            accessService.requireProjectActive(stage.getProjectId());
+        }
         if (progressRate == null || progressRate < 0 || progressRate > 100) {
             throw new IllegalArgumentException("进度必须在 0-100 之间");
         }
@@ -163,14 +170,16 @@ public class ReportController {
     public ResponseEntity<byte[]> downloadAttachment(@PathVariable Long reportId,
                                                      @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireReportView(reportId, loginUser.getUser());
-        byte[] data = reportService.downloadAttachment(reportId);
         SysStageReport report = reportService.getById(reportId);
+        if (report == null || report.getAttachmentName() == null || report.getAttachmentData() == null) {
+            return ResponseEntity.notFound().build();
+        }
         String filename = report.getAttachmentName();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + URLEncoder.encode(filename, StandardCharsets.UTF_8) + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(data);
+                .body(report.getAttachmentData());
     }
 
     @PostMapping("/reports/{reportId}/review")

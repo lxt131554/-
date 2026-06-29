@@ -12,6 +12,7 @@
         style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;margin-bottom:8px;border:1px solid rgba(245,108,108,0.2)">
         <span>被邀请加入项目「{{ inv.projectName }}」作为{{ inv.roleInProject==='manager'?'负责人':'工程师' }}</span>
         <el-button type="primary" size="small" @click="handleAcceptInvite(inv)">接受</el-button>
+        <el-button type="danger" size="small" plain @click="handleRejectInvite(inv)">拒绝</el-button>
       </el-card>
     </div>
 
@@ -272,6 +273,14 @@ async function handleAcceptInvite(inv) {
   try {
     await request.put(`/projects/${inv.projectId}/members/${inv.id}/confirm`)
     ElMessage.success('已接受邀请')
+    loadPendingInvites()
+  } catch { }
+}
+
+async function handleRejectInvite(inv) {
+  try {
+    await request.delete(`/projects/${inv.projectId}/members/${inv.id}`)
+    ElMessage.info('已拒绝邀请')
     loadPendingInvites()
   } catch { }
 }

@@ -5,6 +5,7 @@ import com.pm.entity.SysProjectMember;
 import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.entity.SysUser;
+import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysProjectStageMapper;
 import com.pm.mapper.SysStageReportMapper;
@@ -19,11 +20,12 @@ import static org.mockito.Mockito.when;
 
 class ProjectAccessServiceTest {
 
+    private final SysProjectMapper projectMapper = mock(SysProjectMapper.class);
     private final SysProjectMemberMapper memberMapper = mock(SysProjectMemberMapper.class);
     private final SysProjectStageMapper stageMapper = mock(SysProjectStageMapper.class);
     private final SysStageReportMapper reportMapper = mock(SysStageReportMapper.class);
     private final ProjectAccessService accessService =
-            new ProjectAccessService(memberMapper, stageMapper, reportMapper);
+            new ProjectAccessService(projectMapper, memberMapper, stageMapper, reportMapper);
 
     @Test
     void leaderCanViewButCannotManageProjects() {

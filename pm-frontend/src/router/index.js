@@ -35,6 +35,7 @@ const routes = [
       { path: 'experiences', name: 'ExperienceLibrary', component: () => import('../views/ExperienceLibrary.vue'), meta: { title: '经验库' } },
       { path: 'users', name: 'UserManage', component: () => import('../views/UserManage.vue'), meta: { title: '用户管理', roles: ['admin'] } },
       { path: 'statistics', name: 'Statistics', component: () => import('../views/Statistics.vue'), meta: { title: '统计分析', roles: ['admin', 'leader'] } },
+      { path: 'invitations', redirect: '/dashboard' },
     ]
   }
 ]
