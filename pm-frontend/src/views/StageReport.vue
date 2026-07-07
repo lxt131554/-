@@ -160,8 +160,7 @@ const currentUserId = computed(() => auth.user?.id)
 const submitGuardMessage = computed(() => {
   if (!stage.value) return null
   if (project.value?.status === 'completed') return '项目已完成，无法提交'
-  if (stage.value.status === 'submitted') return '阶段已提交，等待审阅'
-  if (stage.value.assigneeId != null && stage.value.assigneeId !== currentUserId.value) return '仅阶段责任人可以提交'
+  if (stage.value.status === 'completed') return '阶段已完成'
   return null
 })
 
