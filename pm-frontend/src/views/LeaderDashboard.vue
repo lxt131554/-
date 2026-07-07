@@ -36,22 +36,6 @@
       </div>
     </section>
 
-    <!-- Closeout summary -->
-    <section class="page-summary-grid" style="margin-top:16px">
-      <div class="summary-card summary-card--primary">
-        <div class="summary-card-value">{{ stats.completedProjects ?? '--' }}</div>
-        <div class="summary-card-label">已结项项目</div>
-      </div>
-      <div class="summary-card summary-card--success">
-        <div class="summary-card-value">{{ stats.closeoutComplete ?? '--' }}</div>
-        <div class="summary-card-label">收尾资料齐全</div>
-      </div>
-      <div class="summary-card summary-card--warning">
-        <div class="summary-card-value">{{ stats.closeoutIncomplete ?? '--' }}</div>
-        <div class="summary-card-label">收尾资料待补齐</div>
-      </div>
-    </section>
-
     <!-- Tier 2: 重点风险事项 — combined deviations + supports + changes -->
     <section class="section-block">
       <div class="section-title">重点风险事项</div>
@@ -91,22 +75,6 @@
         <el-table-column prop="action" label="建议领导关注点" min-width="240" show-overflow-tooltip />
       </el-table>
       <el-empty v-else description="暂无项目需要关注" :image-size="60" />
-    </section>
-
-    <!-- 收尾资料待补齐 -->
-    <section v-if="stats.closeoutList && stats.closeoutList.length" class="section-block">
-      <div class="section-title">收尾资料待补齐</div>
-      <el-table :data="stats.closeoutList" size="small" stripe>
-        <el-table-column prop="projectName" label="项目名称" min-width="200">
-          <template #default="{row}">
-            <el-link type="primary" @click="$router.push(`/projects/${row.projectId}`)">{{ row.projectName }}</el-link>
-          </template>
-        </el-table-column>
-        <el-table-column label="资料完整度" width="120" align="center">
-          <template #default="{row}">{{ row.done }}/{{ row.total }}</template>
-        </el-table-column>
-        <el-table-column prop="missing" label="缺失内容" min-width="240" show-overflow-tooltip />
-      </el-table>
     </section>
 
     <!-- All projects — compact table at bottom -->
