@@ -306,7 +306,7 @@
         <el-table-column label="操作" width="150" fixed="right" align="center">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/my-tasks/${row.id}/report`)"
-              v-if="auth.user?.role==='engineer' && row.status!=='completed'">填报</el-button>
+              v-if="(auth.user?.id===row.assigneeId || auth.user?.role==='engineer' || auth.user?.role==='manager' || auth.user?.role==='admin') && row.status!=='completed'">填报</el-button>
             <el-button text type="danger" @click="handleDeleteStage(row)" v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status!=='completed'">删除</el-button>
           </template>
         </el-table-column>
