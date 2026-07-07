@@ -67,47 +67,94 @@
         </template>
       </div>
 
-      <!-- View mode: grouped sections -->
+      <!-- View mode: spacious two-column layout -->
       <template v-if="!planningEditMode && hasPlanningData">
-        <section class="planning-group">
-          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">客户与立项判断</h4>
-          <el-descriptions :column="2" border size="small">
-            <el-descriptions-item label="客户等级">{{ project.customerLevel || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="成果产出类型">{{ project.achievementType || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="双方联系人" :span="2">{{ project.contacts || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="审核审批要求" :span="2">{{ project.approvalRequirements || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="项目重要性" :span="2">{{ project.projectImportance || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="成果方向及附件" :span="2">{{ project.achievementDirection || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </section>
-        <section class="planning-group">
-          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">前期分析与约束</h4>
-          <el-descriptions :column="2" border size="small">
-            <el-descriptions-item label="能否承接判断" :span="2">{{ project.canUndertake || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="主要风险" :span="2">{{ project.mainRisks || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="关键约束" :span="2">{{ project.keyConstraints || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="成果交付要求" :span="2">{{ project.deliverableRequirements || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="预计审批路径" :span="2">{{ project.approvalPath || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </section>
-        <section class="planning-group">
-          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">策划与资源配置</h4>
-          <el-descriptions :column="2" border size="small">
-            <el-descriptions-item label="人力资源配置" :span="2">{{ project.hrAllocation || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="预计阶段成果" :span="2">{{ project.expectedOutputs || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="核心资料" :span="2">{{ project.coreMaterials || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="项目组组建" :span="2">{{ project.teamSetup || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="核心策略" :span="2">{{ project.coreStrategy || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </section>
-        <section class="planning-group">
-          <h4 class="section-title" style="margin-top:0;margin-bottom:12px">项目获取与审批</h4>
-          <el-descriptions :column="2" border size="small">
-            <el-descriptions-item label="投标情况" :span="2">{{ project.bidSituation || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="采购程序" :span="2">{{ project.procurementInfo || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="获取结果" :span="2">{{ project.acquisitionResult || '-' }}</el-descriptions-item>
-          </el-descriptions>
-        </section>
+        <!-- 客户与立项判断 -->
+        <div style="border-bottom:1px solid var(--pm-border);padding-bottom:20px;margin-bottom:20px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:16px">客户与立项判断</h4>
+          <div style="display:grid;grid-template-columns:140px 1fr 140px 1fr;gap:12px 20px;align-items:baseline">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px">客户等级</div>
+            <div>{{ project.customerLevel || '—' }}</div>
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px">成果产出类型</div>
+            <div>{{ project.achievementType || '—' }}</div>
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px">双方联系人</div>
+            <div>{{ project.contacts || '—' }}</div>
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px">审核审批要求</div>
+            <div>{{ project.approvalRequirements || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">项目重要性</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.projectImportance || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">成果方向及附件</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.achievementDirection || '—' }}</div>
+          </div>
+        </div>
+        <!-- 前期分析与约束 -->
+        <div style="border-bottom:1px solid var(--pm-border);padding-bottom:20px;margin-bottom:20px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:16px">前期分析与约束</h4>
+          <div>
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">能否承接判断</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.canUndertake || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">主要风险</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.mainRisks || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">关键约束</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.keyConstraints || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">成果交付要求</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.deliverableRequirements || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">预计审批路径</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.approvalPath || '—' }}</div>
+          </div>
+        </div>
+        <!-- 策划与资源配置 -->
+        <div style="border-bottom:1px solid var(--pm-border);padding-bottom:20px;margin-bottom:20px">
+          <h4 class="section-title" style="margin-top:0;margin-bottom:16px">策划与资源配置</h4>
+          <div>
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">人力资源配置</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.hrAllocation || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">预计阶段成果</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.expectedOutputs || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">核心资料</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.coreMaterials || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">项目组组建</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.teamSetup || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">核心策略</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.coreStrategy || '—' }}</div>
+          </div>
+        </div>
+        <!-- 项目获取与审批 -->
+        <div>
+          <h4 class="section-title" style="margin-top:0;margin-bottom:16px">项目获取与审批</h4>
+          <div>
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">投标情况</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.bidSituation || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">采购程序</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.procurementInfo || '—' }}</div>
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-weight:500;color:var(--pm-text-secondary);font-size:14px;margin-bottom:4px">获取结果</div>
+            <div style="line-height:1.7;white-space:pre-wrap">{{ project.acquisitionResult || '—' }}</div>
+          </div>
+        </div>
       </template>
       <el-empty v-else-if="!planningEditMode" description="暂未填写启动与策划信息" :image-size="80">
         <el-button v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status !== 'completed'" type="primary" @click="startPlanningEdit">
@@ -323,16 +370,14 @@
     <div class="section-block" style="margin-bottom:16px">
       <div class="page-toolbar">
         <span class="section-title">项目成员</span>
-        <el-button type="primary" size="small" @click="showAddMember=true"
+        <el-button type="primary" size="small" @click="showMemberManage=true"
           v-if="(isProjectManager || auth.user?.role=='admin') && project.status !== 'completed'">
-          <el-icon><Plus /></el-icon> 添加成员
+          <el-icon><Setting /></el-icon> 成员管理
         </el-button>
       </div>
       <div class="member-tags">
         <el-tag v-for="m in members" :key="m.id"
-          :closable="(isProjectManager || auth.user?.role=='admin') && project.status !== 'completed'"
-          :type="m.roleInProject==='manager'?'warning':'success'"
-          @close="handleRemoveMember(m)" size="large">
+          :type="m.roleInProject==='manager'?'warning':'success'" size="large">
           {{ m.realName }}（{{ m.roleInProject==='manager'?'负责人':'工程师' }}）
           <span v-if="m.status=='pending'" style="margin-left:4px;font-size:11px;opacity:0.7">（待确认）</span>
         </el-tag>
@@ -402,6 +447,47 @@
         <el-button @click="showAddMember=false">取消</el-button>
       </template>
     </el-dialog>
+    <!-- 成员管理对话框 -->
+    <el-dialog v-model="showMemberManage" title="成员管理" width="750px" :close-on-click-modal="false">
+      <div style="margin-bottom:12px">
+        <el-button type="primary" size="small" @click="showAddMember=true"
+          v-if="project.status !== 'completed'">
+          <el-icon><Plus /></el-icon> 添加成员
+        </el-button>
+      </div>
+      <el-table :data="members" border stripe>
+        <el-table-column prop="realName" label="姓名" min-width="100" />
+        <el-table-column label="部门" min-width="120">
+          <template #default="{row}">{{ row.dept || '—' }}</template>
+        </el-table-column>
+        <el-table-column label="项目角色" min-width="100">
+          <template #default="{row}">{{ row.roleInProject==='manager'?'负责人':'工程师' }}</template>
+        </el-table-column>
+        <el-table-column label="状态" min-width="90">
+          <template #default="{row}">
+            <el-tag :type="row.status==='confirmed'?'success':'warning'" size="small">
+              {{ row.status==='confirmed'?'已确认':'待确认' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="加入时间" min-width="160">
+          <template #default="{row}">{{ row.createTime || '—' }}</template>
+        </el-table-column>
+        <el-table-column label="操作" min-width="160" fixed="right" align="center">
+          <template #default="{row}">
+            <template v-if="project.status !== 'completed' && (isProjectManager || auth.user?.role=='admin')">
+              <el-button v-if="row.status==='confirmed'" text type="danger" size="small"
+                @click="handleRemoveMemberClick(row)">移除成员</el-button>
+              <el-button v-else text type="warning" size="small"
+                @click="handleCancelInviteClick(row)">取消邀请</el-button>
+            </template>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="showMemberManage=false">关闭</el-button>
+      </template>
+    </el-dialog>
     <!-- 标准模板预览弹窗 -->
     <el-dialog v-model="showTemplateDialog" title="标准阶段模板预览" width="700px" :close-on-click-modal="false">
       <el-alert title="请确认以下阶段信息，可修改后一次性创建" type="info" :closable="false" show-icon style="margin-bottom:16px" />
@@ -445,7 +531,7 @@ import { getProjectDetail, updateProject } from '../api/project'
 import { getStages, addStage, deleteStage } from '../api/stage'
 import { getProjectMembers, addProjectMember, removeProjectMember } from '../api/project'
 import request from '../api/index'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
@@ -459,6 +545,7 @@ const stages = ref([])
 const members = ref([])
 const showAddStage = ref(false)
 const showAddMember = ref(false)
+const showMemberManage = ref(false)
 
 const addingStage = ref(false)
 const addingMember = ref(false)
@@ -651,14 +738,53 @@ async function handleAddMember() {
     showActionError(error, '成员添加失败')
   } finally { addingMember.value = false }
 }
-async function handleRemoveMember(m) {
+async function handleRemoveMemberClick(member) {
+  // Guard: don't allow removing the only confirmed manager
+  const confirmedManagers = members.value.filter(m => m.roleInProject === 'manager' && m.status === 'confirmed')
+  if (member.roleInProject === 'manager' && confirmedManagers.length <= 1) {
+    ElMessage.warning('不能移除项目中唯一的负责人')
+    return
+  }
   try {
-    await confirmDanger(`确认将“${m.realName || m.userId}”移出项目成员？`, '移除成员')
-    await removeProjectMember(projectId, m.id)
-    ElMessage.success('移除成功')
+    const { value: reason } = await ElMessageBox.prompt(
+      `确认移除成员”${member.realName}”（${member.roleInProject === 'manager' ? '负责人' : '工程师'}）？`,
+      '移除成员',
+      {
+        confirmButtonText: '确认移除',
+        cancelButtonText: '取消',
+        inputPlaceholder: '请输入移除原因',
+        inputType: 'textarea',
+        inputErrorMessage: '请输入移除原因',
+        inputValidator: (val) => val && val.trim() ? true : '请输入移除原因'
+      }
+    )
+    await removeProjectMember(projectId, member.id)
+    ElMessage.success('成员已移除')
     loadMembers()
   } catch (error) {
-    showActionError(error, '移除成员失败')
+    if (error !== 'cancel' && error !== 'close') {
+      showActionError(error, '移除成员失败')
+    }
+  }
+}
+async function handleCancelInviteClick(member) {
+  try {
+    await ElMessageBox.confirm(
+      `确认取消对”${member.realName}”的邀请？`,
+      '取消邀请',
+      {
+        confirmButtonText: '确认取消',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    await removeProjectMember(projectId, member.id)
+    ElMessage.success('邀请已取消')
+    loadMembers()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') {
+      showActionError(error, '取消邀请失败')
+    }
   }
 }
 
@@ -867,22 +993,6 @@ onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
   background: #f7f8fa;
   color: var(--pm-text-secondary);
   font-size: 13px;
-}
-
-.planning-group {
-  padding: 4px 0 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--pm-border-light);
-}
-
-.planning-group:last-child {
-  padding-bottom: 0;
-  margin-bottom: 0;
-  border-bottom: 0;
-}
-
-.planning-group :deep(.el-descriptions__body .el-descriptions__table) {
-  border-radius: 4px;
 }
 
 .edit-planning-section {

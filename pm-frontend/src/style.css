@@ -91,7 +91,7 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
   background: var(--pm-bg);
   color: var(--pm-text);
@@ -120,7 +120,7 @@ body {
   width: 100%;
   max-width: 1680px;
   margin: 0 auto;
-  padding: 0;
+  padding: 24px;
   animation: pageEnter 0.22s var(--pm-ease) both;
 }
 
@@ -198,16 +198,16 @@ body {
   background: var(--pm-surface);
   border: 1px solid var(--pm-border);
   border-radius: var(--pm-radius);
-  padding: 20px;
+  padding: 24px;
   margin-bottom: 16px;
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--pm-text);
   margin-bottom: 16px;
-  padding-bottom: 0;
+  padding-bottom: 10px;
   border-bottom: 0;
 }
 
@@ -224,7 +224,7 @@ body {
   background: var(--pm-surface);
   border: 1px solid var(--pm-border);
   border-radius: var(--pm-radius);
-  padding: 20px;
+  padding: 24px;
   box-shadow: none;
   transition: box-shadow var(--pm-duration-fast) var(--pm-ease);
 }
@@ -420,10 +420,10 @@ body {
   color: var(--pm-text-secondary);
   border-bottom: 1px solid var(--pm-border);
   border-right: none;
-  padding: 11px 12px;
+  padding: 10px 16px;
 }
 .el-table td.el-table__cell {
-  padding: 12px;
+  padding: 10px 16px;
   font-size: 14px;
   border-bottom: 1px solid var(--pm-border-light);
   border-right: none;
@@ -756,7 +756,7 @@ body {
 
 /* --- Breadcrumb --- */
 .el-breadcrumb__item {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.2;
 }
 .el-breadcrumb__inner {
@@ -773,6 +773,12 @@ body {
 /* --- Step --- */
 .el-step__title {
   font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+  .page-container {
+    padding: 16px;
+  }
 }
 
 @media (max-width: 960px) {
