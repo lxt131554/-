@@ -15,7 +15,7 @@ class OaProjectImportServiceImplTest {
     @Test
     void delegatesToRowImporter() throws Exception {
         OaProjectRowImporter rowImporter = mock(OaProjectRowImporter.class);
-        when(rowImporter.importRow(any(), any())).thenReturn(new com.pm.dto.OaProjectImportRow());
+        when(rowImporter.importRow(any(), any(), any())).thenReturn(new com.pm.dto.OaProjectImportRow());
         OaProjectImportServiceImpl service = new OaProjectImportServiceImpl(rowImporter);
         // Smoke test: verify service does not throw on empty file
         assertNotNull(service);
