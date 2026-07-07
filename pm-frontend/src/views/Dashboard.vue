@@ -159,7 +159,7 @@
               <span v-else style="color:var(--pm-text-muted)">—</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="80" align="center">
+          <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
               <el-button type="primary" size="small" link
                 @click="$router.push(`/projects/${row.projectId}`)">审阅</el-button>
@@ -186,7 +186,7 @@
               <el-tag v-else size="small">{{ row.status }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="80" align="center">
+          <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
               <el-button type="primary" size="small" link
                 @click="$router.push(`/my-tasks/${row.stageId}/report`)">填报</el-button>

@@ -389,13 +389,14 @@
     <!-- 收尾资料 -->
     <div class="section-block" v-if="project.status==='completed' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:16px">
       <div class="section-title">收尾资料</div>
-      <div style="margin-bottom:16px;font-size:14px;color:var(--pm-text-secondary)">
-        完整度：{{ closeoutCompleted }}/3
-        <el-progress :percentage="Math.round(closeoutCompleted/3*100)" :stroke-width="8" style="width:200px;display:inline-block;margin-left:12px;vertical-align:middle" />
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;font-size:14px">
+        <span style="font-weight:500;white-space:nowrap">收尾资料完整度</span>
+        <span style="font-weight:600;font-size:18px">{{ closeoutCompleted }}/3</span>
+        <el-progress :percentage="Math.round(closeoutCompleted/3*100)" :stroke-width="8" style="flex:1;max-width:480px;min-width:200px" />
       </div>
-      <el-table :data="closeoutItems" size="small" stripe>
-        <el-table-column prop="label" label="内容" width="140" />
-        <el-table-column prop="status" label="状态" width="100" align="center">
+      <el-table :data="closeoutItems" stripe style="width:100%">
+        <el-table-column prop="label" label="内容" min-width="180" />
+        <el-table-column prop="status" label="状态" min-width="120" align="center">
           <template #default="{row}">
             <el-tag v-if="row.status==='已完成'" type="success" size="small">已完成</el-tag>
             <el-tag v-else-if="row.status==='未填写'" type="info" size="small">未填写</el-tag>
@@ -413,9 +414,9 @@
     <div class="section-block" v-if="project.status==='completed' && (auth.user?.role=='leader'||auth.user?.role=='engineer')" style="margin-top:16px">
       <div class="section-title">收尾资料</div>
       <div style="font-size:14px;color:var(--pm-text-secondary)">完整度：{{ closeoutCompleted }}/3</div>
-      <el-table :data="closeoutItems" size="small" stripe>
-        <el-table-column prop="label" label="内容" width="140" />
-        <el-table-column prop="status" label="状态" width="100" align="center">
+      <el-table :data="closeoutItems" stripe style="width:100%">
+        <el-table-column prop="label" label="内容" min-width="180" />
+        <el-table-column prop="status" label="状态" min-width="120" align="center">
           <template #default="{row}">
             <el-tag v-if="row.status==='已完成'" type="success" size="small">已完成</el-tag>
             <el-tag v-else type="info" size="small">未填写</el-tag>
@@ -1019,7 +1020,8 @@ onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges(); loa
 }
 
 .detail-title-copy > p {
-  max-width: 900px;
+  max-width: 1200px;
+  width: 100%;
   margin-top: 6px;
   color: var(--pm-text-secondary);
   line-height: 1.6;

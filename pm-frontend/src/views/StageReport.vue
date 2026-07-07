@@ -4,7 +4,7 @@
       <el-button text @click="router.back()"><el-icon><ArrowLeft /></el-icon> 返回</el-button>
       <h2 style="margin-top:8px; font-size:22px">阶段填报</h2>
     </div>
-    <div class="card-box" style="max-width:1100px; width:calc(100vw - 64px)">
+    <div class="card-box" style="max-width:1200px; width:100%">
       <el-form :model="form" ref="formRef" :rules="rules">
 
         <!-- Group 1: 进度与时间 -->

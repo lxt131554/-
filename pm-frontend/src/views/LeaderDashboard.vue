@@ -52,7 +52,7 @@
         <el-table-column label="时间" width="160">
           <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="80" align="center">
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
             <el-button size="small" text type="primary" @click="$router.push(row.linkUrl)">查看</el-button>
           </template>
