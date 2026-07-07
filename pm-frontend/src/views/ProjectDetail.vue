@@ -387,7 +387,7 @@
     </div>
 
     <!-- 收尾资料 -->
-    <div class="section-block" v-if="project.status==='completed' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:16px">
+    <div class="section-block" v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" style="margin-top:16px">
       <div class="section-title">收尾资料</div>
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;font-size:14px">
         <span style="font-weight:500;white-space:nowrap">收尾资料完整度</span>
@@ -411,7 +411,7 @@
       </el-table>
     </div>
 
-    <div class="section-block" v-if="project.status==='completed' && (auth.user?.role=='leader'||auth.user?.role=='engineer')" style="margin-top:16px">
+    <div class="section-block" v-if="auth.user?.role=='leader'||auth.user?.role=='engineer'" style="margin-top:16px">
       <div class="section-title">收尾资料</div>
       <div style="font-size:14px;color:var(--pm-text-secondary)">完整度：{{ closeoutCompleted }}/3</div>
       <el-table :data="closeoutItems" stripe style="width:100%">
