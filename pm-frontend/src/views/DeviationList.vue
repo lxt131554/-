@@ -71,7 +71,7 @@
     </div>
 
     <!-- Create dialog -->
-    <el-dialog v-model="showCreate" title="手动记录偏差" width="500px" :close-on-click-modal="false">
+    <el-dialog v-model="showCreate" title="手动记录偏差" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form :model="form" label-width="80px" ref="createFormRef">
         <el-form-item label="所属项目" required>
           <el-select v-model="form.projectId" placeholder="选择项目" style="width:100%">

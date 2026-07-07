@@ -505,6 +505,9 @@ body {
 .el-dialog {
   border-radius: 8px;
   box-shadow: var(--pm-shadow-lg);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
 }
 .el-dialog__header {
   padding: var(--pm-space-lg) var(--pm-space-lg) 0;
@@ -517,6 +520,8 @@ body {
 }
 .el-dialog__body {
   padding: var(--pm-space-lg);
+  overflow-y: auto;
+  flex: 1;
 }
 .el-dialog__footer {
   padding: 0 var(--pm-space-lg) var(--pm-space-lg);
@@ -871,6 +876,12 @@ body {
     padding: 10px 12px;
   }
 
+  .el-dialog {
+    width: calc(100vw - 24px) !important;
+  }
+}
+
+@media (max-width: 600px) {
   .el-dialog {
     width: calc(100vw - 24px) !important;
   }

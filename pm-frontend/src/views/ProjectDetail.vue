@@ -349,7 +349,7 @@
     </div>
 
     <!-- 新增变更对话框 -->
-    <el-dialog v-model="showAddChange" title="新增变更" width="500px" :close-on-click-modal="false">
+    <el-dialog v-model="showAddChange" title="新增变更" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form :model="changeForm" label-width="100px">
         <el-form-item label="变更核心内容" required>
           <el-input v-model="changeForm.content" type="textarea" :rows="3" placeholder="描述变更的核心内容" />
@@ -401,7 +401,7 @@
       </div>
     </div>
 
-    <el-dialog v-model="showAddStage" title="添加阶段" width="500px" :close-on-click-modal="false">
+    <el-dialog v-model="showAddStage" title="添加阶段" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form :model="stageForm" label-width="80px">
         <el-form-item label="阶段名称" required>
           <el-input v-model="stageForm.stageName" placeholder="如：外业调查" />
@@ -430,7 +430,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="showAddMember" title="添加成员" width="400px" :close-on-click-modal="false">
+    <el-dialog v-model="showAddMember" title="添加成员" width="400px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form label-width="80px">
         <el-form-item label="用户ID">
           <el-input v-model="newMember.userId" placeholder="输入用户ID" />
@@ -448,7 +448,7 @@
       </template>
     </el-dialog>
     <!-- 成员管理对话框 -->
-    <el-dialog v-model="showMemberManage" title="成员管理" width="750px" :close-on-click-modal="false">
+    <el-dialog v-model="showMemberManage" title="成员管理" width="750px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <div style="margin-bottom:12px">
         <el-button type="primary" size="small" @click="showAddMember=true"
           v-if="project.status !== 'completed'">
@@ -489,12 +489,28 @@
       </template>
     </el-dialog>
     <!-- 标准模板预览弹窗 -->
-    <el-dialog v-model="showTemplateDialog" title="标准阶段模板预览" width="700px" :close-on-click-modal="false">
+    <el-dialog v-model="showTemplateDialog" title="标准阶段模板预览" width="700px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-alert title="请确认以下阶段信息，可修改后一次性创建" type="info" :closable="false" show-icon style="margin-bottom:16px" />
+      <el-alert v-if="hasTemplateDuplicates" :title="`检测到以下阶段名与现有阶段重复：${duplicateStageNames.join('、')}`" type="warning" :closable="false" show-icon style="margin-bottom:16px">
+        <template #default>
+          <el-checkbox v-model="skipDuplicates" style="margin-top:4px">跳过重复阶段，仅创建新阶段</el-checkbox>
+        </template>
+      </el-alert>
       <el-form label-width="100px">
-        <div v-for="(t, i) in templateStages" :key="i" style="border:1px solid var(--pm-border);border-radius:8px;padding:16px;margin-bottom:12px">
-          <div style="font-weight:600;margin-bottom:8px">阶段 {{ i + 1 }}</div>
-          <el-form-item label="阶段名称"><el-input v-model="t.stageName" /></el-form-item>
+        <div v-for="(t, i) in templateStages" :key="i"
+             :style="{border:'1px solid ' + (duplicateStageNames.includes(t.stageName) ? '#E6A23C' : 'var(--pm-border)'), borderRadius:'8px', padding:'16px', marginBottom:'12px'}">
+          <div style="font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+            <span>阶段 {{ i + 1 }}</span>
+            <el-tag v-if="duplicateStageNames.includes(t.stageName)" type="warning" size="small">与现有阶段重名</el-tag>
+          </div>
+          <el-row :gutter="12">
+            <el-col :span="16">
+              <el-form-item label="阶段名称"><el-input v-model="t.stageName" /></el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="排序"><el-input-number v-model="t.sortOrder" :min="1" :max="99" controls-position="right" style="width:100%" /></el-form-item>
+            </el-col>
+          </el-row>
           <el-form-item label="责任人" required>
             <el-select v-model="t.assigneeId" placeholder="选择责任人" style="width:100%">
               <el-option v-for="m in members" :key="m.userId" :label="m.realName" :value="m.userId" />
@@ -692,32 +708,63 @@ async function handleDeleteStage(row) {
 }
 const showTemplateDialog = ref(false)
 const applyingTemplate = ref(false)
+const skipDuplicates = ref(true)
 const templateStages = reactive([
-  { stageName: '外业调查', description: '实地勘测、数据采集、样地调查', planStart: '', planEnd: '', assigneeId: null },
-  { stageName: '内业整理', description: '数据整理、图纸绘制、统计分析', planStart: '', planEnd: '', assigneeId: null },
-  { stageName: '成果提交', description: '编制报告、制作图件、提交审核', planStart: '', planEnd: '', assigneeId: null }
+  { stageName: '外业调查', description: '实地勘测、数据采集、样地调查', planStart: '', planEnd: '', assigneeId: null, sortOrder: 1 },
+  { stageName: '内业整理', description: '数据整理、图纸绘制、统计分析', planStart: '', planEnd: '', assigneeId: null, sortOrder: 2 },
+  { stageName: '成果编制', description: '编制报告、制作图件', planStart: '', planEnd: '', assigneeId: null, sortOrder: 3 },
+  { stageName: '成果提交与审核', description: '提交成果、审核验收', planStart: '', planEnd: '', assigneeId: null, sortOrder: 4 }
 ])
 
 function openTemplateDialog() {
+  // Reset template fields
+  templateStages.forEach((t, i) => {
+    t.assigneeId = null
+    t.sortOrder = i + 1
+  })
+  templateStages[0].description = '实地勘测、数据采集、样地调查'
+  templateStages[1].description = '数据整理、图纸绘制、统计分析'
+  templateStages[2].description = '编制报告、制作图件'
+  templateStages[3].description = '提交成果、审核验收'
+  // Set default dates: each stage has a nominal 15-day window, sequential
   const today = new Date()
-  const offsets = [[15, 30], [10, 25], [10, 20]]
+  const baseOffsets = [0, 16, 32, 48]
+  const duration = 15
   templateStages.forEach((t, i) => {
     const start = new Date(today)
-    start.setDate(start.getDate() + offsets[i][0])
-    const end = new Date(today)
-    end.setDate(end.getDate() + offsets[i][0] + offsets[i][1])
+    start.setDate(start.getDate() + baseOffsets[i])
+    const end = new Date(start)
+    end.setDate(end.getDate() + duration)
     t.planStart = start.toISOString().slice(0, 10)
     t.planEnd = end.toISOString().slice(0, 10)
   })
+  skipDuplicates.value = true
   showTemplateDialog.value = true
 }
+
+// Detect duplicate stage names against existing stages
+const duplicateStageNames = computed(() => {
+  const existingNames = new Set((stages.value || []).map(s => s.stageName))
+  return templateStages.filter(t => existingNames.has(t.stageName)).map(t => t.stageName)
+})
+
+const hasTemplateDuplicates = computed(() => duplicateStageNames.value.length > 0)
 
 async function handleApplyTemplate() {
   const missing = templateStages.some(t => !t.assigneeId)
   if (missing) { ElMessage.warning('请为每个阶段选择责任人'); return }
   applyingTemplate.value = true
   try {
-    const res = await request.post(`/stages/template/${projectId}`, templateStages)
+    const existingNames = new Set((stages.value || []).map(s => s.stageName))
+    const stagesToCreate = skipDuplicates.value
+      ? templateStages.filter(t => !existingNames.has(t.stageName))
+      : [...templateStages]
+    if (stagesToCreate.length === 0) {
+      ElMessage.info('没有需要创建的新阶段（所有阶段名已存在且选择了跳过重复）')
+      showTemplateDialog.value = false
+      return
+    }
+    const res = await request.post(`/stages/template/${projectId}`, stagesToCreate)
     ElMessage.success(`已创建 ${res.data.length} 个阶段`)
     showTemplateDialog.value = false
     loadStages()
