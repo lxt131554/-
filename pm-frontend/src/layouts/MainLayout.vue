@@ -94,11 +94,28 @@
           </el-popover>
           <div class="header-user">
             <span class="header-avatar">{{ userInitial }}</span>
-            <span class="header-name">{{ auth.user?.realName }}</span>
+            <span class="header-name" style="cursor:pointer" @click="showProfile=true">{{ auth.user?.realName }}</span>
             <span class="header-role">{{ roleLabel }}</span>
             <span class="header-divider"></span>
+            <el-button text size="small" @click="showProfile=true">修改密码</el-button>
             <el-button type="danger" text size="small" @click="handleLogout">退出</el-button>
           </div>
+
+          <!-- Profile Dialog -->
+          <el-dialog v-model="showProfile" title="修改密码" width="400px" append-to-body align-center :lock-scroll="true">
+            <el-form label-width="100px">
+              <el-form-item label="旧密码">
+                <el-input v-model="profileForm.oldPassword" type="password" show-password />
+              </el-form-item>
+              <el-form-item label="新密码">
+                <el-input v-model="profileForm.newPassword" type="password" show-password placeholder="至少6位" />
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button type="primary" @click="handleChangePassword" :loading="changingPwd">确认修改</el-button>
+              <el-button @click="showProfile=false">取消</el-button>
+            </template>
+          </el-dialog>
         </div>
       </el-header>
       <el-main class="layout-main">
@@ -111,8 +128,9 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
 import { Bell } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import request from '../api/index'
 import { showActionError } from '../utils/actionGuards'
 
@@ -120,6 +138,27 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const notifyPopover = ref(null)
+
+// Profile / password change
+const showProfile = ref(false)
+const changingPwd = ref(false)
+const profileForm = reactive({ oldPassword: '', newPassword: '' })
+async function handleChangePassword() {
+  if (!profileForm.oldPassword || !profileForm.newPassword) {
+    ElMessage.warning('请输入旧密码和新密码')
+    return
+  }
+  changingPwd.value = true
+  try {
+    await request.put('/auth/profile', { ...profileForm })
+    ElMessage.success('密码修改成功')
+    showProfile.value = false
+    profileForm.oldPassword = ''
+    profileForm.newPassword = ''
+  } catch (error) {
+    showActionError(error, '密码修改失败')
+  } finally { changingPwd.value = false }
+}
 
 const roleLabel = computed(() => {
   const map = { admin: '管理员', manager: '项目负责人', engineer: '工程师', leader: '院领导' }
