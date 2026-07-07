@@ -30,7 +30,7 @@
         <!-- 任务中心 -->
         <el-sub-menu index="sub-task" v-if="auth.user?.role=='engineer'||auth.user?.role=='manager'||auth.user?.role=='admin'">
           <template #title><el-icon><Edit /></el-icon><span>任务中心</span></template>
-          <el-menu-item v-if="auth.user?.role=='engineer'" index="/my-tasks">我的待填报</el-menu-item>
+          <el-menu-item v-if="auth.user?.role=='engineer'||auth.user?.role=='manager'||auth.user?.role=='admin'" index="/my-tasks">我的待填报</el-menu-item>
           <el-menu-item v-if="auth.user?.role=='engineer'" index="/supports">发起支持申请</el-menu-item>
           <el-menu-item v-if="auth.user?.role=='manager'||auth.user?.role=='admin'" index="/pending-review">待审阅填报</el-menu-item>
         </el-sub-menu>
