@@ -404,14 +404,10 @@
     <el-dialog v-model="showAddStage" title="添加阶段" width="560px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form :model="stageForm" label-width="80px">
         <el-form-item label="从模板选择" style="margin-bottom:12px">
-          <el-select v-model="selectedTemplate" placeholder="选择标准阶段模板（可选）" clearable style="width:100%" @change="onTemplateSelect">
-            <el-option v-for="t in templateStages" :key="t.stageName" :label="t.stageName" :value="t.stageName">
-              <span>{{ t.stageName }}</span>
-              <span style="float:right;color:var(--pm-text-muted);font-size:12px">{{ t.description }}</span>
-            </el-option>
+          <el-select v-model="selectedTemplate" placeholder="选择标准阶段模板快速填充（可选）" clearable style="width:100%" @change="onTemplateSelect">
+            <el-option v-for="t in templateStages" :key="t.stageName" :label="t.stageName" :value="t.stageName" />
           </el-select>
         </el-form-item>
-        <el-divider style="margin:8px 0 16px" />
         <el-form-item label="阶段名称" required>
           <el-input v-model="stageForm.stageName" placeholder="如：外业调查" />
         </el-form-item>
