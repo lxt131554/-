@@ -27,8 +27,24 @@ public class UserController {
     public Result<List<SysUser>> list(@AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireAdmin(loginUser.getUser());
         List<SysUser> users = userMapper.selectList(null);
-        users.forEach(u -> u.setPassword(null)); // never expose password
+        users.forEach(u -> u.setPassword(null));
         return Result.ok(users);
+    }
+
+    @GetMapping("/available")
+    public Result<List<Map<String, Object>>> available(@AuthenticationPrincipal LoginUser loginUser) {
+        List<SysUser> users = userMapper.selectList(null);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (SysUser u : users) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("id", u.getId());
+            info.put("realName", u.getRealName());
+            info.put("username", u.getUsername());
+            info.put("dept", u.getDept());
+            info.put("role", u.getRole());
+            list.add(info);
+        }
+        return Result.ok(list);
     }
 
     @PostMapping

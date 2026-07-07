@@ -697,12 +697,19 @@
     </el-dialog>
 
     <!-- 添加成员对话框 -->
-    <el-dialog v-model="showAddMember" title="添加成员" width="400px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
+    <el-dialog v-model="showAddMember" title="添加成员" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true" @open="loadAvailableUsers">
       <el-form label-width="120px">
-        <el-form-item label="用户ID">
-          <el-input v-model="newMember.userId" placeholder="输入用户ID" />
+        <el-form-item label="选择人员">
+          <el-select v-model="newMember.userId" placeholder="搜索姓名或用户名" filterable style="width:100%">
+            <el-option v-for="u in availableUsers" :key="u.id" :label="`${u.realName}（${u.username}）- ${u.dept || '无部门'}`" :value="u.id">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span>{{ u.realName }}</span>
+                <span style="color:var(--pm-text-muted);font-size:12px">{{ u.username }} · {{ u.dept || '—' }}</span>
+              </div>
+            </el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="角色">
+        <el-form-item label="项目角色">
           <el-select v-model="newMember.roleInProject" style="width:100%">
             <el-option label="项目负责人" value="manager" />
             <el-option label="工程师" value="engineer" />
@@ -859,6 +866,14 @@ function onTemplateSelect(name) {
   }
 }
 const newMember = reactive({ userId: '', roleInProject: 'engineer' })
+const availableUsers = ref([])
+
+async function loadAvailableUsers() {
+  try {
+    const res = await request.get('/users/available')
+    availableUsers.value = res.data || []
+  } catch {}
+}
 
 const changes = ref([])
 const showAddChange = ref(false)
