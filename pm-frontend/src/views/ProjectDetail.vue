@@ -386,21 +386,42 @@
       </div>
     </div>
 
-    <div class="section-block" v-if="project.status=='completed' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:16px">
-      <div class="page-toolbar">
-        <span class="section-title">收尾复盘</span>
+    <!-- 收尾资料 -->
+    <div class="section-block" v-if="project.status==='completed' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:16px">
+      <div class="section-title">收尾资料</div>
+      <div style="margin-bottom:16px;font-size:14px;color:var(--pm-text-secondary)">
+        完整度：{{ closeoutCompleted }}/3
+        <el-progress :percentage="Math.round(closeoutCompleted/3*100)" :stroke-width="8" style="width:200px;display:inline-block;margin-left:12px;vertical-align:middle" />
       </div>
-      <div style="display:flex;gap:12px">
-        <el-button type="primary" @click="router.push(`/projects/${projectId}/review`)">
-          项目自评
-        </el-button>
-        <el-button type="primary" @click="router.push(`/projects/${projectId}/experience`)">
-          经验总结
-        </el-button>
-        <el-button type="primary" @click="router.push(`/projects/${projectId}/approval`)">
-          成果评审
-        </el-button>
-      </div>
+      <el-table :data="closeoutItems" size="small" stripe>
+        <el-table-column prop="label" label="内容" width="140" />
+        <el-table-column prop="status" label="状态" width="100" align="center">
+          <template #default="{row}">
+            <el-tag v-if="row.status==='已完成'" type="success" size="small">已完成</el-tag>
+            <el-tag v-else-if="row.status==='未填写'" type="info" size="small">未填写</el-tag>
+            <el-tag v-else size="small">{{ row.status }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120" align="center">
+          <template #default="{row}">
+            <el-button size="small" type="primary" link @click="router.push(row.url)">{{ row.status==='已完成' ? '查看/编辑' : '去填写' }}</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <div class="section-block" v-if="project.status==='completed' && (auth.user?.role=='leader'||auth.user?.role=='engineer')" style="margin-top:16px">
+      <div class="section-title">收尾资料</div>
+      <div style="font-size:14px;color:var(--pm-text-secondary)">完整度：{{ closeoutCompleted }}/3</div>
+      <el-table :data="closeoutItems" size="small" stripe>
+        <el-table-column prop="label" label="内容" width="140" />
+        <el-table-column prop="status" label="状态" width="100" align="center">
+          <template #default="{row}">
+            <el-tag v-if="row.status==='已完成'" type="success" size="small">已完成</el-tag>
+            <el-tag v-else type="info" size="small">未填写</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
     <el-dialog v-model="showAddStage" title="添加阶段" width="560px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
@@ -570,6 +591,9 @@ const showAddStage = ref(false)
 const showAddMember = ref(false)
 const showMemberManage = ref(false)
 
+const closeoutCompleted = ref(0)
+const closeoutItems = ref([])
+
 const addingStage = ref(false)
 const addingMember = ref(false)
 const stageForm = reactive({
@@ -691,6 +715,15 @@ async function loadProject() {
     const res = await getProjectDetail(projectId)
     project.value = res.data
   } finally { loading.value = false }
+}
+
+async function loadCloseoutStatus() {
+  try {
+    const res = await request.get(`/projects/${projectId}/closeout-status`)
+    const data = res.data
+    closeoutCompleted.value = data.completedCount || 0
+    closeoutItems.value = [data.review, data.experience, data.approval]
+  } catch {}
 }
 async function loadStages() {
   const res = await getStages(projectId)
@@ -922,7 +955,7 @@ function handleExport() {
   window.open(`/api/projects/${projectId}/export`, '_blank')
 }
 
-onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
+onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges(); loadCloseoutStatus() })
 </script>
 
 <style scoped>

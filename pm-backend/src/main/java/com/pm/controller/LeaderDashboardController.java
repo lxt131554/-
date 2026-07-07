@@ -2,10 +2,16 @@ package com.pm.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.pm.common.Result;
+import com.pm.entity.SysApproval;
+import com.pm.entity.SysExperience;
 import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectMember;
 import com.pm.entity.SysProjectStage;
+import com.pm.entity.SysReview;
+import com.pm.mapper.SysApprovalMapper;
+import com.pm.mapper.SysExperienceMapper;
 import com.pm.mapper.SysProjectMemberMapper;
+import com.pm.mapper.SysReviewMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.service.SysDeviationService;
 import com.pm.service.SysProjectService;
@@ -40,6 +46,9 @@ public class LeaderDashboardController {
     private final SysProjectStageService stageService;
     private final SysProjectMemberMapper memberMapper;
     private final SysUserMapper userMapper;
+    private final SysReviewMapper reviewMapper;
+    private final SysExperienceMapper experienceMapper;
+    private final SysApprovalMapper approvalMapper;
     private final ProjectAccessService accessService;
 
     @GetMapping("/api/leader-dashboard")
@@ -75,6 +84,35 @@ public class LeaderDashboardController {
         data.put("pendingReports", pendingReports);
         
         data.put("projects", allProjects);
+
+        // Closeout stats for completed projects
+        long closeoutComplete = 0;
+        long closeoutIncomplete = 0;
+        List<Map<String, Object>> closeoutList = new ArrayList<>();
+
+        for (SysProject p : allProjects) {
+            if (!"completed".equals(p.getStatus())) continue;
+
+            long revCount = reviewMapper.selectCount(new LambdaQueryWrapper<SysReview>().eq(SysReview::getProjectId, p.getId()));
+            long expCount = experienceMapper.selectCount(new LambdaQueryWrapper<SysExperience>().eq(SysExperience::getProjectId, p.getId()));
+            long appCount = approvalMapper.selectCount(new LambdaQueryWrapper<SysApproval>().eq(SysApproval::getProjectId, p.getId()));
+            long done = (revCount > 0 ? 1 : 0) + (expCount > 0 ? 1 : 0) + (appCount > 0 ? 1 : 0);
+
+            if (done == 3) closeoutComplete++;
+            else closeoutIncomplete++;
+
+            if (done < 3) {
+                List<String> missing = new ArrayList<>();
+                if (revCount == 0) missing.add("项目自评");
+                if (expCount == 0) missing.add("经验总结");
+                if (appCount == 0) missing.add("成果评审记录");
+                closeoutList.add(Map.of("projectId", p.getId(), "projectName", p.getName(), "done", done, "total", 3, "missing", String.join("、", missing)));
+            }
+        }
+
+        data.put("closeoutComplete", closeoutComplete);
+        data.put("closeoutIncomplete", closeoutIncomplete);
+        data.put("closeoutList", closeoutList);
 
         return Result.ok(data);
     }

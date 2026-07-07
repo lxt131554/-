@@ -47,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -341,5 +342,47 @@ public class ProjectController {
         project.setStatus("active");
         projectService.updateById(project);
         return Result.ok(project);
+    }
+
+    @GetMapping("/{id}/closeout-status")
+    public Result<Map<String, Object>> closeoutStatus(@PathVariable Long id,
+                                                       @AuthenticationPrincipal LoginUser loginUser) {
+        accessService.requireProjectView(id, loginUser.getUser());
+
+        Map<String, Object> status = new LinkedHashMap<>();
+
+        // Check review (项目自评)
+        Long reviewCount = reviewMapper.selectCount(new LambdaQueryWrapper<SysReview>()
+                .eq(SysReview::getProjectId, id));
+        Map<String, Object> reviewItem = new LinkedHashMap<>();
+        reviewItem.put("label", "项目自评");
+        reviewItem.put("status", reviewCount != null && reviewCount > 0 ? "已完成" : "未填写");
+        reviewItem.put("url", "/projects/" + id + "/review");
+        status.put("review", reviewItem);
+
+        // Check experience (经验总结)
+        Long expCount = experienceMapper.selectCount(new LambdaQueryWrapper<SysExperience>()
+                .eq(SysExperience::getProjectId, id));
+        Map<String, Object> expItem = new LinkedHashMap<>();
+        expItem.put("label", "经验总结");
+        expItem.put("status", expCount != null && expCount > 0 ? "已完成" : "未填写");
+        expItem.put("url", "/projects/" + id + "/experience");
+        status.put("experience", expItem);
+
+        // Check approval (成果评审记录)
+        Long approvalCount = approvalMapper.selectCount(new LambdaQueryWrapper<SysApproval>()
+                .eq(SysApproval::getProjectId, id));
+        Map<String, Object> approvalItem = new LinkedHashMap<>();
+        approvalItem.put("label", "成果评审记录");
+        approvalItem.put("status", approvalCount != null && approvalCount > 0 ? "已完成" : "未填写");
+        approvalItem.put("url", "/projects/" + id + "/approval");
+        status.put("approval", approvalItem);
+
+        // Summary
+        long completedCount = (reviewCount > 0 ? 1 : 0) + (expCount > 0 ? 1 : 0) + (approvalCount > 0 ? 1 : 0);
+        status.put("completedCount", completedCount);
+        status.put("totalCount", 3);
+
+        return Result.ok(status);
     }
 }
