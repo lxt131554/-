@@ -110,6 +110,9 @@
               <el-form-item label="新密码">
                 <el-input v-model="profileForm.newPassword" type="password" show-password placeholder="至少6位" />
               </el-form-item>
+              <el-form-item label="确认密码">
+                <el-input v-model="profileForm.confirmPassword" type="password" show-password placeholder="再次输入新密码" />
+              </el-form-item>
             </el-form>
             <template #footer>
               <el-button type="primary" @click="handleChangePassword" :loading="changingPwd">确认修改</el-button>
@@ -142,7 +145,7 @@ const notifyPopover = ref(null)
 // Profile / password change
 const showProfile = ref(false)
 const changingPwd = ref(false)
-const profileForm = reactive({ oldPassword: '', newPassword: '' })
+const profileForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
 async function handleChangePassword() {
   if (!profileForm.oldPassword || !profileForm.newPassword) {
     ElMessage.warning('请输入旧密码和新密码')
@@ -155,6 +158,7 @@ async function handleChangePassword() {
     showProfile.value = false
     profileForm.oldPassword = ''
     profileForm.newPassword = ''
+    profileForm.confirmPassword = ''
   } catch (error) {
     showActionError(error, '密码修改失败')
   } finally { changingPwd.value = false }

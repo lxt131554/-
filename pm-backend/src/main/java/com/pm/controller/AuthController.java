@@ -38,14 +38,21 @@ public class AuthController {
     @PutMapping("/profile")
     public Result<?> updateProfile(@RequestBody Map<String, String> body,
                                     @AuthenticationPrincipal LoginUser loginUser) {
+        if (loginUser == null || loginUser.getUser() == null) {
+            return Result.fail(401, "请先登录");
+        }
         String oldPassword = body.get("oldPassword");
         String newPassword = body.get("newPassword");
+        String confirmPassword = body.get("confirmPassword");
 
         if (oldPassword == null || oldPassword.isEmpty() || newPassword == null || newPassword.isEmpty()) {
             return Result.fail(400, "请输入旧密码和新密码");
         }
         if (newPassword.length() < 6) {
             return Result.fail(400, "新密码至少6位");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            return Result.fail(400, "两次输入的新密码不一致");
         }
 
         SysUser user = userMapper.selectById(loginUser.getUser().getId());
