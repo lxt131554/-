@@ -404,7 +404,7 @@
     <el-dialog v-model="showAddStage" title="添加阶段" width="560px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form :model="stageForm" label-width="80px">
         <el-form-item label="从模板选择" style="margin-bottom:12px">
-          <el-select v-model="selectedTemplate" placeholder="选择标准阶段模板快速填充（可选）" clearable style="width:100%" @change="onTemplateSelect">
+          <el-select v-model="selectedTemplate" placeholder="选择或输入阶段名称" clearable filterable allow-create style="width:100%" @change="onTemplateSelect">
             <el-option v-for="t in templateStages" :key="t.stageName" :label="t.stageName" :value="t.stageName" />
           </el-select>
         </el-form-item>
@@ -576,14 +576,17 @@ const stageForm = reactive({
 })
 const selectedTemplate = ref('')
 function onTemplateSelect(name) {
-  if (!name) return
+  if (!name) { selectedTemplate.value = ''; return }
   const tpl = templateStages.find(t => t.stageName === name)
-  if (!tpl) return
-  stageForm.stageName = tpl.stageName
-  stageForm.description = tpl.description || ''
-  stageForm.sortOrder = tpl.sortOrder || 0
-  if (tpl.planStart) stageForm.planStart = tpl.planStart
-  if (tpl.planEnd) stageForm.planEnd = tpl.planEnd
+  if (tpl) {
+    stageForm.stageName = tpl.stageName
+    stageForm.description = tpl.description || ''
+    stageForm.sortOrder = tpl.sortOrder || 0
+  } else {
+    // 手动输入的自定义阶段名
+    stageForm.stageName = name
+    stageForm.description = ''
+  }
 }
 const newMember = reactive({ userId: '', roleInProject: 'engineer' })
 
