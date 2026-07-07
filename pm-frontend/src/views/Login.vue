@@ -72,8 +72,9 @@ async function handleLogin() {
     } else {
       router.push('/')
     }
-  } catch {
-    // 错误已在拦截器中处理
+  } catch (error) {
+    const msg = error?.response?.data?.message || error?.message || '登录失败'
+    ElMessage.error(msg)
   } finally {
     loading.value = false
   }
