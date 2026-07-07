@@ -1,4 +1,4 @@
-﻿package com.pm.controller;
+package com.pm.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.pm.common.Result;

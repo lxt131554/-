@@ -1,38 +1,46 @@
 <template>
-  <div class="page-container" v-loading="loading">
-    <div class="page-header">
-      <el-button text @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon> 返回列表</el-button>
-      <h2 style="margin-top:8px">{{ project.name }}</h2>
-      <p style="color:var(--pm-text-secondary);margin-top:4px">{{ project.description || '暂无描述' }}</p>
-      <div v-if="deviationSummary" style="margin-top:4px">
-        <el-tag type="warning" size="small">整体偏差: {{ deviationSummary }}</el-tag>
+  <div class="page-container detail-page" v-loading="loading">
+    <header class="detail-hero">
+      <div class="detail-hero-toolbar">
+        <el-button text class="back-button" @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon><span>返回项目列表</span></el-button>
+        <div class="detail-actions">
+          <el-button size="small" @click="handleExport"><el-icon><Download /></el-icon><span>导出 Excel</span></el-button>
+          <el-button v-if="project.status=='completed' && auth.user?.role=='admin'"
+            size="small" @click="handleReopenProject">重新打开</el-button>
+          <el-button v-if="project.status=='active' && (auth.user?.role=='manager'||auth.user?.role=='admin')"
+            type="primary" size="small" @click="handleCompleteProject">完成项目</el-button>
+        </div>
       </div>
-      <el-button v-if="project.status=='active' && (auth.user?.role=='manager'||auth.user?.role=='admin')"
-        type="warning" size="small" @click="handleCompleteProject" style="margin-left:12px">
-        完成项目
-      </el-button>
-      <el-button v-if="project.status=='completed' && auth.user?.role=='admin'"
-        type="warning" size="small" @click="handleReopenProject" style="margin-left:8px">
-        重新打开
-      </el-button>
-      <el-button size="small" @click="handleExport" style="margin-left:8px">
-        <el-icon><Download /></el-icon> 导出 Excel
-      </el-button>
-    </div>
+      <div class="detail-title-row">
+        <div class="detail-title-copy">
+          <div class="detail-title-line">
+            <h2>{{ project.name || '项目详情' }}</h2>
+            <el-tag :type="project.status === 'active' ? 'success' : 'info'">{{ statusText }}</el-tag>
+          </div>
+          <p>{{ project.description || '暂无项目描述' }}</p>
+          <div class="detail-meta">
+            <span><b>负责人</b>{{ managerNames || '未分配' }}</span>
+            <span><b>当前阶段</b>{{ currentStageName }}</span>
+            <span><b>计划完成</b>{{ latestPlanEnd || '未设置' }}</span>
+          </div>
+        </div>
+        <el-tag v-if="deviationSummary" type="warning" class="deviation-tag">整体偏差：{{ deviationSummary }}</el-tag>
+      </div>
+    </header>
 
     <!-- 项目概况摘要 -->
-    <section class="page-summary-grid" style="margin-bottom:16px">
+    <section class="page-summary-grid detail-summary-grid">
       <div class="summary-card summary-card--primary">
         <div class="summary-card-label">项目状态</div>
-        <div class="summary-card-value" style="font-size:18px">{{ statusText }}</div>
+        <div class="summary-card-value detail-summary-value">{{ statusText }}</div>
       </div>
       <div class="summary-card summary-card--primary">
         <div class="summary-card-label">当前阶段</div>
-        <div class="summary-card-value" style="font-size:18px">{{ currentStageName }}</div>
+        <div class="summary-card-value detail-summary-value">{{ currentStageName }}</div>
       </div>
       <div class="summary-card" :class="project.status==='completed'?'summary-card--success':'summary-card--primary'">
         <div class="summary-card-label">计划完成</div>
-        <div class="summary-card-value" style="font-size:18px">{{ latestPlanEnd || '—' }}</div>
+        <div class="summary-card-value detail-summary-value">{{ latestPlanEnd || '—' }}</div>
       </div>
       <div class="summary-card" :class="openDeviationsCount>0?'summary-card--danger':'summary-card--success'">
         <div class="summary-card-value">{{ openDeviationsCount }}</div>
@@ -61,7 +69,7 @@
 
       <!-- View mode: grouped sections -->
       <template v-if="!planningEditMode && hasPlanningData">
-        <section class="section-block" style="margin-bottom:12px">
+        <section class="planning-group">
           <h4 class="section-title" style="margin-top:0;margin-bottom:12px">客户与立项判断</h4>
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="客户等级">{{ project.customerLevel || '-' }}</el-descriptions-item>
@@ -72,7 +80,7 @@
             <el-descriptions-item label="成果方向及附件" :span="2">{{ project.achievementDirection || '-' }}</el-descriptions-item>
           </el-descriptions>
         </section>
-        <section class="section-block" style="margin-bottom:12px">
+        <section class="planning-group">
           <h4 class="section-title" style="margin-top:0;margin-bottom:12px">前期分析与约束</h4>
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="能否承接判断" :span="2">{{ project.canUndertake || '-' }}</el-descriptions-item>
@@ -82,7 +90,7 @@
             <el-descriptions-item label="预计审批路径" :span="2">{{ project.approvalPath || '-' }}</el-descriptions-item>
           </el-descriptions>
         </section>
-        <section class="section-block" style="margin-bottom:12px">
+        <section class="planning-group">
           <h4 class="section-title" style="margin-top:0;margin-bottom:12px">策划与资源配置</h4>
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="人力资源配置" :span="2">{{ project.hrAllocation || '-' }}</el-descriptions-item>
@@ -92,7 +100,7 @@
             <el-descriptions-item label="核心策略" :span="2">{{ project.coreStrategy || '-' }}</el-descriptions-item>
           </el-descriptions>
         </section>
-        <section class="section-block" style="margin-bottom:12px">
+        <section class="planning-group">
           <h4 class="section-title" style="margin-top:0;margin-bottom:12px">项目获取与审批</h4>
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="投标情况" :span="2">{{ project.bidSituation || '-' }}</el-descriptions-item>
@@ -248,7 +256,7 @@
         <el-table-column label="最新填报" min-width="200" show-overflow-tooltip>
           <template #default="{row}">{{ row.latestReport?.content || '暂无' }}</template>
         </el-table-column>
-        <el-table-column label="操作" min-width="180">
+        <el-table-column label="操作" width="150" fixed="right" align="center">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/my-tasks/${row.id}/report`)"
               v-if="auth.user?.role==='engineer' && row.status!=='completed'">填报</el-button>
@@ -282,7 +290,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="170" align="center">
+        <el-table-column label="操作" width="170" fixed="right" align="center">
           <template #default="{row}">
             <el-button text type="primary" size="small" @click="router.push(`/changes/${row.id}`)">查看详情</el-button>
             <el-button v-if="row.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="success" size="small"
@@ -484,6 +492,14 @@ const hasPlanningData = computed(() => {
 
 const isProjectManager = computed(() => {
   return members.value.some(m => m.userId === auth.user?.id && m.roleInProject === 'manager')
+})
+
+const managerNames = computed(() => {
+  return members.value
+    .filter(m => m.roleInProject === 'manager')
+    .map(m => m.realName)
+    .filter(Boolean)
+    .join('、')
 })
 
 const deviationSummary = computed(() => {
@@ -710,17 +726,163 @@ onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
 </script>
 
 <style scoped>
+.detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-hero {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  padding: 16px 20px 20px;
+}
+
+.detail-hero-toolbar,
+.detail-title-row,
+.detail-title-line,
+.detail-actions,
+.detail-meta {
+  display: flex;
+  align-items: center;
+}
+
+.detail-hero-toolbar,
+.detail-title-row {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.detail-hero-toolbar {
+  min-height: 32px;
+  margin-bottom: 12px;
+}
+
+.back-button {
+  margin-left: -10px;
+}
+
+.detail-actions {
+  gap: 8px;
+}
+
+.detail-title-copy {
+  min-width: 0;
+}
+
+.detail-title-line {
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.detail-title-line h2 {
+  margin: 0;
+  color: var(--pm-text);
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.detail-title-copy > p {
+  max-width: 900px;
+  margin-top: 6px;
+  color: var(--pm-text-secondary);
+  line-height: 1.6;
+}
+
+.detail-meta {
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 12px;
+  color: var(--pm-text-secondary);
+  font-size: 13px;
+}
+
+.detail-meta span {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.detail-meta b {
+  color: var(--pm-text-muted);
+  font-weight: 400;
+}
+
+.deviation-tag {
+  flex-shrink: 0;
+}
+
+.detail-summary-grid {
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  margin: 0;
+}
+
+.detail-summary-grid .summary-card {
+  min-height: 82px;
+  padding: 14px 16px;
+}
+
+.detail-summary-value {
+  margin-top: 5px;
+  font-size: 17px !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere;
+}
+
+.detail-page > .card-box,
+.detail-page > .section-block {
+  margin: 0 !important;
+  box-shadow: none;
+}
+
+.detail-page .page-toolbar {
+  min-height: 32px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--pm-border-light);
+}
+
 .section-title {
   font-weight: 600;
   font-size: 16px;
   color: var(--pm-text);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .member-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+}
+
+.member-tags :deep(.el-tag) {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--pm-border);
+  background: #f7f8fa;
+  color: var(--pm-text-secondary);
+  font-size: 13px;
+}
+
+.planning-group {
+  padding: 4px 0 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--pm-border-light);
+}
+
+.planning-group:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.planning-group :deep(.el-descriptions__body .el-descriptions__table) {
+  border-radius: 4px;
 }
 
 .edit-planning-section {
@@ -741,30 +903,53 @@ onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges() })
 
 /* Summary card color accent variants */
 .summary-card--primary {
-  border-left: 3px solid var(--pm-accent);
+  border-top: 2px solid var(--pm-accent);
 }
 .summary-card--primary .summary-card-value {
   color: var(--pm-accent);
 }
 
 .summary-card--warning {
-  border-left: 3px solid #F59E0B;
+  border-top: 2px solid #F59E0B;
 }
 .summary-card--warning .summary-card-value {
   color: #F59E0B;
 }
 
 .summary-card--danger {
-  border-left: 3px solid var(--pm-red-text);
+  border-top: 2px solid var(--pm-red-text);
 }
 .summary-card--danger .summary-card-value {
   color: var(--pm-red-text);
 }
 
 .summary-card--success {
-  border-left: 3px solid var(--pm-green-text);
+  border-top: 2px solid var(--pm-green-text);
 }
 .summary-card--success .summary-card-value {
   color: var(--pm-green-text);
+}
+
+@media (max-width: 1200px) {
+  .detail-summary-grid {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .detail-hero-toolbar,
+  .detail-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .detail-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .detail-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

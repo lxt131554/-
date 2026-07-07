@@ -27,8 +27,11 @@ public class ProjectExportServiceImpl implements ProjectExportService {
     private final SysReviewService reviewService;
     private final SysExperienceService experienceService;
     private final SysApprovalService approvalService;
+    private final SysSupportItemService supportItemService;
+    private final SysUserMapper userMapper;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Override
     public byte[] exportProject(Long projectId) {
@@ -45,7 +48,7 @@ public class ProjectExportServiceImpl implements ProjectExportService {
                 .filter(d -> d.getStageId() != null)
                 .collect(Collectors.groupingBy(SysDeviation::getStageId));
 
-        List<SysStageReport> allReports = getLatestReports(projectId);
+        List<SysStageReport> allReports = getAllReports(projectId);
         Map<Long, SysStageReport> latestReportByStage = allReports.stream()
                 .filter(r -> r.getStageId() != null)
                 .collect(Collectors.toMap(SysStageReport::getStageId, r -> r, (a, b) -> {
@@ -53,9 +56,13 @@ public class ProjectExportServiceImpl implements ProjectExportService {
                 }));
 
         List<SysChange> changes = changeService.listByProject(projectId);
+        List<SysProjectMember> members = projectService.getMembers(projectId);
+        List<SysSupportItem> supportItems = supportItemService.listByProject(projectId);
         SysReview review = reviewService.getByProjectId(projectId);
         SysExperience experience = experienceService.getByProjectId(projectId);
         SysApproval approval = approvalService.getByProject(projectId);
+        Map<Long, SysUser> usersById = loadRelatedUsers(stages, allReports, deviations, supportItems,
+                changes, members, review, experience, approval);
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("项目台账");
@@ -224,6 +231,12 @@ public class ProjectExportServiceImpl implements ProjectExportService {
                 createCell(row, 7, "暂无成果评审数据", dataStyle);
             }
 
+            createProjectOverviewSheet(workbook, project, members, usersById, titleStyle, headerStyle,
+                    sectionTitleStyle, dataStyle, wrapStyle);
+            createStageReportSheet(workbook, stages, allReports, usersById, titleStyle, headerStyle, dataStyle, wrapStyle);
+            createControlSheet(workbook, stages, deviations, supportItems, usersById,
+                    titleStyle, headerStyle, sectionTitleStyle, dataStyle, wrapStyle);
+
             // Auto-size columns (with max width constraint)
             for (int i = 0; i < 8; i++) {
                 sheet.autoSizeColumn(i);
@@ -248,12 +261,369 @@ public class ProjectExportServiceImpl implements ProjectExportService {
         }
     }
 
-    private List<SysStageReport> getLatestReports(Long projectId) {
-        // Use MyBatis-Plus query wrapper to get reports for this project
+    private List<SysStageReport> getAllReports(Long projectId) {
         com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SysStageReport> wrapper =
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
         wrapper.eq("project_id", projectId).orderByDesc("submit_time");
         return stageReportMapper.selectList(wrapper);
+    }
+
+    private Map<Long, SysUser> loadRelatedUsers(List<SysProjectStage> stages,
+                                                List<SysStageReport> reports,
+                                                List<SysDeviation> deviations,
+                                                List<SysSupportItem> supportItems,
+                                                List<SysChange> changes,
+                                                List<SysProjectMember> members,
+                                                SysReview review,
+                                                SysExperience experience,
+                                                SysApproval approval) {
+        Set<Long> userIds = new LinkedHashSet<>();
+        stages.forEach(item -> addUserId(userIds, item.getAssigneeId()));
+        reports.forEach(item -> {
+            addUserId(userIds, item.getSubmitUserId());
+            addUserId(userIds, item.getReviewUserId());
+        });
+        deviations.forEach(item -> addUserId(userIds, item.getCreateUserId()));
+        supportItems.forEach(item -> {
+            addUserId(userIds, item.getApplicantId());
+            addUserId(userIds, item.getHandlerId());
+        });
+        changes.forEach(item -> addUserId(userIds, item.getCreateUserId()));
+        members.forEach(item -> addUserId(userIds, item.getUserId()));
+        if (review != null) addUserId(userIds, review.getCreateUserId());
+        if (experience != null) addUserId(userIds, experience.getCreateUserId());
+        if (approval != null) addUserId(userIds, approval.getCreateUserId());
+
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<SysUser> users = userMapper.selectBatchIds(userIds);
+        if (users == null) {
+            return Collections.emptyMap();
+        }
+        return users.stream().collect(Collectors.toMap(SysUser::getId, user -> user, (a, b) -> a));
+    }
+
+    private void addUserId(Set<Long> userIds, Long userId) {
+        if (userId != null) {
+            userIds.add(userId);
+        }
+    }
+
+    private void createProjectOverviewSheet(Workbook workbook,
+                                            SysProject project,
+                                            List<SysProjectMember> members,
+                                            Map<Long, SysUser> usersById,
+                                            CellStyle titleStyle,
+                                            CellStyle headerStyle,
+                                            CellStyle sectionStyle,
+                                            CellStyle dataStyle,
+                                            CellStyle wrapStyle) {
+        Sheet sheet = workbook.createSheet("项目概况");
+        int rowIdx = addWideTitle(sheet, 0, "项目概况与启动策划", 3, titleStyle);
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "基本信息", 3, sectionStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "项目名称", project.getName(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "项目状态", projectStatusText(project.getStatus()), headerStyle, dataStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "项目描述", project.getDescription(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "创建时间", formatDateTime(project.getCreateTime()), headerStyle, dataStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "更新时间", formatDateTime(project.getUpdateTime()), headerStyle, dataStyle);
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "客户与立项判断", 3, sectionStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "客户等级/项目分级", project.getCustomerLevel(), headerStyle, dataStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "双方联系人", project.getContacts(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "成果产出类型", project.getAchievementType(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "审核审批要求", project.getApprovalRequirements(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "项目重要性", project.getProjectImportance(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "成果方向及附件", project.getAchievementDirection(), headerStyle, wrapStyle);
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "前期分析与约束", 3, sectionStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "能否承接判断", project.getCanUndertake(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "主要风险", project.getMainRisks(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "关键约束", project.getKeyConstraints(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "成果交付要求", project.getDeliverableRequirements(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "预计审批路径", project.getApprovalPath(), headerStyle, wrapStyle);
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "策划与资源配置", 3, sectionStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "人力资源配置", project.getHrAllocation(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "预计阶段成果", project.getExpectedOutputs(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "核心资料", project.getCoreMaterials(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "项目组组建", project.getTeamSetup(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "核心策略", project.getCoreStrategy(), headerStyle, wrapStyle);
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "项目获取与审批", 3, sectionStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "投标情况", project.getBidSituation(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "采购程序", project.getProcurementInfo(), headerStyle, wrapStyle);
+        rowIdx = addOverviewField(sheet, rowIdx, "获取结果", project.getAcquisitionResult(), headerStyle, wrapStyle);
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "项目成员", 3, sectionStyle);
+        String[] memberHeaders = {"姓名", "部门", "项目角色", "确认状态"};
+        createHeaderRow(sheet, rowIdx++, memberHeaders, headerStyle);
+        if (members.isEmpty()) {
+            Row row = sheet.createRow(rowIdx);
+            createCell(row, 0, "暂无项目成员", dataStyle);
+        } else {
+            for (SysProjectMember member : members) {
+                SysUser user = usersById.get(member.getUserId());
+                Row row = sheet.createRow(rowIdx++);
+                createCell(row, 0, user != null ? user.getRealName() : "", dataStyle);
+                createCell(row, 1, user != null ? user.getDept() : "", dataStyle);
+                createCell(row, 2, projectRoleText(member.getRoleInProject()), dataStyle);
+                createCell(row, 3, memberStatusText(member.getStatus()), dataStyle);
+            }
+        }
+
+        sheet.setColumnWidth(0, 22 * 256);
+        sheet.setColumnWidth(1, 34 * 256);
+        sheet.setColumnWidth(2, 22 * 256);
+        sheet.setColumnWidth(3, 22 * 256);
+        sheet.createFreezePane(0, 1);
+    }
+
+    private void createStageReportSheet(Workbook workbook,
+                                        List<SysProjectStage> stages,
+                                        List<SysStageReport> reports,
+                                        Map<Long, SysUser> usersById,
+                                        CellStyle titleStyle,
+                                        CellStyle headerStyle,
+                                        CellStyle dataStyle,
+                                        CellStyle wrapStyle) {
+        Sheet sheet = workbook.createSheet("阶段与填报");
+        String[] headers = {
+                "阶段名称", "阶段描述", "责任人", "阶段状态", "计划开始", "计划结束", "实际开始", "实际结束",
+                "填报时间", "填报人", "进度", "填报内容", "存在问题", "质量控制", "成果说明", "协调事项",
+                "部门审核", "审核状态", "审核意见", "附件名称"
+        };
+        int rowIdx = addWideTitle(sheet, 0, "项目阶段与全部填报记录", headers.length - 1, titleStyle);
+        createHeaderRow(sheet, rowIdx++, headers, headerStyle);
+
+        Map<Long, List<SysStageReport>> reportsByStage = reports.stream()
+                .filter(report -> report.getStageId() != null)
+                .collect(Collectors.groupingBy(SysStageReport::getStageId));
+
+        for (SysProjectStage stage : stages) {
+            List<SysStageReport> stageReports = new ArrayList<>(
+                    reportsByStage.getOrDefault(stage.getId(), Collections.emptyList()));
+            stageReports.sort(Comparator.comparing(SysStageReport::getSubmitTime,
+                    Comparator.nullsLast(Comparator.naturalOrder())));
+            if (stageReports.isEmpty()) {
+                rowIdx = addStageReportRow(sheet, rowIdx, stage, null, usersById, dataStyle, wrapStyle);
+            } else {
+                for (SysStageReport report : stageReports) {
+                    rowIdx = addStageReportRow(sheet, rowIdx, stage, report, usersById, dataStyle, wrapStyle);
+                }
+            }
+        }
+
+        if (stages.isEmpty()) {
+            Row row = sheet.createRow(rowIdx);
+            createCell(row, 0, "暂无项目阶段", dataStyle);
+        }
+        setDetailSheetWidths(sheet, headers.length, Set.of(1, 11, 12, 13, 14, 15, 16, 18));
+        sheet.createFreezePane(0, 2);
+        sheet.setAutoFilter(new CellRangeAddress(1, Math.max(1, rowIdx - 1), 0, headers.length - 1));
+    }
+
+    private int addStageReportRow(Sheet sheet,
+                                  int rowIdx,
+                                  SysProjectStage stage,
+                                  SysStageReport report,
+                                  Map<Long, SysUser> usersById,
+                                  CellStyle dataStyle,
+                                  CellStyle wrapStyle) {
+        Row row = sheet.createRow(rowIdx++);
+        row.setHeightInPoints(34);
+        createCell(row, 0, stage.getStageName(), dataStyle);
+        createCell(row, 1, stage.getDescription(), wrapStyle);
+        createCell(row, 2, userName(usersById, stage.getAssigneeId()), dataStyle);
+        createCell(row, 3, stageStatusText(stage.getStatus()), dataStyle);
+        createCell(row, 4, formatDate(stage.getPlanStart()), dataStyle);
+        createCell(row, 5, formatDate(stage.getPlanEnd()), dataStyle);
+        createCell(row, 6, formatDate(stage.getActualStart()), dataStyle);
+        createCell(row, 7, formatDate(stage.getActualEnd()), dataStyle);
+        createCell(row, 8, report != null ? formatDateTime(report.getSubmitTime()) : "", dataStyle);
+        createCell(row, 9, report != null ? userName(usersById, report.getSubmitUserId()) : "", dataStyle);
+        createCell(row, 10, report != null && report.getProgressRate() != null ? report.getProgressRate() + "%" : "", dataStyle);
+        createCell(row, 11, report != null ? report.getContent() : "", wrapStyle);
+        createCell(row, 12, report != null ? report.getProblem() : "", wrapStyle);
+        createCell(row, 13, report != null ? report.getQualityControl() : "", wrapStyle);
+        createCell(row, 14, report != null ? report.getResultSummary() : "", wrapStyle);
+        createCell(row, 15, report != null ? report.getCoordinationNote() : "", wrapStyle);
+        createCell(row, 16, report != null ? report.getDeptReviewNote() : "", wrapStyle);
+        createCell(row, 17, report != null ? reportStatusText(report.getReviewStatus()) : "", dataStyle);
+        createCell(row, 18, report != null ? report.getReviewComment() : "", wrapStyle);
+        createCell(row, 19, report != null ? report.getAttachmentName() : "", dataStyle);
+        return rowIdx;
+    }
+
+    private void createControlSheet(Workbook workbook,
+                                    List<SysProjectStage> stages,
+                                    List<SysDeviation> deviations,
+                                    List<SysSupportItem> supportItems,
+                                    Map<Long, SysUser> usersById,
+                                    CellStyle titleStyle,
+                                    CellStyle headerStyle,
+                                    CellStyle sectionStyle,
+                                    CellStyle dataStyle,
+                                    CellStyle wrapStyle) {
+        Sheet sheet = workbook.createSheet("偏差与支持");
+        int lastColumn = 9;
+        int rowIdx = addWideTitle(sheet, 0, "项目偏差与支持事项", lastColumn, titleStyle);
+        Map<Long, String> stageNames = stages.stream()
+                .filter(stage -> stage.getId() != null)
+                .collect(Collectors.toMap(SysProjectStage::getId, SysProjectStage::getStageName, (a, b) -> a));
+
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "偏差台账", lastColumn, sectionStyle);
+        String[] deviationHeaders = {"阶段", "偏差类型", "偏差描述", "原因", "影响", "状态", "创建人", "创建时间", "关闭时间"};
+        createHeaderRow(sheet, rowIdx++, deviationHeaders, headerStyle);
+        if (deviations.isEmpty()) {
+            Row row = sheet.createRow(rowIdx++);
+            createCell(row, 0, "暂无偏差记录", dataStyle);
+        } else {
+            for (SysDeviation deviation : deviations) {
+                Row row = sheet.createRow(rowIdx++);
+                row.setHeightInPoints(34);
+                createCell(row, 0, stageNames.getOrDefault(deviation.getStageId(), "未关联阶段"), dataStyle);
+                createCell(row, 1, deviation.getType(), dataStyle);
+                createCell(row, 2, deviation.getDescription(), wrapStyle);
+                createCell(row, 3, deviation.getReason(), wrapStyle);
+                createCell(row, 4, deviation.getImpact(), wrapStyle);
+                createCell(row, 5, deviationStatusText(deviation.getStatus()), dataStyle);
+                createCell(row, 6, userName(usersById, deviation.getCreateUserId()), dataStyle);
+                createCell(row, 7, formatDateTime(deviation.getCreateTime()), dataStyle);
+                createCell(row, 8, formatDateTime(deviation.getCloseTime()), dataStyle);
+            }
+        }
+
+        rowIdx++;
+        rowIdx = addWideSectionTitle(sheet, rowIdx, "支持事项", lastColumn, sectionStyle);
+        String[] supportHeaders = {"标题", "内容", "申请人", "处理人", "期望时间", "状态", "处理回复", "解决情况", "创建时间", "更新时间"};
+        createHeaderRow(sheet, rowIdx++, supportHeaders, headerStyle);
+        if (supportItems.isEmpty()) {
+            Row row = sheet.createRow(rowIdx);
+            createCell(row, 0, "暂无支持事项", dataStyle);
+        } else {
+            for (SysSupportItem item : supportItems) {
+                Row row = sheet.createRow(rowIdx++);
+                row.setHeightInPoints(34);
+                createCell(row, 0, item.getTitle(), dataStyle);
+                createCell(row, 1, item.getContent(), wrapStyle);
+                createCell(row, 2, userName(usersById, item.getApplicantId()), dataStyle);
+                createCell(row, 3, userName(usersById, item.getHandlerId()), dataStyle);
+                createCell(row, 4, formatDate(item.getExpectTime()), dataStyle);
+                createCell(row, 5, supportStatusText(item.getStatus()), dataStyle);
+                createCell(row, 6, item.getReply(), wrapStyle);
+                createCell(row, 7, item.getResolveNote(), wrapStyle);
+                createCell(row, 8, formatDateTime(item.getCreateTime()), dataStyle);
+                createCell(row, 9, formatDateTime(item.getUpdateTime()), dataStyle);
+            }
+        }
+
+        setDetailSheetWidths(sheet, lastColumn + 1, Set.of(1, 2, 3, 4, 6, 7));
+        sheet.createFreezePane(0, 2);
+    }
+
+    private int addWideTitle(Sheet sheet, int rowIdx, String title, int lastColumn, CellStyle style) {
+        Row row = sheet.createRow(rowIdx++);
+        row.setHeightInPoints(28);
+        createCell(row, 0, title, style);
+        sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 0, lastColumn));
+        return rowIdx;
+    }
+
+    private int addWideSectionTitle(Sheet sheet, int rowIdx, String title, int lastColumn, CellStyle style) {
+        Row row = sheet.createRow(rowIdx++);
+        row.setHeightInPoints(22);
+        createCell(row, 0, title, style);
+        sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 0, lastColumn));
+        return rowIdx;
+    }
+
+    private int addOverviewField(Sheet sheet,
+                                 int rowIdx,
+                                 String label,
+                                 String value,
+                                 CellStyle labelStyle,
+                                 CellStyle valueStyle) {
+        Row row = sheet.createRow(rowIdx++);
+        row.setHeightInPoints(value != null && (value.contains("\n") || value.length() > 60) ? 42 : 24);
+        createCell(row, 0, label, labelStyle);
+        createCell(row, 1, value, valueStyle);
+        createCell(row, 2, "", valueStyle);
+        createCell(row, 3, "", valueStyle);
+        sheet.addMergedRegion(new CellRangeAddress(rowIdx - 1, rowIdx - 1, 1, 3));
+        return rowIdx;
+    }
+
+    private void createHeaderRow(Sheet sheet, int rowIdx, String[] headers, CellStyle headerStyle) {
+        Row row = sheet.createRow(rowIdx);
+        row.setHeightInPoints(24);
+        for (int i = 0; i < headers.length; i++) {
+            createCell(row, i, headers[i], headerStyle);
+        }
+    }
+
+    private void setDetailSheetWidths(Sheet sheet, int columnCount, Set<Integer> wideColumns) {
+        for (int i = 0; i < columnCount; i++) {
+            sheet.setColumnWidth(i, (wideColumns.contains(i) ? 30 : 16) * 256);
+        }
+    }
+
+    private String userName(Map<Long, SysUser> usersById, Long userId) {
+        if (userId == null) return "";
+        SysUser user = usersById.get(userId);
+        return user != null && user.getRealName() != null ? user.getRealName() : "";
+    }
+
+    private String formatDate(LocalDate date) {
+        return date != null ? date.format(DATE_FMT) : "";
+    }
+
+    private String formatDateTime(java.time.LocalDateTime dateTime) {
+        return dateTime != null ? dateTime.format(DATE_TIME_FMT) : "";
+    }
+
+    private String projectStatusText(String status) {
+        return "completed".equals(status) ? "已完成" : "active".equals(status) ? "进行中" : safeText(status);
+    }
+
+    private String projectRoleText(String role) {
+        return "manager".equals(role) ? "项目负责人" : "engineer".equals(role) ? "工程师" : safeText(role);
+    }
+
+    private String memberStatusText(String status) {
+        return "confirmed".equals(status) ? "已确认" : "pending".equals(status) ? "待确认" : safeText(status);
+    }
+
+    private String stageStatusText(String status) {
+        if ("pending".equals(status)) return "待开始";
+        if ("in_progress".equals(status)) return "进行中";
+        if ("submitted".equals(status)) return "待审阅";
+        if ("completed".equals(status)) return "已完成";
+        return safeText(status);
+    }
+
+    private String reportStatusText(String status) {
+        if ("pending".equals(status)) return "待审阅";
+        if ("passed".equals(status)) return "已通过";
+        if ("rejected".equals(status)) return "已退回";
+        return safeText(status);
+    }
+
+    private String deviationStatusText(String status) {
+        return "open".equals(status) ? "未关闭" : "closed".equals(status) ? "已关闭" : safeText(status);
+    }
+
+    private String supportStatusText(String status) {
+        if ("pending".equals(status)) return "待处理";
+        if ("processing".equals(status)) return "处理中";
+        if ("resolved".equals(status)) return "已解决";
+        if ("closed".equals(status)) return "已关闭";
+        return safeText(status);
+    }
+
+    private String safeText(String value) {
+        return value != null ? value : "";
     }
 
     private String getGateName(int index, int total) {
@@ -344,6 +714,10 @@ public class ProjectExportServiceImpl implements ProjectExportService {
         if (review.getOverallDeviation() != null && !review.getOverallDeviation().isEmpty()) {
             if (sb.length() > 0) sb.append("; ");
             sb.append("总体偏差: ").append(review.getOverallDeviation());
+        }
+        if (review.getSupportEvaluation() != null && !review.getSupportEvaluation().isEmpty()) {
+            if (sb.length() > 0) sb.append("; ");
+            sb.append("支持评价: ").append(review.getSupportEvaluation());
         }
         if (review.getCommunicationNote() != null && !review.getCommunicationNote().isEmpty()) {
             if (sb.length() > 0) sb.append("; ");

@@ -5,6 +5,7 @@ import com.pm.entity.SysUser;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;

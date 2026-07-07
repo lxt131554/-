@@ -1,18 +1,18 @@
 <template>
   <el-container style="height:100vh">
     <!-- Sidebar -->
-    <el-aside width="200px" class="layout-sidebar">
+    <el-aside width="224px" class="layout-sidebar">
       <div class="sidebar-brand">
-        <div class="brand-title">林草规划院项目管理系统</div>
-        <div class="brand-subtitle">Project Lifecycle Platform</div>
+        <div class="brand-mark"><el-icon><OfficeBuilding /></el-icon></div>
+        <div class="brand-copy">
+          <div class="brand-title">林草规划院</div>
+          <div class="brand-subtitle">项目管理系统</div>
+        </div>
       </div>
       <el-menu
         :default-active="route.path"
-        background-color="transparent"
-        text-color="#9B9DA0"
-        active-text-color="#FFFFFF"
         router
-        style="border-right:none;flex:1;padding-top:8px"
+        class="sidebar-menu"
       >
         <!-- 工作台 -->
         <el-menu-item index="/dashboard">
@@ -92,6 +92,7 @@
             <el-empty v-else description="暂无待办事项" :image-size="60" />
           </el-popover>
           <div class="header-user">
+            <span class="header-avatar">{{ userInitial }}</span>
             <span class="header-name">{{ auth.user?.realName }}</span>
             <span class="header-role">{{ roleLabel }}</span>
             <span class="header-divider"></span>
@@ -138,6 +139,8 @@ const breadcrumbItems = computed(() => {
   return items
 })
 
+const userInitial = computed(() => auth.user?.realName?.slice(0, 1) || '用')
+
 function defaultPathForRole(role) {
   return role === 'leader' ? '/leader-dashboard' : '/dashboard'
 }
@@ -164,36 +167,58 @@ function handleLogout() {
 </script>
 
 <style scoped>
-/* Sidebar container -- not glued to edge */
 .layout-sidebar {
   background: var(--pm-sidebar-bg);
-  margin: 6px 0 6px 6px;
-  border-radius: 14px;
+  border-right: 1px solid var(--pm-border);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 2px 0 8px rgba(31, 35, 41, 0.03);
 }
 
-/* Brand area */
 .sidebar-brand {
-  padding: 20px 20px 16px;
-  color: #FFFFFF;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  height: 58px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--pm-text);
+  border-bottom: 1px solid var(--pm-border-light);
+  flex-shrink: 0;
+}
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--pm-primary);
+  color: #fff;
+  font-size: 17px;
+}
+.brand-copy {
+  min-width: 0;
 }
 .brand-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.3;
+  letter-spacing: 0;
+  line-height: 1.25;
 }
 .brand-subtitle {
-  font-size: 11px;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.06em;
-  margin-top: 2px;
+  font-size: 12px;
+  color: var(--pm-text-muted);
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+.sidebar-menu {
+  border-right: none;
+  flex: 1;
+  padding: 10px 8px;
+  overflow-y: auto;
 }
 
-/* Top header -- floating feel */
 .layout-header {
   background: var(--pm-surface);
   border-bottom: 1px solid var(--pm-border);
@@ -201,8 +226,10 @@ function handleLogout() {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 var(--pm-space-lg);
+  padding: 0 24px;
   height: 58px;
+  box-shadow: 0 1px 4px rgba(31, 35, 41, 0.03);
+  z-index: 2;
 }
 
 .header-location {
@@ -230,6 +257,10 @@ function handleLogout() {
   align-items: center;
 }
 
+.header-notify :deep(.el-icon) {
+  color: var(--pm-text-secondary);
+}
+
 /* User info */
 .header-user {
   display: flex;
@@ -239,16 +270,29 @@ function handleLogout() {
 
 .header-name {
   color: var(--pm-text);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
+}
+
+.header-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8f1ff;
+  color: var(--pm-primary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .header-role {
   color: var(--pm-text-muted);
-  font-size: 13px;
+  font-size: 12px;
   background: var(--pm-surface-hover);
-  padding: 2px 10px;
-  border-radius: 99px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-weight: 500;
 }
 
@@ -262,7 +306,13 @@ function handleLogout() {
 /* Main content */
 .layout-main {
   background: var(--pm-bg);
-  padding: var(--pm-space-lg);
+  padding: 20px 24px 32px;
   overflow-y: auto;
+}
+
+@media (max-width: 960px) {
+  .layout-main {
+    padding: 16px;
+  }
 }
 </style>

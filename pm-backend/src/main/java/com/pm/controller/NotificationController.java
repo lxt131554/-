@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,12 +32,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationController {
 
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
     private final SysProjectStageService stageService;
     private final SysStageReportService reportService;
     private final SysDeviationService deviationService;
     private final SysSupportItemService supportService;
     private final SysChangeService changeService;
     private final ProjectAccessService accessService;
+
+    private String fmt(LocalDateTime dt) {
+        return dt != null ? dt.format(FMT) : "";
+    }
 
     @GetMapping("/notifications")
     public Result<List<Map<String, Object>>> list(@AuthenticationPrincipal LoginUser loginUser) {
@@ -58,9 +65,9 @@ public class NotificationController {
                 if (stage != null) {
                     list.add(Map.of(
                             "type", "returned",
-                            "message", "Stage [" + stage.getStageName() + "] was returned and needs resubmission",
+                            "message", "阶段「" + stage.getStageName() + "」已被退回，需重新填报",
                             "url", "/my-tasks/" + stage.getId() + "/report",
-                            "time", report.getReviewTime() != null ? report.getReviewTime().toString() : ""
+                            "time", fmt(report.getReviewTime())
                     ));
                 }
             });
@@ -71,8 +78,8 @@ public class NotificationController {
                             && !"completed".equals(s.getStatus()))
                     .forEach(s -> list.add(Map.of(
                             "type", "overdue",
-                            "message", "Stage [" + s.getStageName() + "] is overdue by "
-                                    + ChronoUnit.DAYS.between(s.getPlanEnd(), LocalDate.now()) + " day(s)",
+                            "message", "阶段「" + s.getStageName() + "」已逾期 " +
+                                    ChronoUnit.DAYS.between(s.getPlanEnd(), LocalDate.now()) + " 天",
                             "url", "/my-tasks/" + s.getId() + "/report",
                             "time", s.getPlanEnd().toString()
                     )));
@@ -83,9 +90,9 @@ public class NotificationController {
             if (pendingReview > 0) {
                 list.add(Map.of(
                         "type", "review",
-                        "message", pendingReview + " stage report(s) pending review",
+                        "message", pendingReview + " 条填报待审阅",
                         "url", "/pending-review",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
 
@@ -95,9 +102,9 @@ public class NotificationController {
             if (pendingAchievement > 0) {
                 list.add(Map.of(
                         "type", "achievement",
-                        "message", pendingAchievement + " deliverable review(s) pending",
+                        "message", pendingAchievement + " 条成果待审核",
                         "url", "/pending-review",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
 
@@ -108,9 +115,9 @@ public class NotificationController {
             if (openDev > 0) {
                 list.add(Map.of(
                         "type", "deviation",
-                        "message", openDev + " deviation(s) still open",
+                        "message", openDev + " 项偏差未关闭",
                         "url", "/deviations",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
 
@@ -121,9 +128,9 @@ public class NotificationController {
             if (pendingSup > 0) {
                 list.add(Map.of(
                         "type", "support",
-                        "message", pendingSup + " support item(s) pending",
+                        "message", pendingSup + " 项支持事项待处理",
                         "url", "/supports",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
         }
@@ -135,9 +142,9 @@ public class NotificationController {
             if (openDev > 0) {
                 list.add(Map.of(
                         "type", "deviation",
-                        "message", openDev + " deviation(s) still open",
+                        "message", openDev + " 项偏差未关闭",
                         "url", "/deviations",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
 
@@ -145,9 +152,9 @@ public class NotificationController {
             if (pendingSup > 0) {
                 list.add(Map.of(
                         "type", "support",
-                        "message", pendingSup + " support item(s) pending",
+                        "message", pendingSup + " 项支持事项待处理",
                         "url", "/supports",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
 
@@ -157,9 +164,9 @@ public class NotificationController {
             if (pendingChanges > 0) {
                 list.add(Map.of(
                         "type", "change",
-                        "message", pendingChanges + " change request(s) pending confirmation",
+                        "message", pendingChanges + " 项变更待确认",
                         "url", "/leader-dashboard",
-                        "time", LocalDateTime.now().toString()
+                        "time", fmt(LocalDateTime.now())
                 ));
             }
         }
