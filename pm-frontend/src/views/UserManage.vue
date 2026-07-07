@@ -33,7 +33,7 @@
     </div>
 
     <el-dialog v-model="showDialog" :title="isEdit?'编辑用户':'新增用户'" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
-      <el-form :model="form" label-width="80px">
+      <el-form :model="form" label-width="120px">
         <el-form-item label="用户名" required><el-input v-model="form.username" :disabled="isEdit" /></el-form-item>
         <el-form-item label="姓名" required><el-input v-model="form.realName" /></el-form-item>
         <el-form-item label="密码" :required="!isEdit">

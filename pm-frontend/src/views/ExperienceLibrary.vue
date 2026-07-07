@@ -51,7 +51,7 @@
             <div class="line-clamp-2">{{ row.improvement || '-' }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="150">
+        <el-table-column label="创建时间" min-width="150">
           <template #default="{row}">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right" align="center">

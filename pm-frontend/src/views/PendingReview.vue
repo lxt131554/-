@@ -65,7 +65,7 @@
               <span v-else class="text-muted">-</span>
             </template>
           </el-table-column>
-          <el-table-column label="提交时间" width="140">
+          <el-table-column label="提交时间" min-width="140">
             <template #default="{row}">
               <span class="cell-time">{{ formatTime(row.submitTime) }}</span>
             </template>

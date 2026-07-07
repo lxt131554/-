@@ -7,7 +7,7 @@
 
     <!-- Create mode -->
     <div class="card-box" style="max-width:1200px; width:100%" v-if="!isEdit">
-      <el-form :model="form" label-width="90px" ref="formRef">
+      <el-form :model="form" label-width="120px" ref="formRef">
         <el-form-item label="所属项目" required>
           <el-select v-model="form.projectId" placeholder="选择项目" style="width:100%">
             <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
@@ -52,7 +52,7 @@
       </el-descriptions>
 
       <div v-if="detail?.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">
-        <el-form label-width="90px">
+        <el-form label-width="120px">
           <el-form-item label="处理回复" required>
             <el-input v-model="reply" type="textarea" :rows="4" placeholder="输入处理意见、解决方案或协调结果" />
           </el-form-item>

@@ -352,7 +352,7 @@
 
     <!-- 新增变更对话框 -->
     <el-dialog v-model="showAddChange" title="新增变更" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
-      <el-form :model="changeForm" label-width="100px">
+      <el-form :model="changeForm" label-width="120px">
         <el-form-item label="变更核心内容" required>
           <el-input v-model="changeForm.content" type="textarea" :rows="3" placeholder="描述变更的核心内容" />
         </el-form-item>
@@ -404,7 +404,7 @@
     </div>
 
     <el-dialog v-model="showAddStage" title="添加阶段" width="560px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
-      <el-form :model="stageForm" label-width="80px">
+      <el-form :model="stageForm" label-width="120px">
         <el-form-item label="从模板选择" style="margin-bottom:12px">
           <el-select v-model="selectedTemplate" placeholder="选择或输入阶段名称" clearable filterable allow-create style="width:100%" @change="onTemplateSelect">
             <el-option v-for="t in templateStages" :key="t.stageName" :label="t.stageName" :value="t.stageName" />
@@ -438,7 +438,7 @@
     </el-dialog>
 
     <el-dialog v-model="showAddMember" title="添加成员" width="400px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
-      <el-form label-width="80px">
+      <el-form label-width="120px">
         <el-form-item label="用户ID">
           <el-input v-model="newMember.userId" placeholder="输入用户ID" />
         </el-form-item>
@@ -503,7 +503,7 @@
           <el-checkbox v-model="skipDuplicates" style="margin-top:4px">跳过重复阶段，仅创建新阶段</el-checkbox>
         </template>
       </el-alert>
-      <el-form label-width="100px">
+      <el-form label-width="120px">
         <div v-for="(t, i) in templateStages" :key="i"
              :style="{border:'1px solid ' + (duplicateStageNames.includes(t.stageName) ? '#E6A23C' : 'var(--pm-border)'), borderRadius:'8px', padding:'16px', marginBottom:'12px'}">
           <div style="font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">

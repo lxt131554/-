@@ -780,6 +780,69 @@ body {
   font-size: 16px;
 }
 
+/* ================================================================
+   Unified Label & Table Standards
+   ================================================================ */
+
+/* Form labels — never wrap, fixed width */
+.pm-form .el-form-item__label,
+.el-form-item .pm-label-nowrap {
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+/* Descriptions labels — never wrap */
+.el-descriptions__label {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+}
+
+/* Table headers — never wrap, vertical align */
+.el-table th.el-table__cell .cell {
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+/* Descriptions — wider labels */
+.el-descriptions .el-descriptions__label {
+  min-width: 100px;
+}
+
+/* Form — wider labels */
+@media (min-width: 1201px) {
+  .el-form-item__label {
+    min-width: 100px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .el-form-item__label {
+    min-width: 84px;
+  }
+}
+
+/* Small screen: top-label layout */
+@media (max-width: 767px) {
+  .el-form-item {
+    display: block !important;
+  }
+  .el-form-item__label {
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    margin-bottom: 4px;
+  }
+  .el-form-item__content {
+    margin-left: 0 !important;
+  }
+  .el-descriptions {
+    --el-descriptions-item-bordered-label-background: transparent;
+  }
+}
+
 @media (max-width: 1200px) {
   .page-container {
     padding: 16px;

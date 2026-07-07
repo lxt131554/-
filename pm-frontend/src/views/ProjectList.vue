@@ -71,7 +71,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="160">
+        <el-table-column label="创建时间" min-width="160">
           <template #default="{row}">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="132" fixed="right" align="center">

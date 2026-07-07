@@ -100,7 +100,7 @@
       <!-- History table -->
       <el-divider>历史填报记录</el-divider>
       <el-table v-if="history.length" :data="history" size="small" stripe>
-        <el-table-column label="提交时间" width="160">
+        <el-table-column label="提交时间" min-width="160">
           <template #default="{row}">{{ row.createTime?.substring(0,16) }}</template>
         </el-table-column>
         <el-table-column prop="progressRate" label="进度" width="80" align="center">

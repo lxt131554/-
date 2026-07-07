@@ -20,7 +20,7 @@
       </el-descriptions>
 
       <div v-if="report.reviewStatus==='pending'" style="margin-top:24px">
-        <el-form label-width="80px">
+        <el-form label-width="120px">
           <el-form-item label="审阅意见">
             <el-input v-model="comment" type="textarea" :rows="3" placeholder="选填，退回时建议填写原因" />
           </el-form-item>
