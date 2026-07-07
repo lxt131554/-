@@ -2,9 +2,11 @@ package com.pm.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.pm.common.Result;
+import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.entity.SysUser;
+import com.pm.mapper.SysProjectMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.SysChangeService;
@@ -40,6 +42,7 @@ public class NotificationController {
     private final SysSupportItemService supportService;
     private final SysChangeService changeService;
     private final ProjectAccessService accessService;
+    private final SysProjectMapper projectMapper;
 
     private String fmt(LocalDateTime dt) {
         return dt != null ? dt.format(FMT) : "";
@@ -63,11 +66,14 @@ public class NotificationController {
             latestReturnedByStage.values().forEach(report -> {
                 SysProjectStage stage = stageService.getById(report.getStageId());
                 if (stage != null) {
+                    SysProject project = projectMapper.selectById(stage.getProjectId());
+                    String projectName = project != null ? project.getName() : "";
                     list.add(Map.of(
                             "type", "returned",
-                            "message", "阶段「" + stage.getStageName() + "」已被退回，需重新填报",
+                            "message", projectName + "｜" + stage.getStageName() + "阶段已退回，需重新填报",
                             "url", "/my-tasks/" + stage.getId() + "/report",
-                            "time", fmt(report.getReviewTime())
+                            "time", fmt(report.getReviewTime()),
+                            "projectName", projectName
                     ));
                 }
             });
@@ -76,13 +82,18 @@ public class NotificationController {
                     .filter(s -> s.getPlanEnd() != null
                             && s.getPlanEnd().isBefore(LocalDate.now())
                             && !"completed".equals(s.getStatus()))
-                    .forEach(s -> list.add(Map.of(
-                            "type", "overdue",
-                            "message", "阶段「" + s.getStageName() + "」已逾期 " +
-                                    ChronoUnit.DAYS.between(s.getPlanEnd(), LocalDate.now()) + " 天",
-                            "url", "/my-tasks/" + s.getId() + "/report",
-                            "time", s.getPlanEnd().toString()
-                    )));
+                    .forEach(s -> {
+                        SysProject project = projectMapper.selectById(s.getProjectId());
+                        String projectName = project != null ? project.getName() : "";
+                        long days = ChronoUnit.DAYS.between(s.getPlanEnd(), LocalDate.now());
+                        list.add(Map.of(
+                                "type", "overdue",
+                                "message", projectName + "｜" + s.getStageName() + "阶段已逾期 " + days + " 天",
+                                "url", "/my-tasks/" + s.getId() + "/report",
+                                "time", s.getPlanEnd().toString(),
+                                "projectName", projectName
+                        ));
+                    });
         }
 
         if ("manager".equals(role)) {
@@ -92,7 +103,8 @@ public class NotificationController {
                         "type", "review",
                         "message", pendingReview + " 条填报待审阅",
                         "url", "/pending-review",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
 
@@ -104,7 +116,8 @@ public class NotificationController {
                         "type", "achievement",
                         "message", pendingAchievement + " 条成果待审核",
                         "url", "/pending-review",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
 
@@ -117,7 +130,8 @@ public class NotificationController {
                         "type", "deviation",
                         "message", openDev + " 项偏差未关闭",
                         "url", "/deviations",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
 
@@ -130,7 +144,8 @@ public class NotificationController {
                         "type", "support",
                         "message", pendingSup + " 项支持事项待处理",
                         "url", "/supports",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
         }
@@ -144,7 +159,8 @@ public class NotificationController {
                         "type", "deviation",
                         "message", openDev + " 项偏差未关闭",
                         "url", "/deviations",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
 
@@ -154,7 +170,8 @@ public class NotificationController {
                         "type", "support",
                         "message", pendingSup + " 项支持事项待处理",
                         "url", "/supports",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
 
@@ -166,7 +183,8 @@ public class NotificationController {
                         "type", "change",
                         "message", pendingChanges + " 项变更待确认",
                         "url", "/leader-dashboard",
-                        "time", fmt(LocalDateTime.now())
+                        "time", fmt(LocalDateTime.now()),
+                        "projectName", "全院"
                 ));
             }
         }

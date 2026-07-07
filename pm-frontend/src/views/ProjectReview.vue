@@ -5,7 +5,7 @@
       <h2 style="margin-top:8px">项目自评</h2>
       <p style="color:var(--pm-text-secondary);font-size:14px">{{ projectName }}</p>
     </div>
-    <div class="card-box" style="max-width:800px">
+    <div class="card-box" style="max-width:1200px; width:100%">
       <el-form :model="form" label-width="130px" ref="formRef">
         <el-form-item label="项目整体执行偏差">
           <el-input v-model="form.overallDeviation" type="textarea" :rows="4" placeholder="描述项目整体执行偏差情况，如：外业延迟15天、内业延迟30天、成果延迟30天" />

@@ -6,7 +6,7 @@
     </div>
 
     <!-- Create mode -->
-    <div class="card-box" style="max-width:700px" v-if="!isEdit">
+    <div class="card-box" style="max-width:1200px; width:100%" v-if="!isEdit">
       <el-form :model="form" label-width="90px" ref="formRef">
         <el-form-item label="所属项目" required>
           <el-select v-model="form.projectId" placeholder="选择项目" style="width:100%">
@@ -35,7 +35,7 @@
     </div>
 
     <!-- Edit/View mode -->
-    <div class="card-box" style="max-width:700px" v-else>
+    <div class="card-box" style="max-width:1200px; width:100%" v-else>
       <el-descriptions title="事项详情" :column="2" border v-if="detail">
         <el-descriptions-item label="标题" :span="2">{{ detail.title }}</el-descriptions-item>
         <el-descriptions-item label="所属项目">{{ detail.projectName }}</el-descriptions-item>

@@ -83,10 +83,11 @@
             </template>
             <div v-if="notifications.length" style="max-height:400px;overflow-y:auto">
               <div v-for="(n, i) in notifications" :key="i"
-                style="padding:12px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer"
+                style="padding:10px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer"
                 @click="goNotify(n.url)">
-                <div style="font-size:14px;color:var(--pm-text)">{{ n.message }}</div>
-                <div style="font-size:12px;color:#999;margin-top:4px">{{ n.time?.substring(0,16) }}</div>
+                <div style="font-size:13px;font-weight:500;color:var(--pm-text)" v-if="n.projectName">{{ n.projectName }}</div>
+                <div style="font-size:14px;color:var(--pm-text);margin:2px 0">{{ n.message }}</div>
+                <div style="font-size:12px;color:var(--pm-text-muted)">{{ n.time }}</div>
               </div>
             </div>
             <el-empty v-else description="暂无待办事项" :image-size="60" />

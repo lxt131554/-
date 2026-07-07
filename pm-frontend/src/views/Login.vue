@@ -21,12 +21,13 @@
           <p>请使用院内系统账号进入工作台</p>
         </header>
         <el-form :model="form" :rules="rules" ref="formRef" size="large">
-          <el-form-item prop="username" label="用户名">
-            <el-input v-model="form.username" placeholder="请输入用户名" prefix-icon="User" autocomplete="username" />
+          <el-form-item>
+            <div style="margin-bottom:4px;font-size:14px;font-weight:500">用户名</div>
+            <el-input v-model="form.username" placeholder="请输入用户名" size="large" />
           </el-form-item>
-          <el-form-item prop="password" label="密码">
-            <el-input v-model="form.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password
-              autocomplete="current-password" @keyup.enter="handleLogin" />
+          <el-form-item>
+            <div style="margin-bottom:4px;font-size:14px;font-weight:500">密码</div>
+            <el-input v-model="form.password" type="password" placeholder="请输入密码" size="large" show-password />
           </el-form-item>
           <el-form-item class="login-action">
             <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">登录</el-button>
@@ -194,11 +195,8 @@ async function handleLogin() {
   font-size: 14px;
 }
 
-.login-panel :deep(.el-form-item__label) {
-  height: auto;
-  padding-bottom: 7px;
-  color: var(--pm-text);
-  line-height: 1.4;
+.login-panel :deep(.el-form-item) {
+  margin-bottom: 24px;
 }
 
 .login-panel :deep(.el-input__wrapper) {

@@ -5,7 +5,7 @@
       <h2 style="margin-top:8px">经验总结</h2>
       <p style="color:var(--pm-text-secondary);font-size:14px">{{ projectName }}</p>
     </div>
-    <div class="card-box" style="max-width:800px">
+    <div class="card-box" style="max-width:1200px; width:100%">
       <el-form :model="form" label-width="130px" ref="formRef">
         <el-form-item label="值得复用的经验">
           <el-input v-model="form.reusableExperience" type="textarea" :rows="4" placeholder="总结本项目中可以复用的成功经验和方法" />

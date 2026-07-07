@@ -5,7 +5,7 @@
       <h2 style="margin-top:8px">成果评审与审批</h2>
       <p style="color:var(--pm-text-secondary);font-size:14px">{{ projectName }}</p>
     </div>
-    <div class="card-box" style="max-width:800px">
+    <div class="card-box" style="max-width:1200px; width:100%">
       <el-form :model="form" label-width="160px" ref="formRef">
         <el-form-item label="上级主管/专家评审情况">
           <el-input v-model="form.reviewSituation" type="textarea" :rows="5"
