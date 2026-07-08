@@ -29,7 +29,7 @@
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
       </div>
-      <el-table v-if="filteredData.length" :data="filteredData" border stripe v-loading="loading">
+      <el-table v-if="filteredData.length" :data="pagedData" border stripe v-loading="loading">
         <el-table-column label="项目名称" min-width="160">
           <template #default="{row}">
             <el-link v-if="row.projectId" type="primary" @click="router.push(`/projects/${row.projectId}`)">{{ row.projectName && row.projectName !== '-' ? row.projectName : (row.projectId || '-') }}</el-link>
@@ -61,13 +61,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination v-if="filteredData.length > expPageSize"
+        v-model:current-page="expPage" :page-size="expPageSize"
+        :total="filteredData.length" layout="total, prev, pager, next" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
       <el-empty v-else-if="!loading" description="暂无经验总结" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '../api/index'
 import { showActionError } from '../utils/actionGuards'
@@ -76,6 +80,13 @@ const router = useRouter()
 const tableData = ref([])
 const loading = ref(false)
 const keyword = ref('')
+const expPage = ref(1)
+const expPageSize = 10
+
+const pagedData = computed(() => {
+  const start = (expPage.value - 1) * expPageSize
+  return filteredData.value.slice(start, start + expPageSize)
+})
 
 const filteredData = computed(() => {
   const text = keyword.value.trim().toLowerCase()
@@ -109,6 +120,7 @@ function formatTime(val) {
   return val.substring(0, 16).replace('T', ' ')
 }
 
+watch(keyword, () => { expPage.value = 1 })
 onMounted(loadData)
 </script>
 
