@@ -85,7 +85,7 @@
           查看全部 →
         </el-button>
       </div>
-      <el-table v-if="allProjects.length" :data="allProjects" size="small" stripe style="width:100%" v-loading="loading">
+      <el-table v-if="allProjects.length" :data="pagedProjects" size="small" stripe style="width:100%" v-loading="loading">
         <el-table-column prop="name" label="项目名称" min-width="200">
           <template #default="{ row }">
             <el-link type="primary" @click="$router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
@@ -99,6 +99,10 @@
         <el-table-column prop="managerName" label="负责人" min-width="100" />
         <el-table-column prop="currentStageName" label="当前阶段" min-width="120" />
       </el-table>
+      <el-pagination v-if="allProjects.length > pageSize"
+        v-model:current-page="projectPage" :page-size="pageSize"
+        :total="allProjects.length" layout="total, prev, pager, next" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
       <el-empty v-else-if="!loading" description="暂无项目" :image-size="60" />
     </div>
   </div>
@@ -114,7 +118,13 @@ const stats = ref({})
 const loading = ref(false)
 const auth = useAuthStore()
 
+const projectPage = ref(1)
+const pageSize = 10
 const allProjects = computed(() => stats.value.projects || [])
+const pagedProjects = computed(() => {
+  const start = (projectPage.value - 1) * pageSize
+  return allProjects.value.slice(start, start + pageSize)
+})
 
 // Count projects that have at least one open deviation
 const highRiskProjectCount = computed(() => {
