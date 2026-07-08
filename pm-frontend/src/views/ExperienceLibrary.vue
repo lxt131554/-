@@ -63,7 +63,7 @@
       </el-table>
       <el-pagination v-if="filteredData.length > expPageSize"
         v-model:current-page="expPage" :page-size="expPageSize"
-        :total="filteredData.length" layout="total, prev, pager, next" size="small"
+        :total="filteredData.length" layout="prev, pager, next" :pager-count="5" size="small"
         style="margin-top:12px;justify-content:flex-end" />
       <el-empty v-else-if="!loading" description="暂无经验总结" />
     </div>

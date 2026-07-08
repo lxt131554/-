@@ -101,7 +101,7 @@
       </el-table>
       <el-pagination v-if="allProjects.length > pageSize"
         v-model:current-page="projectPage" :page-size="pageSize"
-        :total="allProjects.length" layout="total, prev, pager, next" size="small"
+        :total="allProjects.length" layout="prev, pager, next" :pager-count="5" size="small"
         style="margin-top:12px;justify-content:flex-end" />
       <el-empty v-else-if="!loading" description="暂无项目" :image-size="60" />
     </div>
