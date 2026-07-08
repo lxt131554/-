@@ -29,42 +29,36 @@
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
       </div>
-      <el-table v-if="filteredData.length" :data="pagedData" border stripe v-loading="loading">
-        <el-table-column label="项目名称" min-width="160">
-          <template #default="{row}">
-            <el-link v-if="row.projectId" type="primary" @click="router.push(`/projects/${row.projectId}`)">{{ row.projectName && row.projectName !== '-' ? row.projectName : (row.projectId || '-') }}</el-link>
-            <span v-else>{{ row.projectName && row.projectName !== '-' ? row.projectName : (row.projectId || '-') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="可复用经验" min-width="200">
-          <template #default="{row}">
-            <div class="line-clamp-2">{{ row.reusableExperience || '-' }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="短板或缺陷" min-width="180">
-          <template #default="{row}">
-            <div class="line-clamp-2">{{ row.shortcomings || '-' }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="改进建议" min-width="180">
-          <template #default="{row}">
-            <div class="line-clamp-2">{{ row.improvement || '-' }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" min-width="150">
-          <template #default="{row}">{{ formatTime(row.createTime) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right" align="center">
-          <template #default="{row}">
-            <el-button v-if="row.projectId" text type="primary" size="small" @click="router.push(`/projects/${row.projectId}`)">查看详情</el-button>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-pagination v-if="filteredData.length > expPageSize"
-        v-model:current-page="expPage" :page-size="expPageSize"
-        :total="filteredData.length" layout="prev, pager, next" :pager-count="5" size="small"
-        style="margin-top:12px;justify-content:flex-end" />
+
+      <!-- Experience cards -->
+      <div v-if="pagedData.length" v-loading="loading">
+        <div v-for="item in pagedData" :key="item.id"
+          class="exp-card" @click="router.push(`/projects/${item.projectId}`)" style="cursor:pointer">
+          <div class="exp-card-header">
+            <el-link type="primary" :underline="false" style="font-size:15px;font-weight:600">
+              {{ item.projectName || '项目#' + item.projectId }}
+            </el-link>
+            <span style="color:var(--pm-text-muted);font-size:13px">{{ formatTime(item.createTime) }}</span>
+          </div>
+          <div v-if="item.reusableExperience" class="exp-card-section">
+            <div class="exp-card-label">可复用经验</div>
+            <div class="exp-card-text">{{ item.reusableExperience }}</div>
+          </div>
+          <div v-if="item.shortcomings" class="exp-card-section">
+            <div class="exp-card-label">短板或缺陷</div>
+            <div class="exp-card-text">{{ item.shortcomings }}</div>
+          </div>
+          <div v-if="item.improvement" class="exp-card-section">
+            <div class="exp-card-label">改进建议</div>
+            <div class="exp-card-text">{{ item.improvement }}</div>
+          </div>
+        </div>
+
+        <el-pagination v-if="filteredData.length > expPageSize"
+          v-model:current-page="expPage" :page-size="expPageSize"
+          :total="filteredData.length" layout="prev, pager, next" :pager-count="5" size="small"
+          style="margin-top:16px;justify-content:flex-end" />
+      </div>
       <el-empty v-else-if="!loading" description="暂无经验总结" />
     </div>
   </div>
@@ -125,31 +119,42 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.summary-card--primary {
-  border-left: 3px solid var(--pm-accent);
-}
-.summary-card--primary .summary-card-value {
-  color: var(--pm-accent);
-}
-.summary-card--success {
-  border-left: 3px solid var(--pm-green-text);
-}
-.summary-card--success .summary-card-value {
-  color: var(--pm-green-text);
-}
-.summary-card--warning {
-  border-left: 3px solid var(--pm-amber-text);
-}
-.summary-card--warning .summary-card-value {
-  color: var(--pm-amber-text);
-}
+.summary-card--primary { border-left: 3px solid var(--pm-accent); }
+.summary-card--primary .summary-card-value { color: var(--pm-accent); }
+.summary-card--success { border-left: 3px solid var(--pm-green-text); }
+.summary-card--success .summary-card-value { color: var(--pm-green-text); }
+.summary-card--warning { border-left: 3px solid var(--pm-amber-text); }
+.summary-card--warning .summary-card-value { color: var(--pm-amber-text); }
 
-.line-clamp-2 {
+.exp-card {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--pm-border);
+  transition: background 0.15s;
+}
+.exp-card:last-child { border-bottom: none; }
+.exp-card:hover { background: var(--pm-surface-hover); }
+.exp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.exp-card-section {
+  margin-bottom: 10px;
+}
+.exp-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pm-text-secondary);
+  margin-bottom: 4px;
+}
+.exp-card-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--pm-text);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  word-break: break-all;
-  max-height: 3em;
 }
 </style>

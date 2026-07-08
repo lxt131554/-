@@ -2,6 +2,8 @@ package com.pm.controller;
 
 import com.pm.common.Result;
 import com.pm.entity.SysExperience;
+import com.pm.entity.SysProject;
+import com.pm.mapper.SysProjectMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.SysExperienceService;
@@ -17,6 +19,7 @@ public class ExperienceController {
 
     private final SysExperienceService experienceService;
     private final ProjectAccessService accessService;
+    private final SysProjectMapper projectMapper;
 
     @GetMapping("/api/projects/{projectId}/experience")
     public Result<SysExperience> getByProject(@PathVariable Long projectId,
@@ -41,6 +44,10 @@ public class ExperienceController {
         List<SysExperience> list = experienceService.listAll();
         if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
             list.removeIf(exp -> !accessService.canViewProject(exp.getProjectId(), loginUser.getUser()));
+        }
+        for (SysExperience exp : list) {
+            SysProject project = projectMapper.selectById(exp.getProjectId());
+            if (project != null) exp.setProjectName(project.getName());
         }
         return Result.ok(list);
     }
