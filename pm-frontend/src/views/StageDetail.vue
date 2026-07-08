@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <el-button text @click="router.back()"><el-icon><ArrowLeft /></el-icon> 返回</el-button>
-      <h2 style="margin-top:8px">{{ stage.stageName }}</h2>
+      <h2>{{ stage.stageName }}</h2>
       <p style="color:var(--pm-text-secondary);margin-top:4px">
         所属项目：<el-link type="primary" @click="router.push(`/projects/${stage.projectId}`)">{{ stage.projectName }}</el-link>
         &nbsp;|&nbsp; 责任人：{{ stage.assigneeName || '未指定' }}

@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <el-button text @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon> 返回列表</el-button>
-      <h2 style="margin-top:8px">新建项目</h2>
+      <h2>新建项目</h2>
     </div>
 
     <el-form :model="form" :rules="rules" ref="formRef" label-width="130px">

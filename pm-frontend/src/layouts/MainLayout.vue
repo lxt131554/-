@@ -350,13 +350,7 @@ function handleLogout() {
 /* Main content */
 .layout-main {
   background: var(--pm-bg);
-  padding: 24px;
+  padding: 0;
   overflow-y: auto;
-}
-
-@media (max-width: 960px) {
-  .layout-main {
-    padding: 16px;
-  }
 }
 </style>

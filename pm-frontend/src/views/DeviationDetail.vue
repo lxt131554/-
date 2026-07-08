@@ -2,9 +2,9 @@
   <div class="page-container">
     <div class="page-header">
       <el-button text @click="router.back()"><el-icon><ArrowLeft /></el-icon> 返回</el-button>
-      <h2 style="margin-top:8px">偏差详情</h2>
+      <h2>偏差详情</h2>
     </div>
-    <div class="card-box" style="max-width:1200px; width:100%">
+    <div class="card-box">
       <el-descriptions :column="2" border v-if="detail">
         <el-descriptions-item label="所属项目">{{ detail.projectName }}</el-descriptions-item>
         <el-descriptions-item label="关联阶段">{{ detail.stageName || '无' }}</el-descriptions-item>

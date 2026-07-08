@@ -2,9 +2,9 @@
   <div class="page-container">
     <div class="page-header">
       <el-button text @click="router.back()"><el-icon><ArrowLeft /></el-icon> 返回</el-button>
-      <h2 style="margin-top:8px">审阅填报</h2>
+      <h2>审阅填报</h2>
     </div>
-    <div class="card-box" style="max-width:1200px; width:100%">
+    <div class="card-box">
       <el-descriptions title="填报详情" :column="2" border>
         <el-descriptions-item label="提交人">{{ report.submitUserName }}</el-descriptions-item>
         <el-descriptions-item label="提交时间">{{ report.submitTime }}</el-descriptions-item>

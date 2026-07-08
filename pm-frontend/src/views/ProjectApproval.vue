@@ -2,10 +2,10 @@
   <div class="page-container">
     <div class="page-header">
       <el-button text @click="router.back()"><el-icon><ArrowLeft /></el-icon> 返回项目</el-button>
-      <h2 style="margin-top:8px">成果评审与审批</h2>
+      <h2>成果评审与审批</h2>
       <p style="color:var(--pm-text-secondary);font-size:14px">{{ projectName }}</p>
     </div>
-    <div class="card-box" style="max-width:1200px; width:100%">
+    <div class="card-box">
       <el-form :model="form" label-width="160px" ref="formRef">
         <el-form-item label="上级主管/专家评审情况">
           <el-input v-model="form.reviewSituation" type="textarea" :rows="5"

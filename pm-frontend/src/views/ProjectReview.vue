@@ -1,9 +1,8 @@
 <template>
   <div class="page-container">
-    <div class="content-shell">
       <div class="page-header">
         <el-button text @click="router.back()"><el-icon><ArrowLeft /></el-icon> 返回</el-button>
-        <h2 style="margin-top:8px">项目自评</h2>
+        <h2>项目自评</h2>
         <p style="color:var(--pm-text-secondary);margin-top:4px">对项目执行过程进行总结评估，用于项目复盘与经验沉淀</p>
       </div>
 
@@ -62,7 +61,6 @@
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

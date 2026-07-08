@@ -118,10 +118,12 @@ body {
 /* ---- Utility Classes ---- */
 .page-container {
   width: 100%;
-  max-width: 1680px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 24px;
-  animation: pageEnter 0.22s var(--pm-ease) both;
+}
+@media (max-width: 768px) {
+  .page-container { padding: 16px; }
 }
 
 .page-header {
@@ -233,28 +235,7 @@ body {
   max-width: 720px;
 }
 
-/* ---- Animations ---- */
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes cardEnter {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* ---- Animations (removed — production systems don't need page entry animations) ---- */
 
 /* ================================================================
    Element Plus Global Overrides
@@ -843,17 +824,7 @@ body {
   }
 }
 
-@media (max-width: 1200px) {
-  .page-container {
-    padding: 16px;
-  }
-}
-
 @media (max-width: 960px) {
-  .page-container {
-    padding: var(--pm-space-sm);
-  }
-
   .page-header {
     margin-bottom: var(--pm-space-lg);
   }
@@ -950,7 +921,6 @@ body {
   }
 }
 
-.content-shell { max-width: 1440px; margin: 0 auto; width: 100%; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .long-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; line-height: 1.8; font-size: 14px; }
 .review-layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start; }
