@@ -453,7 +453,7 @@
               <el-tag v-else-if="row.status==='completed'" type="success" size="small">已完成</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="进度" width="80" align="center">
+          <el-table-column label="进度" width="85" align="center">
             <template #default="{row}">
               <span v-if="row.latestReport?.progressRate">{{ row.latestReport.progressRate }}%</span>
               <span v-else style="color:var(--pm-text-muted)">—</span>
@@ -508,7 +508,7 @@
             </el-table-column>
             <el-table-column prop="stageName" label="关联阶段" min-width="120" />
             <el-table-column prop="createTime" label="创建时间" min-width="140" />
-            <el-table-column label="状态" min-width="90" align="center">
+            <el-table-column label="状态" min-width="100" align="center">
               <template #default="{row}">
                 <el-tag :type="row.status==='open'?'danger':'success'" size="small">{{ row.status==='open'?'未关闭':'已关闭' }}</el-tag>
               </template>
@@ -539,7 +539,7 @@
             </el-table-column>
             <el-table-column prop="applicantName" label="申请人" min-width="100" />
             <el-table-column prop="createTime" label="创建时间" min-width="140" />
-            <el-table-column label="状态" min-width="90" align="center">
+            <el-table-column label="状态" min-width="100" align="center">
               <template #default="{row}">
                 <el-tag :type="row.status==='pending'||row.status==='open'?'warning':(row.status==='resolved'?'success':'info')" size="small">
                   {{ row.status==='pending'?'待处理':(row.status==='open'?'处理中':(row.status==='resolved'?'已解决':row.status)) }}
@@ -577,7 +577,7 @@
             </el-table-column>
             <el-table-column prop="confirmTime" label="确认时间" min-width="120" />
             <el-table-column prop="impact" label="影响范围" min-width="160" show-overflow-tooltip />
-            <el-table-column prop="status" label="状态" min-width="90" align="center">
+            <el-table-column prop="status" label="状态" min-width="100" align="center">
               <template #default="{row}">
                 <el-tag :type="row.status=='confirmed'?'success':'warning'" size="small">
                   {{ row.status=='confirmed'?'已确认':'待确认' }}
@@ -738,7 +738,7 @@
         <el-table-column label="项目角色" min-width="100">
           <template #default="{row}">{{ row.roleInProject==='manager'?'负责人':'工程师' }}</template>
         </el-table-column>
-        <el-table-column label="状态" min-width="90">
+        <el-table-column label="状态" min-width="100">
           <template #default="{row}">
             <el-tag :type="row.status==='confirmed'?'success':'warning'" size="small">
               {{ row.status==='confirmed'?'已确认':'待确认' }}

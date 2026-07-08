@@ -54,7 +54,7 @@
       </div>
 
       <el-table v-if="tableData.length" :data="tableData" class="pm-table">
-        <el-table-column prop="id" label="编号" width="76" align="center" />
+        <el-table-column prop="id" label="编号" width="70" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="260">
           <template #default="{row}">
             <el-link class="project-name-link" type="primary" @click="router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
@@ -74,7 +74,7 @@
         <el-table-column label="创建时间" min-width="160">
           <template #default="{row}">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="132" fixed="right" align="center">
+        <el-table-column label="操作" width="140" fixed="right" align="center">
           <template #default="{row}">
             <el-button text type="primary" @click="router.push(`/projects/${row.id}`)">查看</el-button>
             <el-button text type="danger" @click="handleDelete(row)" v-if="auth.user?.role==='admin'">删除</el-button>

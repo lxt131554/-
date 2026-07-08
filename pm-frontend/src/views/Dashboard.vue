@@ -179,7 +179,7 @@
               <span v-else style="color:var(--pm-text-muted)">—</span>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="90" align="center">
+          <el-table-column prop="status" label="状态" min-width="90" align="center">
             <template #default="{ row }">
               <el-tag v-if="row.status==='in_progress'" type="primary" size="small">进行中</el-tag>
               <el-tag v-else-if="row.status==='pending'" type="info" size="small">待开始</el-tag>

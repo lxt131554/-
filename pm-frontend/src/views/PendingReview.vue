@@ -53,13 +53,13 @@
               <span class="progress-text">{{ row.progressRate }}%</span>
             </template>
           </el-table-column>
-          <el-table-column label="偏差" width="70" align="center">
+          <el-table-column label="偏差" width="80" align="center">
             <template #default="{row}">
               <el-tag v-if="row.problem && row.problem.trim()" type="danger" size="small">有</el-tag>
               <span v-else class="text-muted">无</span>
             </template>
           </el-table-column>
-          <el-table-column label="附件" width="55" align="center">
+          <el-table-column label="附件" width="75" align="center">
             <template #default="{row}">
               <el-icon v-if="row.attachmentName" style="color:#059669" :size="16"><Paperclip /></el-icon>
               <span v-else class="text-muted">-</span>

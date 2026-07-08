@@ -40,14 +40,14 @@
         <el-table-column label="期望时间" min-width="120">
           <template #default="{row}">{{ formatTime(row.expectTime) }}</template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" min-width="90" align="center">
+        <el-table-column prop="status" label="状态" min-width="100" align="center">
           <template #default="{row}">
             <el-tag :type="row.status=='pending'?'warning':'success'" size="small">
               {{ row.status=='pending'?'待处理':'已解决' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="80" fixed="right" align="center">
+        <el-table-column label="操作" min-width="100" fixed="right" align="center">
           <template #default="{row}">
             <el-button v-if="canResolve(row)" text type="primary" size="small"
               @click="$router.push(`/supports/${row.id}`)">处理</el-button>

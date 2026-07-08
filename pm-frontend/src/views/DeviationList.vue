@@ -49,7 +49,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="reason" label="偏差原因" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="status" label="状态" min-width="90" align="center">
+        <el-table-column prop="status" label="状态" min-width="100" align="center">
           <template #default="{row}">
             <el-tag :type="row.status=='open'?'danger':'success'" size="small">
               {{ row.status=='open'?'未关闭':'已关闭' }}
@@ -59,7 +59,7 @@
         <el-table-column label="创建时间" min-width="170">
           <template #default="{row}">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
-        <el-table-column label="操作" min-width="80" fixed="right" align="center">
+        <el-table-column label="操作" min-width="100" fixed="right" align="center">
           <template #default="{row}">
             <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="primary" size="small" @click="handleClose(row)">
               关闭

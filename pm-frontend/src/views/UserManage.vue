@@ -15,7 +15,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="dept" label="部门" min-width="140" />
-        <el-table-column prop="enabled" label="状态" min-width="90" align="center">
+        <el-table-column prop="enabled" label="状态" min-width="100" align="center">
           <template #default="{row}">
             <el-tag :type="row.enabled?'success':'danger'" size="small">{{ row.enabled?'启用':'禁用' }}</el-tag>
           </template>
