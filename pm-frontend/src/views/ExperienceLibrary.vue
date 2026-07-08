@@ -33,7 +33,7 @@
       <!-- Experience cards -->
       <div v-if="pagedData.length" v-loading="loading">
         <div v-for="item in pagedData" :key="item.id"
-          class="exp-card" @click="router.push(`/projects/${item.projectId}`)" style="cursor:pointer">
+          class="exp-card" @click="openDetail(item)" style="cursor:pointer">
           <div class="exp-card-header">
             <el-link type="primary" :underline="false" style="font-size:15px;font-weight:600">
               {{ item.projectName || '项目#' + item.projectId }}
@@ -61,6 +61,28 @@
       </div>
       <el-empty v-else-if="!loading" description="暂无经验总结" />
     </div>
+
+    <!-- Detail Dialog -->
+    <el-dialog v-model="showDetail" title="经验详情" width="680px" append-to-body align-center :lock-scroll="true">
+      <template v-if="detailItem">
+        <div style="margin-bottom:16px">
+          <el-link type="primary" @click="goProject(detailItem.projectId)" style="font-size:15px;font-weight:600">{{ detailItem.projectName || '项目#'+detailItem.projectId }}</el-link>
+          <span style="color:var(--pm-text-muted);font-size:13px;margin-left:12px">{{ formatTime(detailItem.createTime) }}</span>
+        </div>
+        <div v-if="detailItem.reusableExperience" class="detail-block">
+          <div class="detail-label">可复用经验</div>
+          <div class="detail-text long-text">{{ detailItem.reusableExperience }}</div>
+        </div>
+        <div v-if="detailItem.shortcomings" class="detail-block">
+          <div class="detail-label">短板或缺陷</div>
+          <div class="detail-text long-text">{{ detailItem.shortcomings }}</div>
+        </div>
+        <div v-if="detailItem.improvement" class="detail-block">
+          <div class="detail-label">改进建议</div>
+          <div class="detail-text long-text">{{ detailItem.improvement }}</div>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -76,6 +98,11 @@ const loading = ref(false)
 const keyword = ref('')
 const expPage = ref(1)
 const expPageSize = 10
+const showDetail = ref(false)
+const detailItem = ref(null)
+
+function openDetail(item) { detailItem.value = item; showDetail.value = true }
+function goProject(pid) { showDetail.value = false; router.push('/projects/' + pid) }
 
 const pagedData = computed(() => {
   const start = (expPage.value - 1) * expPageSize
@@ -157,4 +184,8 @@ onMounted(loadData)
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.detail-block { margin-bottom: 20px; }
+.detail-label { font-size: 14px; font-weight: 600; color: var(--pm-text); margin-bottom: 8px; padding-left: 10px; border-left: 3px solid var(--pm-accent); }
+.detail-text { background: var(--pm-bg); border-radius: 6px; padding: 14px 16px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
 </style>
