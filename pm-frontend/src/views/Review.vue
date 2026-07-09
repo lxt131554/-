@@ -19,6 +19,15 @@
         <el-descriptions-item label="审阅意见" :span="2" v-if="report.reviewComment">{{ report.reviewComment }}</el-descriptions-item>
       </el-descriptions>
 
+      <!-- 附件下载 -->
+      <div v-if="report.attachmentName" style="margin-top:20px;padding:16px;background:var(--pm-bg);border-radius:8px;display:flex;align-items:center;gap:12px">
+        <el-icon :size="20" color="#059669"><Paperclip /></el-icon>
+        <span style="flex:1;font-size:14px">{{ report.attachmentName }}</span>
+        <el-button type="primary" size="small" @click="downloadAttachment">
+          <el-icon><Download /></el-icon> 下载附件
+        </el-button>
+      </div>
+
       <div v-if="report.reviewStatus==='pending'" style="margin-top:24px">
         <el-form label-width="120px">
           <el-form-item label="审阅意见">
@@ -43,6 +52,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPendingReviews, reviewReport } from '../api/report'
 import { ElMessage } from 'element-plus'
+import { Paperclip, Download } from '@element-plus/icons-vue'
 import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const route = useRoute()
@@ -75,6 +85,10 @@ async function doReview(status) {
   } catch (error) {
     showActionError(error, '审阅操作失败')
   } finally { submitting.value = false }
+}
+
+function downloadAttachment() {
+  window.open(`/api/reports/${reportId}/attachment`, '_blank')
 }
 
 onMounted(loadReport)
