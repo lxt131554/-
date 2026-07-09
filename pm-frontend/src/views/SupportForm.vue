@@ -9,7 +9,7 @@
     <div class="card-box" v-if="!isEdit">
       <el-form :model="form" label-width="120px" ref="formRef">
         <el-form-item label="所属项目" required>
-          <el-select v-model="form.projectId" placeholder="选择项目" style="width:100%">
+          <el-select v-model="form.projectId" placeholder="搜索并选择项目" filterable remote :remote-method="searchProjects" :loading="projectLoading" reserve-keyword clearable style="width:100%">
             <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
         </el-form-item>
@@ -91,6 +91,7 @@ const isEdit = ref(!!route.params.id)
 const formRef = ref(null)
 const submitting = ref(false)
 const projects = ref([])
+const projectLoading = ref(false)
 const users = ref([])
 const detail = ref(null)
 const reply = ref('')
@@ -101,12 +102,20 @@ const form = reactive({ projectId: null, title: '', content: '', handlerId: null
 async function loadFormData() {
   try {
     const [projRes] = await Promise.all([
-      getProjects({ page: 1, size: 100 })
+      getProjects({ page: 1, size: 20 })
     ])
     projects.value = projRes.data.records || []
   } catch (error) {
     showActionError(error, '项目列表加载失败')
   }
+}
+
+async function searchProjects(keyword) {
+  projectLoading.value = true
+  try {
+    const res = await getProjects({ page: 1, size: 20, keyword })
+    projects.value = res.data.records || []
+  } finally { projectLoading.value = false }
 }
 
 async function loadDetail() {

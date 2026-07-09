@@ -106,8 +106,8 @@
 
     <!-- Section 3: Key Projects (manager & engineer only; leader view changes in Task 3) -->
     <section v-if="stats.myProjects && stats.myProjects.length" class="section-block">
-      <div class="section-title">重点项目</div>
-      <el-table v-if="stats.myProjects && stats.myProjects.length" :data="enrichedProjects" size="small" stripe
+      <div class="section-title">近期关注项目</div>
+      <el-table v-if="stats.myProjects && stats.myProjects.length" :data="displayProjects" size="small" stripe
         style="width:100%">
         <el-table-column prop="name" label="项目名称" min-width="180">
           <template #default="{ row }">
@@ -138,6 +138,9 @@
           </template>
         </el-table-column>
       </el-table>
+      <div v-if="hasMoreProjects" style="text-align:right;margin-top:8px">
+        <el-link type="primary" @click="$router.push('/projects')">仅展示需优先关注的 8 个项目，查看全部 →</el-link>
+      </div>
       <el-empty v-else description="暂无项目数据" :image-size="60" />
     </section>
 
@@ -149,7 +152,7 @@
 
       <!-- Manager: pending review items -->
       <template v-if="auth.user?.role==='manager' && stats.pendingReviewItems">
-        <el-table :data="stats.pendingReviewItems" size="small" stripe style="width:100%">
+        <el-table :data="stats.pendingReviewItems.slice(0, 5)" size="small" stripe style="width:100%">
           <el-table-column prop="projectName" label="项目名称" min-width="160" />
           <el-table-column prop="stageName" label="阶段" min-width="120" />
           <el-table-column prop="submitUserName" label="提交人" min-width="100" />
@@ -168,11 +171,14 @@
             </template>
           </el-table-column>
         </el-table>
+        <div style="text-align:right;margin-top:8px">
+          <el-link type="primary" @click="$router.push('/pending-review')">查看全部待审阅 →</el-link>
+        </div>
       </template>
 
       <!-- Engineer: pending stages -->
       <template v-if="auth.user?.role==='engineer' && stats.pendingStages">
-        <el-table :data="stats.pendingStages" size="small" stripe style="width:100%">
+        <el-table :data="stats.pendingStages.slice(0, 5)" size="small" stripe style="width:100%">
           <el-table-column prop="projectName" label="项目名称" min-width="160" />
           <el-table-column prop="stageName" label="阶段" min-width="120" />
           <el-table-column label="计划完成" min-width="120">
@@ -197,6 +203,9 @@
             </template>
           </el-table-column>
         </el-table>
+        <div style="text-align:right;margin-top:8px">
+          <el-link type="primary" @click="$router.push('/my-tasks')">查看全部待填报 →</el-link>
+        </div>
       </template>
     </section>
 
@@ -245,6 +254,30 @@ const enrichedProjects = computed(() => {
     nextAction: reviewProjectIds.has(p.projectId) ? '审阅' : '查看'
   }))
 })
+
+const displayProjects = computed(() => {
+  const projects = stats.value.myProjects || []
+  const sorted = [...projects].sort((a, b) => {
+    // Has deviation first
+    if (a.hasDeviation && !b.hasDeviation) return -1
+    if (!a.hasDeviation && b.hasDeviation) return 1
+    // Then by planEnd (nearer first)
+    if (a.planEnd && b.planEnd) return new Date(a.planEnd) - new Date(b.planEnd)
+    return 0
+  })
+  // Enrich with nextAction
+  if (auth.user?.role === 'engineer') {
+    return sorted.slice(0, 8).map(p => ({ ...p, nextAction: '填报' }))
+  }
+  const reviewItems = stats.value.pendingReviewItems || []
+  const reviewProjectIds = new Set(reviewItems.map(r => r.projectId))
+  return sorted.slice(0, 8).map(p => ({
+    ...p,
+    nextAction: reviewProjectIds.has(p.projectId) ? '审阅' : '查看'
+  }))
+})
+
+const hasMoreProjects = computed(() => (stats.value.myProjects || []).length > 8)
 
 function formatDate(val) {
   if (!val) return ''

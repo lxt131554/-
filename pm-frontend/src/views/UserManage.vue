@@ -6,7 +6,7 @@
         <div></div>
         <el-button type="primary" @click="openCreate"><el-icon><Plus /></el-icon> 新增用户</el-button>
       </div>
-      <el-table v-if="users.length" :data="users" border stripe v-loading="loading">
+      <el-table v-if="users.length" :data="pagedUsers" border stripe v-loading="loading">
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="realName" label="姓名" min-width="100" />
         <el-table-column prop="role" label="角色" min-width="100">
@@ -32,6 +32,10 @@
         </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="暂无用户数据" />
+      <el-pagination v-if="users.length > pageSize"
+        v-model:current-page="page" :page-size="pageSize"
+        :total="users.length" layout="prev, pager, next" :pager-count="5" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
     </div>
 
     <el-dialog v-model="showDialog" :title="isEdit?'编辑用户':'新增用户'" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
@@ -60,13 +64,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import request from '../api/index'
 import { ElMessage } from 'element-plus'
 import { confirmDanger, showActionError } from '../utils/actionGuards'
 
 const users = ref([])
 const loading = ref(false)
+
+const page = ref(1)
+const pageSize = 10
+const pagedUsers = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return users.value.slice(start, start + pageSize)
+})
 const showDialog = ref(false)
 const isEdit = ref(false)
 const editId = ref(null)

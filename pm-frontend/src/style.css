@@ -989,3 +989,5 @@ body {
 .form-tip { font-size: 13px; color: var(--pm-text-muted); margin-top: 6px; line-height: 1.5; }
 .action-bar { display: flex; align-items: center; justify-content: space-between; background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 8px; padding: 16px 24px; margin-top: 24px; position: sticky; bottom: 0; }
 @media (max-width: 900px) { .review-layout { grid-template-columns: 1fr; } .review-aside { position: static; } }
+
+.pagination-row { display: flex; justify-content: flex-end; align-items: center; padding-top: 16px; }

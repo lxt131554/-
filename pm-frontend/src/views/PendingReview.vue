@@ -36,7 +36,7 @@
       <!-- Table with horizontal scroll -->
       <div class="table-scroll-wrapper">
         <el-table
-          :data="filteredReports"
+          :data="pagedReports"
           v-loading="loading"
           size="small"
           style="min-width:900px"
@@ -94,12 +94,16 @@
       <div v-if="!loading && reports.length>0 && filteredReports.length>0 && filteredReports.length < reports.length" style="text-align:center;padding:4px 0;color:var(--pm-text-muted);font-size:13px">
         已筛选 {{ filteredReports.length }} / {{ reports.length }} 条记录
       </div>
+      <el-pagination v-if="filteredReports.length > pageSize"
+        v-model:current-page="page" :page-size="pageSize"
+        :total="filteredReports.length" layout="prev, pager, next" :pager-count="5" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getPendingReviews } from '../api/report'
 import { showActionError } from '../utils/actionGuards'
@@ -125,6 +129,15 @@ const filteredReports = computed(() => {
 
 const overdueCount = computed(() => reports.value.filter(isOverdue).length)
 const withAttachmentCount = computed(() => reports.value.filter(r => r.attachmentName).length)
+
+const page = ref(1)
+const pageSize = 10
+const pagedReports = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return filteredReports.value.slice(start, start + pageSize)
+})
+
+watch([filterProject, filterDeviation, quickFilter], () => { page.value = 1 })
 
 function isOverdue(report) {
   if (!report.submitTime) return false

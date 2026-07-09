@@ -28,7 +28,7 @@
           <el-icon><Plus /></el-icon> 新建支持申请
         </el-button>
       </div>
-      <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
+      <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
         <el-table-column prop="title" label="事项标题" min-width="220" show-overflow-tooltip>
           <template #default="{row}">
@@ -58,6 +58,10 @@
         </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="暂无支持事项" />
+      <el-pagination v-if="tableData.length > pageSize"
+        v-model:current-page="page" :page-size="pageSize"
+        :total="tableData.length" layout="prev, pager, next" :pager-count="5" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
     </div>
   </div>
 </template>
@@ -80,12 +84,20 @@ const pendingCount = computed(() => allData.value.filter(s => s.status === 'pend
 const resolvedCount = computed(() => allData.value.filter(s => s.status === 'resolved').length)
 const canCreateSupport = computed(() => ['engineer', 'admin'].includes(auth.user?.role))
 
+const page = ref(1)
+const pageSize = 10
+const pagedData = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return tableData.value.slice(start, start + pageSize)
+})
+
 function canResolve(row) {
   return row.status === 'pending' && ['manager', 'admin'].includes(auth.user?.role)
 }
 
 function setStatusFilter(status) {
   filterStatus.value = status
+  page.value = 1
   loadData()
 }
 
@@ -95,6 +107,7 @@ function formatTime(val) {
 }
 
 async function loadData() {
+  page.value = 1
   loading.value = true
   try {
     const res = await request.get('/supports')

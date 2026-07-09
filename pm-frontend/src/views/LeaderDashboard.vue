@@ -76,6 +76,9 @@
         <el-table-column prop="owner" label="负责人" min-width="100" />
         <el-table-column prop="action" label="建议领导关注点" min-width="240" show-overflow-tooltip />
       </el-table>
+      <div v-if="hasMoreAttention" style="text-align:right;margin-top:8px">
+        <el-link type="primary" @click="$router.push('/projects')">仅展示前 8 个项目，查看全部 →</el-link>
+      </div>
       <el-empty v-else description="暂无项目需要关注" :image-size="60" />
     </section>
 
@@ -162,7 +165,7 @@ const riskItems = computed(() => {
     ...deviations.slice(0, 3),
     ...supports.slice(0, 3),
     ...changes.slice(0, 2)
-  ]
+  ].slice(0, 8)
 })
 
 // Tier 3: projects needing leader attention
@@ -204,7 +207,21 @@ const attentionProjects = computed(() => {
       owner: p.managerName || '—',
       action
     }
-  })
+  }).slice(0, 8)
+})
+
+const hasMoreAttention = computed(() => {
+  const projects = stats.value.projects || []
+  const deviations = stats.value.openDeviationList || []
+  const supports = stats.value.pendingSupportList || []
+  const changes = stats.value.pendingChanges || []
+  if (!projects.length) return false
+  const count = projects.filter(p => {
+    return deviations.some(d => d.projectId === p.id) ||
+      supports.some(s => s.projectId === p.id) ||
+      changes.some(c => c.projectId === p.id)
+  }).length
+  return count > 8
 })
 
 function formatTime(val) {

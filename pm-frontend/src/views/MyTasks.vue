@@ -41,8 +41,9 @@
         </el-radio-group>
       </div>
 
+      <div style="margin-bottom:8px;color:var(--pm-text-secondary);font-size:13px">共 {{ filteredTasks.length }} 条任务</div>
       <div style="overflow-x:auto">
-        <el-table :data="filteredTasks" v-loading="loading">
+        <el-table :data="pagedTasks" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
         <el-table-column prop="stageName" label="阶段名称" min-width="140">
           <template #default="{row}">
@@ -77,12 +78,16 @@
       </el-table>
       </div>
       <el-empty v-if="!loading && tasks.length===0" description="暂无需填报的阶段" />
+      <el-pagination v-if="filteredTasks.length > pageSize"
+        v-model:current-page="page" :page-size="pageSize"
+        :total="filteredTasks.length" layout="prev, pager, next" :pager-count="5" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMyTasks } from '../api/stage'
 
@@ -104,6 +109,15 @@ const filteredTasks = computed(() => {
   if (filterStatus.value) list = list.filter(t => t.status === filterStatus.value)
   return list
 })
+
+const page = ref(1)
+const pageSize = 10
+const pagedTasks = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return filteredTasks.value.slice(start, start + pageSize)
+})
+
+watch([filterProject, filterStatus], () => { page.value = 1 })
 
 async function loadTasks() {
   loading.value = true

@@ -33,7 +33,7 @@
         </el-button>
       </div>
 
-      <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
+      <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="180" />
         <el-table-column prop="stageName" label="阶段" min-width="120" />
         <el-table-column prop="type" label="来源" min-width="80" align="center">
@@ -70,13 +70,17 @@
         </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="暂无偏差记录" />
+      <el-pagination v-if="tableData.length > pageSize"
+        v-model:current-page="page" :page-size="pageSize"
+        :total="tableData.length" layout="prev, pager, next" :pager-count="5" size="small"
+        style="margin-top:12px;justify-content:flex-end" />
     </div>
 
     <!-- Create dialog -->
-    <el-dialog v-model="showCreate" title="手动记录偏差" width="500px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
+    <el-dialog v-model="showCreate" title="手动记录偏差" width="640px" :close-on-click-modal="false" append-to-body align-center :lock-scroll="true">
       <el-form :model="form" label-width="120px" ref="createFormRef">
         <el-form-item label="所属项目" required>
-          <el-select v-model="form.projectId" placeholder="选择项目" style="width:100%">
+          <el-select v-model="form.projectId" placeholder="搜索并选择项目" filterable remote :remote-method="searchProjects" :loading="projectLoading" style="width:100%" clearable>
             <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
         </el-form-item>
@@ -117,12 +121,21 @@ const showCreate = ref(false)
 const creating = ref(false)
 const createFormRef = ref(null)
 const projects = ref([])
+const projectLoading = ref(false)
 const form = reactive({ projectId: null, description: '', reason: '', impact: '' })
+
+const page = ref(1)
+const pageSize = 10
+const pagedData = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return tableData.value.slice(start, start + pageSize)
+})
 
 const openCount = computed(() => allData.value.filter(d => d.status === 'open').length)
 const closedCount = computed(() => allData.value.filter(d => d.status === 'closed').length)
 
 async function loadData() {
+  page.value = 1
   loading.value = true
   try {
     const res = await request.get('/deviations')
@@ -170,11 +183,19 @@ async function handleCreate() {
   } finally { creating.value = false }
 }
 
+async function searchProjects(keyword) {
+  projectLoading.value = true
+  try {
+    const res = await getProjects({ page: 1, size: 20, keyword })
+    projects.value = res.data.records || []
+  } finally { projectLoading.value = false }
+}
+
 onMounted(async () => {
   loadData()
   if (auth.user?.role === 'manager' || auth.user?.role === 'admin') {
     try {
-      const res = await getProjects({ page: 1, size: 100 })
+      const res = await getProjects({ page: 1, size: 20 })
       projects.value = res.data.records || []
     } catch (error) { showActionError(error, '项目列表加载失败') }
   }
