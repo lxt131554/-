@@ -153,7 +153,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await getPendingReviews()
-    reports.value = res.data
+    reports.value = res.data.records || res.data || []
   } catch (error) {
     showActionError(error, '待审阅填报加载失败')
   } finally { loading.value = false }

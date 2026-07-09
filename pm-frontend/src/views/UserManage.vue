@@ -87,7 +87,7 @@ const roleMap = { admin:'管理员', manager:'项目负责人', engineer:'工程
 
 async function loadUsers() {
   loading.value = true
-  try { const res = await request.get('/users'); users.value = res.data || [] }
+  try { const res = await request.get('/users'); users.value = res.data.records || res.data || [] }
   catch (error) { showActionError(error, '用户列表加载失败') }
   finally { loading.value = false }
 }

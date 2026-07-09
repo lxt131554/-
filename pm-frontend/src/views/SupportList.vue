@@ -111,7 +111,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await request.get('/supports')
-    allData.value = res.data || []
+    allData.value = res.data.records || res.data || []
     tableData.value = filterStatus.value
       ? allData.value.filter(item => item.status === filterStatus.value)
       : allData.value

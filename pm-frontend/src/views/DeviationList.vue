@@ -139,7 +139,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await request.get('/deviations')
-    allData.value = res.data || []
+    allData.value = res.data.records || res.data || []
     let list = allData.value
     if (filterStatus.value) list = list.filter(d => d.status === filterStatus.value)
     tableData.value = list
