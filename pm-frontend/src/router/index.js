@@ -77,7 +77,7 @@ router.beforeEach(async (to, from, next) => {
 })
 
 router.afterEach((to) => {
-  document.title = `${to.meta?.title || '工作台'} - 林草规划院项目管理系统`
+  document.title = `${to.meta?.title || '工作台'} - 四川省林业和草原调查规划院`
 })
 
 export default router

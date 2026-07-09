@@ -1,12 +1,12 @@
 <template>
   <el-container style="height:100vh">
     <!-- Sidebar -->
-    <el-aside width="232px" class="layout-sidebar">
+    <el-aside width="248px" class="layout-sidebar">
       <div class="sidebar-brand">
-        <div class="brand-logo"><el-icon :size="22"><OfficeBuilding /></el-icon></div>
+        <div class="brand-logo"><el-icon :size="24"><OfficeBuilding /></el-icon></div>
         <div class="brand-copy">
-          <div class="brand-title">林草规划院</div>
-          <div class="brand-subtitle">项目管理系统</div>
+          <div class="brand-title">四川省林业和草原调查规划院</div>
+          <div class="brand-subtitle">项目全过程管理系统</div>
         </div>
       </div>
       <el-menu
@@ -255,8 +255,8 @@ function handleLogout() {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .brand-logo { color: #fff; }
-.brand-title { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.3; }
-.brand-subtitle { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+.brand-title { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.4; letter-spacing: 0.02em; }
+.brand-subtitle { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; letter-spacing: 0.04em; }
 .sidebar-menu {
   border-right: none;
   flex: 1;

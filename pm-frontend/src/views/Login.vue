@@ -6,7 +6,7 @@
       <div class="visual-content">
         <div class="visual-brand">
           <span class="brand-mark"><el-icon><OfficeBuilding /></el-icon></span>
-          <span>四川省林业和草原规划院</span>
+          <span>四川省林业和草原调查规划院</span>
         </div>
         <h1>项目管理系统</h1>
         <p>项目全周期协同、过程管控与成果沉淀</p>
@@ -38,7 +38,7 @@
           <span>测试账号：manager1 / engineer1 / leader1 / admin，密码均为 123456</span>
         </div>
       </div>
-      <div class="login-footer">四川省林业和草原规划院</div>
+      <div class="login-footer">四川省林业和草原调查规划院</div>
     </section>
   </main>
 </template>
