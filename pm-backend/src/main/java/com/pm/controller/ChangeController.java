@@ -4,6 +4,7 @@ import com.pm.common.Result;
 import com.pm.entity.SysChange;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.SysChangeService;
 import com.pm.service.SysProjectService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class ChangeController {
     private final SysChangeService changeService;
     private final SysProjectService projectService;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping("/api/projects/{projectId}/changes")
     public Result<List<SysChange>> listByProject(@PathVariable Long projectId,
@@ -37,6 +39,7 @@ public class ChangeController {
         change.setStatus("pending");
         change.setCreateUserId(loginUser.getUser().getId());
         changeService.save(change);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(change);
     }
 
@@ -64,6 +67,7 @@ public class ChangeController {
         }
         accessService.requireProjectManager(c.getProjectId(), loginUser.getUser());
         changeService.confirm(id);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 }

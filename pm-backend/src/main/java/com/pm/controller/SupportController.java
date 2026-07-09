@@ -5,6 +5,7 @@ import com.pm.common.Result;
 import com.pm.entity.SysSupportItem;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.SysSupportItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class SupportController {
 
     private final SysSupportItemService supportItemService;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping
     public Result<Page<SysSupportItem>> list(
@@ -53,6 +55,7 @@ public class SupportController {
         item.setApplicantId(loginUser.getUser().getId());
         item.setStatus("pending");
         supportItemService.save(item);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(item);
     }
 
@@ -73,6 +76,7 @@ public class SupportController {
             throw new IllegalArgumentException("处理回复不能为空");
         }
         supportItemService.resolve(id, reply, resolveNote);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 

@@ -6,6 +6,7 @@ import com.pm.mapper.*;
 import com.pm.security.LoginUser;
 import com.pm.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ public class StatisticsController {
     private final ProjectAccessService accessService;
 
     @GetMapping("/statistics")
+    @Cacheable(cacheNames = "statisticsCache", key = "'user:' + #loginUser.getUser().getId() + ':role:' + #loginUser.getUser().getRole()", unless = "#result == null || #result.data == null")
     public Result<Map<String, Object>> stats(@AuthenticationPrincipal LoginUser loginUser) {
         // PERFORMANCE NOTE: This endpoint does selectList(null) on projects, stages, users,
         // and experiences tables. For production use with large datasets, consider adding

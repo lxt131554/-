@@ -16,6 +16,7 @@ import com.pm.service.SysProjectStageService;
 import com.pm.service.ProjectAccessService;
 import com.pm.security.LoginUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,6 +44,7 @@ public class LeaderDashboardController {
     private final ProjectAccessService accessService;
 
     @GetMapping("/api/leader-dashboard")
+    @Cacheable(cacheNames = "leaderDashboardCache", key = "'user:' + #loginUser.getUser().getId() + ':role:' + #loginUser.getUser().getRole()", unless = "#result == null || #result.data == null")
     public Result<Map<String, Object>> stats(@AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireLeaderOrAdmin(loginUser.getUser());
         Map<String, Object> data = new HashMap<>();

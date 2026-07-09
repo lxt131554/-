@@ -28,6 +28,7 @@ import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.OaProjectImportService;
 import com.pm.service.ProjectAccessService;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.SysDeviationService;
 import com.pm.service.SysProjectService;
 import com.pm.service.SysSupportItemService;
@@ -71,6 +72,7 @@ public class ProjectController {
     private final SysSupportItemService supportItemService;
     private final OaProjectImportService oaProjectImportService;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping
     public Result<IPage<SysProject>> list(
@@ -116,6 +118,7 @@ public class ProjectController {
         project.setStatus("active");
         projectService.save(project);
         projectService.addMember(project.getId(), loginUser.getUser().getId(), "manager", "confirmed");
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(project);
     }
 
@@ -138,6 +141,7 @@ public class ProjectController {
         accessService.requireProjectActive(id);
         project.setId(id);
         projectService.updateById(project);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(project);
     }
 
@@ -156,6 +160,7 @@ public class ProjectController {
         experienceMapper.delete(new LambdaQueryWrapper<SysExperience>().eq(SysExperience::getProjectId, id));
         approvalMapper.delete(new LambdaQueryWrapper<SysApproval>().eq(SysApproval::getProjectId, id));
         projectService.removeById(id);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 
@@ -328,7 +333,7 @@ public class ProjectController {
         SysProject project = projectService.getById(id);
         project.setStatus("completed");
         projectService.updateById(project);
-
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(project);
     }
 
@@ -341,6 +346,7 @@ public class ProjectController {
         }
         project.setStatus("active");
         projectService.updateById(project);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(project);
     }
 

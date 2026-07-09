@@ -13,6 +13,7 @@ import com.pm.mapper.SysStageReportMapper;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.SysProjectStageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class StageController {
     private final SysUserMapper userMapper;
     private final SysDeviationMapper deviationMapper;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping("/projects/{projectId}/stages")
     public Result<List<SysProjectStage>> listStages(@PathVariable Long projectId,
@@ -68,6 +70,7 @@ public class StageController {
         stage.setProjectId(projectId);
         stage.setStatus("pending");
         stageService.save(stage);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(stage);
     }
 
@@ -100,6 +103,7 @@ public class StageController {
         stage.setId(stageId);
         stage.setProjectId(projectId);
         stageService.updateById(stage);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(stage);
     }
 
@@ -119,6 +123,7 @@ public class StageController {
             return Result.fail(400, "该阶段已有 " + reportCount + " 条填报记录，不能直接删除。请先清理相关填报");
         }
         stageService.removeById(stageId);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 

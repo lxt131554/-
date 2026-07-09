@@ -5,6 +5,7 @@ import com.pm.common.Result;
 import com.pm.entity.SysUser;
 import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.ProjectAccessService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class UserController {
     private final SysUserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping
     public Result<Page<SysUser>> list(@RequestParam(defaultValue = "1") int page,
@@ -66,6 +68,7 @@ public class UserController {
         user.setEnabled(true);
         userMapper.insert(user);
         user.setPassword(null);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(user);
     }
 
@@ -84,6 +87,7 @@ public class UserController {
         }
         userMapper.updateById(user);
         user.setPassword(null);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(user);
     }
 
@@ -98,6 +102,7 @@ public class UserController {
         if (user == null) return Result.fail("用户不存在");
         user.setEnabled(!(user.getEnabled() != null && user.getEnabled()));
         userMapper.updateById(user);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 }

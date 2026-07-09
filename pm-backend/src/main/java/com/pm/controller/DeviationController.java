@@ -5,6 +5,7 @@ import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.SysDeviationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class DeviationController {
 
     private final SysDeviationService deviationService;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping
     public Result<Page<SysDeviation>> list(
@@ -64,6 +66,7 @@ public class DeviationController {
         deviation.setStatus("open");
         deviation.setCreateUserId(loginUser.getUser().getId());
         deviationService.save(deviation);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(deviation);
     }
 
@@ -76,6 +79,7 @@ public class DeviationController {
         }
         accessService.requireProjectManager(deviation.getProjectId(), loginUser.getUser());
         deviationService.closeDeviation(id);
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 }

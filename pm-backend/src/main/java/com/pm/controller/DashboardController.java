@@ -19,6 +19,7 @@ import com.pm.service.SysSupportItemService;
 import com.pm.service.SysChangeService;
 import com.pm.service.ProjectAccessService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +45,7 @@ public class DashboardController {
     private final SysProjectMemberMapper memberMapper;
 
     @GetMapping
+    @Cacheable(cacheNames = "dashboardCache", key = "'user:' + #loginUser.getUser().getId() + ':role:' + #loginUser.getUser().getRole()", unless = "#result == null || #result.data == null")
     public Result<Map<String, Object>> stats(@AuthenticationPrincipal LoginUser loginUser) {
         String role = loginUser.getUser().getRole();
         Long userId = loginUser.getUser().getId();

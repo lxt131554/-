@@ -9,6 +9,7 @@ import com.pm.entity.SysSupportItem;
 import com.pm.mapper.SysProjectStageMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
+import com.pm.service.CacheEvictionService;
 import com.pm.service.SysDeviationService;
 import com.pm.service.SysStageReportService;
 import com.pm.service.SysSupportItemService;
@@ -51,6 +52,7 @@ public class ReportController {
     private final SysSupportItemService supportItemService;
     private final SysProjectStageMapper stageMapper;
     private final ProjectAccessService accessService;
+    private final CacheEvictionService cacheEvictionService;
 
     @GetMapping("/stages/{stageId}/reports")
     public Result<List<SysStageReport>> listReports(@PathVariable Long stageId,
@@ -156,6 +158,7 @@ public class ReportController {
             supportItemService.save(supportItem);
         }
 
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok(saved);
     }
 
@@ -210,7 +213,9 @@ public class ReportController {
         if ("returned".equals(status) && !hasText(comment)) {
             throw new IllegalArgumentException("退回填报时请填写审核意见");
         }
-        return Result.ok(reportService.review(reportId, status, comment, loginUser.getUser().getId()));
+        SysStageReport reviewed = reportService.review(reportId, status, comment, loginUser.getUser().getId());
+        cacheEvictionService.evictDashboardCaches();
+        return Result.ok(reviewed);
     }
 
     private void validateAttachment(MultipartFile file) {
