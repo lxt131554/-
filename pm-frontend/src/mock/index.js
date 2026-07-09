@@ -407,7 +407,23 @@ async function getMockResponse(config) {
         if (r.reviewStatus === 'pending') pending.push(r)
       })
     })
-    result = { code: 200, message: 'success', data: pending }
+    // Populate projectName and stageName
+    pending.forEach(function(r) {
+      if (!r.projectName) {
+        var p = mockData.projects.find(function(x) { return x.id === r.projectId })
+        if (p) r.projectName = p.name
+      }
+      if (!r.stageName && r.stageId) {
+        var stages = mockData.stages[r.projectId] || []
+        var s = stages.find(function(x) { return x.id === r.stageId })
+        if (s) r.stageName = s.stageName
+      }
+    })
+    var total = pending.length
+    var page = parseInt(params.page) || 1
+    var size = Math.min(parseInt(params.size) || 10, 100)
+    var start = (page - 1) * size
+    result = { code: 200, message: 'success', data: { records: pending.slice(start, start + size), total: total, size: size, current: page } }
   }
   else if (url?.match(/^\/reports\/\d+\/review$/) && method === 'post') {
     const reportId = parseInt(url.split('/')[2])
@@ -436,7 +452,12 @@ async function getMockResponse(config) {
 
   // ======================== User endpoints ========================
   else if (url === '/users' && method === 'get') {
-    result = { code: 200, message: 'success', data: Object.values(mockData.users).map(u => ({...u})) }
+    var allUsers = Object.values(mockData.users).map(u => ({...u}))
+    var total = allUsers.length
+    var page = parseInt(params.page) || 1
+    var size = Math.min(parseInt(params.size) || 10, 100)
+    var start = (page - 1) * size
+    result = { code: 200, message: 'success', data: { records: allUsers.slice(start, start + size), total: total, size: size, current: page } }
   }
   else if (url === '/users' && method === 'post') {
     const newUser = {
@@ -697,7 +718,23 @@ async function getMockResponse(config) {
     if (params.status) {
       list = list.filter(d => d.status === params.status)
     }
-    result = { code: 200, message: 'success', data: list }
+    // Populate projectName and stageName from mock data
+    list.forEach(function(d) {
+      if (!d.projectName) {
+        var p = mockData.projects.find(function(x) { return x.id === d.projectId })
+        if (p) d.projectName = p.name
+      }
+      if (!d.stageName && d.stageId) {
+        var stages = mockData.stages[d.projectId] || []
+        var s = stages.find(function(x) { return x.id === d.stageId })
+        if (s) d.stageName = s.stageName
+      }
+    })
+    var total = list.length
+    var page = parseInt(params.page) || 1
+    var size = Math.min(parseInt(params.size) || 10, 100)
+    var start = (page - 1) * size
+    result = { code: 200, message: 'success', data: { records: list.slice(start, start + size), total: total, size: size, current: page } }
   }
   else if (url === '/deviations' && method === 'post') {
     const user = getMockUser()
@@ -737,7 +774,18 @@ async function getMockResponse(config) {
     if (params.status) {
       list = list.filter(s => s.status === params.status)
     }
-    result = { code: 200, message: 'success', data: list }
+    // Populate projectName from mock projects
+    list.forEach(function(s) {
+      if (!s.projectName) {
+        var p = mockData.projects.find(function(x) { return x.id === s.projectId })
+        if (p) s.projectName = p.name
+      }
+    })
+    var total = list.length
+    var page = parseInt(params.page) || 1
+    var size = Math.min(parseInt(params.size) || 10, 100)
+    var start = (page - 1) * size
+    result = { code: 200, message: 'success', data: { records: list.slice(start, start + size), total: total, size: size, current: page } }
   }
   else if (url === '/supports' && method === 'post') {
     const user = getMockUser()
@@ -960,7 +1008,19 @@ async function getMockResponse(config) {
     result = { code: 200, message: 'success', data: experience }
   }
   else if (url === '/experiences' && method === 'get') {
-    result = { code: 200, message: 'success', data: Object.values(mockData.experiences) }
+    var allExp = Object.values(mockData.experiences)
+    // Populate projectName
+    allExp.forEach(function(e) {
+      if (!e.projectName) {
+        var p = mockData.projects.find(function(x) { return x.id === e.projectId })
+        if (p) e.projectName = p.name
+      }
+    })
+    var total = allExp.length
+    var page = parseInt(params.page) || 1
+    var size = Math.min(parseInt(params.size) || 10, 100)
+    var start = (page - 1) * size
+    result = { code: 200, message: 'success', data: { records: allExp.slice(start, start + size), total: total, size: size, current: page } }
   }
 
   // ======================== Change endpoints ========================
