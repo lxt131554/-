@@ -50,7 +50,7 @@
         <div style="margin-bottom:4px" v-if="r.deptReviewNote"><strong>部门审核：</strong>{{ r.deptReviewNote }}</div>
         <div v-if="r.attachmentName" style="display:flex;align-items:center;gap:8px">
           <strong>附件：</strong><span>{{ r.attachmentName }}</span>
-          <el-button type="primary" size="small" link @click="window.open('/api/reports/'+r.id+'/attachment','_blank')">
+          <el-button type="primary" size="small" link @click="downloadAttachment(r.id)">
             <el-icon><Download /></el-icon> 下载
           </el-button>
         </div>
@@ -89,6 +89,10 @@ async function loadData() {
   } catch (error) {
     showActionError(error, '阶段详情加载失败')
   }
+}
+
+function downloadAttachment(reportId) {
+  window.open('/api/reports/' + reportId + '/attachment', '_blank')
 }
 
 onMounted(loadData)
