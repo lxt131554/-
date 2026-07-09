@@ -22,7 +22,7 @@
           v-if="project.status!=='completed' && (auth.user?.role==='manager'||auth.user?.role==='admin')"
           size="small" @click="handleEditProject">编辑项目</el-button>
         <el-button v-if="project.status=='completed' && auth.user?.role=='admin'"
-          size="small" @click="handleReopenProject">重新打开</el-button>
+          size="small" @click="handleReopenProject">恢复进行</el-button>
         <el-button v-if="project.status=='active' && (auth.user?.role=='manager'||auth.user?.role=='admin')"
           type="primary" size="small" @click="handleCompleteProject">完成项目</el-button>
         <el-button size="small" @click="router.push('/projects')"><el-icon><ArrowLeft /></el-icon>返回列表</el-button>
@@ -1269,9 +1269,9 @@ async function handleCompleteProject() {
 
 async function handleReopenProject() {
   try {
-    await confirmDanger('确认重新打开该项目？', '重新打开项目')
+    await confirmDanger('确认恢复该项目为进行中状态？恢复后可继续编辑和填报。', '恢复进行')
     await request.put(`/projects/${projectId}/reopen`)
-    ElMessage.success('项目已重新打开')
+    ElMessage.success('项目已恢复进行')
     loadProject()
   } catch (error) {
     showActionError(error, '重新打开失败')
