@@ -1,7 +1,7 @@
 <template>
   <el-container style="height:100vh">
     <!-- Sidebar -->
-    <el-aside width="260px" class="layout-sidebar">
+    <el-aside width="280px" class="layout-sidebar">
       <div class="sidebar-brand">
         <div class="brand-logo"><el-icon :size="24"><OfficeBuilding /></el-icon></div>
         <div class="brand-copy">
@@ -248,14 +248,14 @@ function handleLogout() {
   overflow: hidden;
 }
 .sidebar-brand {
-  padding: 20px 20px 16px;
+  padding: 20px 16px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .brand-logo { color: #fff; }
-.brand-title { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.4; letter-spacing: 0.03em; }
+.brand-title { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.4; letter-spacing: 0.02em; }
 .brand-subtitle { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 3px; letter-spacing: 0.05em; font-weight: 500; }
 .sidebar-menu {
   border-right: none;
