@@ -18,7 +18,7 @@
         <el-descriptions-item label="偏差原因" :span="2">{{ detail.reason || '无' }}</el-descriptions-item>
         <el-descriptions-item label="影响范围" :span="2">{{ detail.impact || '无' }}</el-descriptions-item>
         <el-descriptions-item label="创建人">{{ detail.createUserName }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ detail.createTime }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ formatTime(detail.createTime) }}</el-descriptions-item>
       </el-descriptions>
       <div v-if="detail?.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">
         <el-button type="success" @click="handleClose" :loading="closing">关闭偏差</el-button>
@@ -48,6 +48,11 @@ async function loadDetail() {
   } catch (error) {
     showActionError(error, '偏差详情加载失败')
   }
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 async function handleClose() {

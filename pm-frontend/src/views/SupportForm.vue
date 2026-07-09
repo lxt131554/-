@@ -46,7 +46,7 @@
         </el-descriptions-item>
         <el-descriptions-item label="申请人">{{ detail.applicantName }}</el-descriptions-item>
         <el-descriptions-item label="处理人">{{ detail.handlerName || '未指定' }}</el-descriptions-item>
-        <el-descriptions-item label="期望时间">{{ detail.expectTime || '不限' }}</el-descriptions-item>
+        <el-descriptions-item label="期望时间">{{ detail.expectTime ? formatTime(detail.expectTime) : '不限' }}</el-descriptions-item>
         <el-descriptions-item label="详细描述" :span="2">{{ detail.content || '无' }}</el-descriptions-item>
         <el-descriptions-item label="处理回复" :span="2" v-if="detail.reply">{{ detail.reply }}</el-descriptions-item>
       </el-descriptions>
@@ -125,6 +125,11 @@ async function loadDetail() {
   } catch (error) {
     showActionError(error, '支持事项详情加载失败')
   }
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 async function handleSubmit() {

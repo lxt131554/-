@@ -104,7 +104,7 @@
                 @click="goNotify(n.url)">
                 <div style="font-size:13px;font-weight:500;color:var(--pm-text)" v-if="n.projectName">{{ n.projectName }}</div>
                 <div style="font-size:14px;color:var(--pm-text);margin:2px 0">{{ n.message }}</div>
-                <div style="font-size:12px;color:var(--pm-text-muted)">{{ n.time }}</div>
+                <div style="font-size:12px;color:var(--pm-text-muted)">{{ formatTime(n.time) }}</div>
               </div>
             </div>
             <el-empty v-else description="暂无待办事项" :image-size="60" />
@@ -214,6 +214,11 @@ const userInitial = computed(() => auth.user?.realName?.slice(0, 1) || '用')
 
 function defaultPathForRole(role) {
   return role === 'leader' ? '/leader-dashboard' : '/dashboard'
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 async function loadNotifications() {

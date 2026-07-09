@@ -7,7 +7,7 @@
     <div class="card-box">
       <el-descriptions title="填报详情" :column="2" border>
         <el-descriptions-item label="提交人">{{ report.submitUserName }}</el-descriptions-item>
-        <el-descriptions-item label="提交时间">{{ report.submitTime }}</el-descriptions-item>
+        <el-descriptions-item label="提交时间">{{ formatTime(report.submitTime) }}</el-descriptions-item>
         <el-descriptions-item label="进度">{{ report.progressRate }}%</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag v-if="report.reviewStatus==='pending'" type="warning" size="small">待审阅</el-tag>
@@ -85,6 +85,11 @@ async function doReview(status) {
   } catch (error) {
     showActionError(error, '审阅操作失败')
   } finally { submitting.value = false }
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 function downloadAttachment() {

@@ -7,7 +7,7 @@
     <div class="card-box">
       <el-descriptions title="填报详情" :column="2" border>
         <el-descriptions-item label="提交人">{{ report.submitUserName }}</el-descriptions-item>
-        <el-descriptions-item label="提交时间">{{ report.submitTime }}</el-descriptions-item>
+        <el-descriptions-item label="提交时间">{{ formatTime(report.submitTime) }}</el-descriptions-item>
         <el-descriptions-item label="进度">{{ report.progressRate }}%</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag v-if="report.reviewStatus==='pending'" type="warning" size="small">待审核</el-tag>
@@ -69,6 +69,11 @@ async function loadReport() {
   } catch (error) {
     showActionError(error, '成果审核详情加载失败')
   }
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 function downloadAttachment() {

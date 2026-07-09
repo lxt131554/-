@@ -133,7 +133,7 @@
                 <div v-for="(r, i) in recentReports" :key="i" class="ws-report-item">
                   <div class="ws-report-item-hd">
                     <span class="ws-report-item-stage">{{ r.stageName }}</span>
-                    <span class="ws-report-item-time" v-if="r.time">{{ r.time }}</span>
+                    <span class="ws-report-item-time" v-if="r.time">{{ formatTime(r.time) }}</span>
                     <el-tag size="small" type="primary" effect="plain">{{ r.progressRate }}%</el-tag>
                   </div>
                   <div class="ws-report-item-body">{{ r.content }}</div>
@@ -507,7 +507,9 @@
               <template #default="{row}">{{ row.description || row.content || row.title || '—' }}</template>
             </el-table-column>
             <el-table-column prop="stageName" label="关联阶段" min-width="120" />
-            <el-table-column prop="createTime" label="创建时间" min-width="140" />
+            <el-table-column label="创建时间" min-width="140">
+              <template #default="{row}">{{ formatTime(row.createTime) }}</template>
+            </el-table-column>
             <el-table-column label="状态" min-width="100" align="center">
               <template #default="{row}">
                 <el-tag :type="row.status==='open'?'danger':'success'" size="small">{{ row.status==='open'?'未关闭':'已关闭' }}</el-tag>
@@ -540,7 +542,9 @@
               <template #default="{row}">{{ row.title || row.content || row.description || '—' }}</template>
             </el-table-column>
             <el-table-column prop="applicantName" label="申请人" min-width="100" />
-            <el-table-column prop="createTime" label="创建时间" min-width="140" />
+            <el-table-column label="创建时间" min-width="140">
+              <template #default="{row}">{{ formatTime(row.createTime) }}</template>
+            </el-table-column>
             <el-table-column label="状态" min-width="100" align="center">
               <template #default="{row}">
                 <el-tag :type="row.status==='pending'||row.status==='open'?'warning':(row.status==='resolved'?'success':'info')" size="small">
@@ -579,7 +583,9 @@
                 <el-link type="primary" @click="router.push(`/changes/${row.id}`)">{{ row.content }}</el-link>
               </template>
             </el-table-column>
-            <el-table-column prop="confirmTime" label="确认时间" min-width="120" />
+            <el-table-column label="确认时间" min-width="120">
+              <template #default="{row}">{{ formatTime(row.confirmTime) }}</template>
+            </el-table-column>
             <el-table-column prop="impact" label="影响范围" min-width="160" show-overflow-tooltip />
             <el-table-column prop="status" label="状态" min-width="100" align="center">
               <template #default="{row}">
@@ -754,7 +760,7 @@
           </template>
         </el-table-column>
         <el-table-column label="加入时间" min-width="160">
-          <template #default="{row}">{{ row.createTime || '—' }}</template>
+          <template #default="{row}">{{ formatTime(row.createTime) }}</template>
         </el-table-column>
         <el-table-column label="操作" min-width="160" fixed="right" align="center">
           <template #default="{row}">
@@ -1007,6 +1013,11 @@ const upcomingDeadlines = computed(() => {
 })
 
 // ---- Functions ----
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
+}
+
 function handleEditProject() {
   activeTab.value = 'planning'
   if (!planningEditMode.value) {

@@ -3,7 +3,8 @@
     <!-- Section 1: Page Header -->
     <section class="page-header">
       <h2>工作台</h2>
-      <p style="color:var(--pm-text-secondary);margin-top:4px;font-size:16px">欢迎，{{ auth.user?.realName }}</p>
+      <p style="font-size:20px;font-weight:600;color:var(--pm-text);margin-top:8px">欢迎，{{ auth.user?.realName }}</p>
+      <p style="color:var(--pm-text-secondary);font-size:14px;margin-top:4px">{{ todayString }}</p>
     </section>
 
     <!-- Pending Invitations -->
@@ -222,6 +223,16 @@ import { ElMessage } from 'element-plus'
 
 const auth = useAuthStore()
 const stats = ref({})
+
+const todayString = computed(() => {
+  const d = new Date()
+  const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六']
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const w = weekdays[d.getDay()]
+  return `${y}年${m}月${day}日 ${w}`
+})
 const pendingInvites = ref([])
 const loading = ref(true)
 

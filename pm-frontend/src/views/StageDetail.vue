@@ -39,7 +39,7 @@
       <div v-for="(r, i) in reports" :key="r.id" style="padding:16px;border:1px solid var(--pm-border);border-radius:8px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-weight:600">第 {{ reports.length - i }} 次填报</span>
-          <span style="font-size:13px;color:var(--pm-text-muted)">{{ r.submitUserName }} · {{ r.submitTime }}</span>
+          <span style="font-size:13px;color:var(--pm-text-muted)">{{ r.submitUserName }} · {{ formatTime(r.submitTime) }}</span>
         </div>
         <div style="margin-bottom:4px"><strong>进度：</strong>{{ r.progressRate }}%</div>
         <div style="margin-bottom:4px"><strong>工作内容：</strong>{{ r.content || '无' }}</div>
@@ -90,6 +90,11 @@ async function loadData() {
 
 function downloadAttachment(reportId) {
   window.open('/api/reports/' + reportId + '/attachment', '_blank')
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 onMounted(loadData)

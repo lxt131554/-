@@ -7,7 +7,7 @@
     <div class="card-box">
       <el-descriptions :column="2" border v-if="detail">
         <el-descriptions-item label="所属项目">{{ detail.projectName }}</el-descriptions-item>
-        <el-descriptions-item label="确认时间">{{ detail.confirmTime || '未确认' }}</el-descriptions-item>
+        <el-descriptions-item label="确认时间">{{ detail.confirmTime ? formatTime(detail.confirmTime) : '未确认' }}</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag size="small" :type="detail.status=='confirmed'?'success':'warning'">{{ detail.status=='confirmed'?'已确认':'待确认' }}</el-tag>
         </el-descriptions-item>
@@ -42,6 +42,11 @@ async function loadDetail() {
   } catch (error) {
     showActionError(error, '变更详情加载失败')
   }
+}
+
+function formatTime(val) {
+  if (!val) return '-'
+  return val.substring(0, 16).replace('T', ' ')
 }
 
 async function handleConfirm() {
