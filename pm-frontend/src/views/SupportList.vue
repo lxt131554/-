@@ -30,9 +30,11 @@
       </div>
       <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="title" label="事项标题" min-width="280" show-overflow-tooltip>
+        <el-table-column label="事项标题" min-width="280">
           <template #default="{row}">
-            <span class="table-link-ellipsis" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</span>
+            <el-tooltip :content="row.title" placement="top" :disabled="!row.title || row.title.length < 20">
+              <span class="table-link-ellipsis" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</span>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="applicantName" label="申请人" min-width="100" />

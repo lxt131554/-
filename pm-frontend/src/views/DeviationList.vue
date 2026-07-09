@@ -43,9 +43,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="偏差描述" min-width="240" show-overflow-tooltip>
+        <el-table-column label="偏差描述" min-width="240">
           <template #default="{row}">
-            <el-link type="primary" @click="router.push(`/deviations/${row.id}`)">{{ row.description }}</el-link>
+            <el-tooltip :content="row.description" placement="top" :disabled="!row.description || row.description.length < 20">
+              <span class="table-link-ellipsis" @click="router.push(`/deviations/${row.id}`)">{{ row.description }}</span>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="reason" label="偏差原因" min-width="180" show-overflow-tooltip />
