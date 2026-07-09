@@ -45,7 +45,7 @@
 
   /* Sidebar - default blue theme */
   --pm-sidebar-bg: #1e40af;
-  --pm-sidebar-text: rgba(255,255,255,0.78);
+  --pm-sidebar-text: rgba(255,255,255,0.90);
   --pm-sidebar-text-active: #ffffff;
   --pm-sidebar-active-bg: rgba(255,255,255,0.15);
   --pm-sidebar-hover: rgba(255,255,255,0.08);
