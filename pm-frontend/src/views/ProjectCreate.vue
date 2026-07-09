@@ -73,8 +73,12 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="审核审批要求">
-                <el-input v-model="form.approvalRequirements" type="textarea" :rows="2"
-                  placeholder="例：需通过省林业局审批、县政府常务会审查" />
+                <el-select v-model="form.approvalRequirements" placeholder="请选择或直接输入" clearable filterable allow-create style="width:100%">
+                  <el-option label="需通过省级主管部门审批" value="需通过省级主管部门审批" />
+                  <el-option label="需通过市级主管部门审批" value="需通过市级主管部门审批" />
+                  <el-option label="需通过县级主管部门审批" value="需通过县级主管部门审批" />
+                  <el-option label="院内审核即可" value="院内审核即可" />
+                </el-select>
               </el-form-item>
               <el-form-item label="项目重要性">
                 <el-input v-model="form.projectImportance" type="textarea" :rows="2"
@@ -88,24 +92,50 @@
               <!-- 前期分析 -->
               <el-divider content-position="left"><strong>前期分析</strong></el-divider>
               <el-form-item label="能否承接判断">
-                <el-input v-model="form.canUndertake" type="textarea" :rows="2"
-                  placeholder="例：项目涉及专业齐全，院内有足够技术力量，可以承接" />
+                <el-select v-model="form.canUndertake" placeholder="请选择或直接输入" clearable filterable allow-create style="width:100%">
+                  <el-option label="可以承接：项目涉及专业齐全，院内有足够技术力量" value="项目涉及专业齐全，院内有足够技术力量，可以承接" />
+                  <el-option label="谨慎承接：需要外部专家支持或部分专业能力不足" value="需要外部专家支持，部分专业能力不足，建议联合承接" />
+                  <el-option label="建议不承接：超出院内技术能力范围" value="超出院内技术能力范围，建议不承接" />
+                </el-select>
               </el-form-item>
               <el-form-item label="主要风险">
                 <el-input v-model="form.mainRisks" type="textarea" :rows="2"
                   placeholder="例：地形复杂导致外业延期；地方协调存在不确定性" />
+                <div class="quick-tags" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('mainRisks','地形复杂导致外业延期')">地形复杂导致外业延期</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('mainRisks','地方协调存在不确定性')">地方协调存在不确定性</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('mainRisks','天气因素影响工期')">天气因素影响工期</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('mainRisks','数据获取难度大')">数据获取难度大</el-tag>
+                </div>
               </el-form-item>
               <el-form-item label="关键约束">
                 <el-input v-model="form.keyConstraints" type="textarea" :rows="2"
                   placeholder="例：工期8个月；需跨部门协作" />
+                <div class="quick-tags" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('keyConstraints','工期紧张')">工期紧张</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('keyConstraints','需跨部门协作')">需跨部门协作</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('keyConstraints','预算有限')">预算有限</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('keyConstraints','成果需通过上级审批')">成果需通过上级审批</el-tag>
+                </div>
               </el-form-item>
               <el-form-item label="成果交付要求">
                 <el-input v-model="form.deliverableRequirements" type="textarea" :rows="2"
                   placeholder="例：纸质报告10套、电子版5份" />
+                <div class="quick-tags" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('deliverableRequirements','纸质报告10套(A4胶装)')">纸质报告10套(A4胶装)</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('deliverableRequirements','电子版光盘5份')">电子版光盘5份</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('deliverableRequirements','图件PDF和CAD格式各一套')">图件PDF和CAD格式各一套</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('deliverableRequirements','汇报PPT')">汇报PPT</el-tag>
+                </div>
               </el-form-item>
               <el-form-item label="预计审批路径">
                 <el-input v-model="form.approvalPath" type="textarea" :rows="2"
                   placeholder="例：院内审核→专家评审→县林业局审批" />
+                <div class="quick-tags" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('approvalPath','院内部三审→专家评审→主管部门审批')">院内部三审→专家评审→主管部门审批</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('approvalPath','院审→专家评审→规委会审议→上级审批')">院审→专家评审→规委会审议→上级审批</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('approvalPath','院内审核→主管部门验收')">院内审核→主管部门验收</el-tag>
+                </div>
               </el-form-item>
             </el-form>
           </div>
@@ -116,6 +146,12 @@
               <el-form-item label="人力资源配置">
                 <el-input v-model="form.hrAllocation" type="textarea" :rows="2"
                   placeholder="例：项目负责人1人、外业5人、内业3人" />
+                <div class="quick-tags" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('hrAllocation','项目负责人1人')">项目负责人1人</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('hrAllocation','外业调查工程师5人')">外业调查工程师5人</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('hrAllocation','内业数据处理工程师3人')">内业数据处理工程师3人</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('hrAllocation','质量审核1人')">质量审核1人</el-tag>
+                </div>
               </el-form-item>
               <el-form-item label="预计阶段成果">
                 <el-input v-model="form.expectedOutputs" type="textarea" :rows="2"
@@ -132,6 +168,12 @@
               <el-form-item label="核心策略">
                 <el-input v-model="form.coreStrategy" type="textarea" :rows="2"
                   placeholder="例：分组并行作业；关键节点向院领导汇报" />
+                <div class="quick-tags" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('coreStrategy','分组并行作业缩短工期')">分组并行作业缩短工期</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('coreStrategy','关键节点向院领导专题汇报')">关键节点向院领导专题汇报</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('coreStrategy','建立与甲方的定期沟通机制')">建立与甲方的定期沟通机制</el-tag>
+                  <el-tag size="small" type="info" style="cursor:pointer" @click="appendText('coreStrategy','采用遥感+地面调查结合方式')">采用遥感+地面调查结合方式</el-tag>
+                </div>
               </el-form-item>
             </el-form>
           </div>
@@ -140,16 +182,33 @@
           <div v-show="currentStep === 3">
             <el-form :model="form" label-width="140px">
               <el-form-item label="投标情况">
-                <el-input v-model="form.bidSituation" type="textarea" :rows="2"
-                  placeholder="例：竞争性谈判中标，参与单位3家" />
+                <el-select v-model="form.bidSituation" placeholder="请选择或直接输入" clearable filterable allow-create style="width:100%">
+                  <el-option label="公开招标中标" value="公开招标中标" />
+                  <el-option label="竞争性谈判中标" value="竞争性谈判中标" />
+                  <el-option label="定向委托" value="定向委托" />
+                  <el-option label="询价采购中标" value="询价采购中标" />
+                  <el-option label="院内项目" value="院内项目，无需招标" />
+                </el-select>
               </el-form-item>
               <el-form-item label="采购程序">
-                <el-input v-model="form.procurementInfo" type="textarea" :rows="2"
-                  placeholder="例：政府采购公开招标，咨询中心负责" />
+                <el-select v-model="form.procurementInfo" placeholder="请选择或直接输入" clearable filterable allow-create style="width:100%">
+                  <el-option label="政府采购公开招标" value="政府采购公开招标" />
+                  <el-option label="竞争性谈判" value="竞争性谈判" />
+                  <el-option label="定向委托" value="定向委托" />
+                  <el-option label="询价采购" value="询价采购" />
+                  <el-option label="院内自行采购" value="院内自行采购" />
+                  <el-option label="无需采购" value="无需采购" />
+                </el-select>
               </el-form-item>
               <el-form-item label="获取结果">
-                <el-input v-model="form.acquisitionResult" type="textarea" :rows="2"
-                  placeholder="例：成功中标，合同额120万元" />
+                <el-select v-model="form.acquisitionResult" placeholder="请选择或直接输入" clearable filterable allow-create style="width:100%">
+                  <el-option label="成功中标" value="成功中标" />
+                  <el-option label="竞争性谈判中标" value="竞争性谈判中标" />
+                  <el-option label="定向委托" value="定向委托" />
+                  <el-option label="询价采购中标" value="询价采购中标" />
+                  <el-option label="公开招标中标" value="公开招标中标" />
+                  <el-option label="院内项目，无需招标" value="院内项目，无需招标" />
+                </el-select>
               </el-form-item>
             </el-form>
           </div>
@@ -228,6 +287,15 @@ const form = reactive({
 
 const rules = {
   name: [{ required: true, message: '请输入项目名称', trigger: 'blur' }]
+}
+
+function appendText(field, text) {
+  const current = form[field] || ''
+  if (!current) {
+    form[field] = text
+  } else if (!current.includes(text)) {
+    form[field] = current + '；' + text
+  }
 }
 
 function nextStep() {
