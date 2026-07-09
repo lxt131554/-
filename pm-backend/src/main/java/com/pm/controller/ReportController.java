@@ -1,12 +1,20 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
+import com.pm.entity.SysProject;
+import com.pm.entity.SysProjectMember;
 import com.pm.entity.SysProjectStage;
 import com.pm.entity.SysStageReport;
 import com.pm.entity.SysSupportItem;
+import com.pm.entity.SysUser;
+import com.pm.mapper.SysProjectMapper;
+import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysProjectStageMapper;
+import com.pm.mapper.SysStageReportMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.CacheEvictionService;
@@ -32,10 +40,11 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -50,7 +59,11 @@ public class ReportController {
     private final SysStageReportService reportService;
     private final SysDeviationService deviationService;
     private final SysSupportItemService supportItemService;
+    private final SysStageReportMapper reportMapper;
     private final SysProjectStageMapper stageMapper;
+    private final SysProjectMapper projectMapper;
+    private final SysProjectMemberMapper memberMapper;
+    private final SysUserMapper userMapper;
     private final ProjectAccessService accessService;
     private final CacheEvictionService cacheEvictionService;
 
@@ -168,16 +181,63 @@ public class ReportController {
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal LoginUser loginUser) {
         if (size > 100) size = 100;
-        List<SysStageReport> list = reportService.listPendingReview(
-                loginUser.getUser().getId(),
-                loginUser.getUser().getRole());
-        list.forEach(r -> r.setAttachmentData(null));
-        long total = list.size();
-        int start = (page - 1) * size;
-        int end = Math.min(start + size, (int) total);
-        Page<SysStageReport> p = new Page<>(page, size, total);
-        p.setRecords(start < total ? list.subList(start, end) : Collections.emptyList());
-        return Result.ok(p);
+        boolean isAdminOrLeader = "admin".equals(loginUser.getUser().getRole())
+                || "leader".equals(loginUser.getUser().getRole());
+
+        Page<SysStageReport> pageObj = new Page<>(page, size);
+        LambdaQueryWrapper<SysStageReport> wrapper = new LambdaQueryWrapper<SysStageReport>()
+                .eq(SysStageReport::getReviewStatus, "pending")
+                .orderByDesc(SysStageReport::getSubmitTime);
+
+        if (!isAdminOrLeader) {
+            List<SysProjectMember> memberships = memberMapper.selectList(
+                    new LambdaQueryWrapper<SysProjectMember>()
+                            .eq(SysProjectMember::getUserId, loginUser.getUser().getId())
+                            .eq(SysProjectMember::getRoleInProject, "manager")
+                            .eq(SysProjectMember::getStatus, "confirmed"));
+            List<Long> managedProjectIds = memberships.stream()
+                    .map(SysProjectMember::getProjectId).distinct().collect(Collectors.toList());
+            if (managedProjectIds.isEmpty()) {
+                return Result.ok(new Page<>(page, size, 0));
+            }
+            wrapper.in(SysStageReport::getProjectId, managedProjectIds);
+        }
+
+        pageObj = reportMapper.selectPage(pageObj, wrapper);
+        List<SysStageReport> records = pageObj.getRecords();
+        records.forEach(r -> r.setAttachmentData(null));
+
+        // Batch enrichment to avoid N+1 queries
+        Set<Long> stageIds = records.stream().map(SysStageReport::getStageId)
+                .filter(id -> id != null).collect(Collectors.toSet());
+        Set<Long> projectIds = records.stream().map(SysStageReport::getProjectId)
+                .filter(id -> id != null).collect(Collectors.toSet());
+        Set<Long> userIds = records.stream().map(SysStageReport::getSubmitUserId)
+                .filter(id -> id != null).collect(Collectors.toSet());
+
+        Map<Long, String> stageNameMap = new HashMap<>();
+        if (!stageIds.isEmpty()) {
+            stageMapper.selectBatchIds(stageIds)
+                    .forEach(s -> stageNameMap.put(s.getId(), s.getStageName()));
+        }
+        Map<Long, String> projectNameMap = new HashMap<>();
+        if (!projectIds.isEmpty()) {
+            projectMapper.selectBatchIds(projectIds)
+                    .forEach(p -> projectNameMap.put(p.getId(), p.getName()));
+        }
+        Map<Long, String> userNameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            userMapper.selectBatchIds(userIds)
+                    .forEach(u -> userNameMap.put(u.getId(), u.getRealName()));
+        }
+
+        for (SysStageReport r : records) {
+            r.setStageName(stageNameMap.getOrDefault(r.getStageId(), "(阶段已删除)"));
+            r.setProjectName(projectNameMap.getOrDefault(r.getProjectId(), "(项目已删除)"));
+            r.setSubmitUserName(userNameMap.get(r.getSubmitUserId()));
+        }
+
+        return Result.ok(pageObj);
     }
 
     @GetMapping("/reports/{reportId}/attachment")

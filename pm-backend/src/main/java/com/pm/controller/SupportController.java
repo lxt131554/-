@@ -1,8 +1,10 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysSupportItem;
+import com.pm.mapper.SysSupportItemMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.CacheEvictionService;
@@ -12,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import java.util.Map;
 public class SupportController {
 
     private final SysSupportItemService supportItemService;
+    private final SysSupportItemMapper supportItemMapper;
     private final ProjectAccessService accessService;
     private final CacheEvictionService cacheEvictionService;
 
@@ -32,19 +34,22 @@ public class SupportController {
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal LoginUser loginUser) {
         if (size > 100) size = 100;
-        List<SysSupportItem> list = supportItemService.listAll(status);
+        Page<SysSupportItem> pageObj = new Page<>(page, size);
+        LambdaQueryWrapper<SysSupportItem> wrapper = new LambdaQueryWrapper<>();
+        if (status != null && !status.trim().isEmpty()) {
+            wrapper.eq(SysSupportItem::getStatus, status);
+        }
+        wrapper.orderByDesc(SysSupportItem::getCreateTime);
+        pageObj = supportItemMapper.selectPage(pageObj, wrapper);
         if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
             Long userId = loginUser.getUser().getId();
-            list.removeIf(item ->
+            List<SysSupportItem> records = pageObj.getRecords();
+            records.removeIf(item ->
                 !userId.equals(item.getApplicantId()) &&
                 !accessService.canViewProject(item.getProjectId(), loginUser.getUser()));
+            pageObj.setRecords(records);
         }
-        long total = list.size();
-        int start = (page - 1) * size;
-        int end = Math.min(start + size, (int) total);
-        Page<SysSupportItem> p = new Page<>(page, size, total);
-        p.setRecords(start < total ? list.subList(start, end) : Collections.emptyList());
-        return Result.ok(p);
+        return Result.ok(pageObj);
     }
 
     @PostMapping

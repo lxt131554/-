@@ -1,5 +1,6 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysUser;
@@ -13,9 +14,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -41,23 +39,21 @@ public class UserController {
     }
 
     @GetMapping("/available")
-    public Result<List<Map<String, Object>>> available(@AuthenticationPrincipal LoginUser loginUser) {
-        List<SysUser> users = userMapper.selectList(null);
-        // Safety cap: limit to 200 users for member selection dropdowns
-        if (users.size() > 200) {
-            users = users.subList(0, 200);
+    public Result<Page<SysUser>> available(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        if (size > 50) size = 50;
+        Page<SysUser> pageObj = new Page<>(page, size);
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.and(w -> w.like(SysUser::getRealName, keyword).or().like(SysUser::getUsername, keyword));
         }
-        List<Map<String, Object>> list = new ArrayList<>();
-        for (SysUser u : users) {
-            Map<String, Object> info = new HashMap<>();
-            info.put("id", u.getId());
-            info.put("realName", u.getRealName());
-            info.put("username", u.getUsername());
-            info.put("dept", u.getDept());
-            info.put("role", u.getRole());
-            list.add(info);
-        }
-        return Result.ok(list);
+        wrapper.orderByAsc(SysUser::getId);
+        pageObj = userMapper.selectPage(pageObj, wrapper);
+        pageObj.getRecords().forEach(u -> u.setPassword(null));
+        return Result.ok(pageObj);
     }
 
     @PostMapping

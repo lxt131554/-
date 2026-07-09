@@ -887,7 +887,7 @@ const availableUsers = ref([])
 async function loadAvailableUsers() {
   try {
     const res = await request.get('/users/available')
-    availableUsers.value = res.data || []
+    availableUsers.value = (res.data && res.data.records) || []
   } catch {}
 }
 

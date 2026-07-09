@@ -143,7 +143,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await request.get('/experiences')
-    tableData.value = res.data || []
+    tableData.value = (res.data && res.data.records) || res.data || []
   } catch (error) {
     showActionError(error, '经验库加载失败')
   } finally { loading.value = false }

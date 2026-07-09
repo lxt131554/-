@@ -1,8 +1,10 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
+import com.pm.mapper.SysDeviationMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.CacheEvictionService;
@@ -12,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -21,6 +22,7 @@ import java.util.List;
 public class DeviationController {
 
     private final SysDeviationService deviationService;
+    private final SysDeviationMapper deviationMapper;
     private final ProjectAccessService accessService;
     private final CacheEvictionService cacheEvictionService;
 
@@ -34,16 +36,19 @@ public class DeviationController {
         if (projectId != null) {
             accessService.requireProjectView(projectId, loginUser.getUser());
         }
-        List<SysDeviation> list = deviationService.listByProject(projectId);
-        if (projectId == null && !accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
-            list.removeIf(d -> !accessService.canViewProject(d.getProjectId(), loginUser.getUser()));
+        Page<SysDeviation> pageObj = new Page<>(page, size);
+        LambdaQueryWrapper<SysDeviation> wrapper = new LambdaQueryWrapper<>();
+        if (projectId != null) {
+            wrapper.eq(SysDeviation::getProjectId, projectId);
         }
-        long total = list.size();
-        int start = (page - 1) * size;
-        int end = Math.min(start + size, (int) total);
-        Page<SysDeviation> p = new Page<>(page, size, total);
-        p.setRecords(start < total ? list.subList(start, end) : Collections.emptyList());
-        return Result.ok(p);
+        wrapper.orderByDesc(SysDeviation::getCreateTime);
+        pageObj = deviationMapper.selectPage(pageObj, wrapper);
+        if (projectId == null && !accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
+            List<SysDeviation> records = pageObj.getRecords();
+            records.removeIf(d -> !accessService.canViewProject(d.getProjectId(), loginUser.getUser()));
+            pageObj.setRecords(records);
+        }
+        return Result.ok(pageObj);
     }
 
     @GetMapping("/{id}")
