@@ -48,11 +48,8 @@
         <div style="margin-bottom:4px" v-if="r.resultSummary"><strong>阶段成果：</strong>{{ r.resultSummary }}</div>
         <div style="margin-bottom:4px" v-if="r.coordinationNote"><strong>沟通协调：</strong>{{ r.coordinationNote }}</div>
         <div style="margin-bottom:4px" v-if="r.deptReviewNote"><strong>部门审核：</strong>{{ r.deptReviewNote }}</div>
-        <div v-if="r.attachmentName" style="display:flex;align-items:center;gap:8px">
-          <strong>附件：</strong><span>{{ r.attachmentName }}</span>
-          <el-button type="primary" size="small" link @click="downloadAttachment(r.id)">
-            <el-icon><Download /></el-icon> 下载
-          </el-button>
+        <div v-if="r.attachmentName">
+          <strong>附件：</strong><el-link type="primary" :underline="false" @click="downloadAttachment(r.id)">{{ r.attachmentName }}</el-link>
         </div>
         <div v-if="r.reviewComment" style="margin-top:8px;padding:8px;background:var(--pm-bg);border-radius:4px">
           <strong>审阅意见：</strong>{{ r.reviewComment }}

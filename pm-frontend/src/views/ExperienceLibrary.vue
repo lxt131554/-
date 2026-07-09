@@ -24,33 +24,46 @@
     </section>
 
     <div class="section-block">
-      <div class="filter-bar">
-        <el-input v-model="keyword" clearable placeholder="搜索项目、经验、短板或改进建议" style="max-width:360px">
+      <!-- Search Toolbar -->
+      <div class="exp-toolbar">
+        <el-input v-model="keyword" clearable placeholder="搜索项目名称、经验、短板或改进建议" style="width:380px">
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
+        <span class="exp-result-count">共 {{ filteredData.length }} 条经验</span>
       </div>
 
       <!-- Experience cards -->
       <div v-if="pagedData.length" v-loading="loading">
-        <div v-for="item in pagedData" :key="item.id"
-          class="exp-card" @click="openDetail(item)" style="cursor:pointer">
+        <div v-for="item in pagedData" :key="item.id" class="exp-card">
           <div class="exp-card-header">
-            <el-link type="primary" :underline="false" style="font-size:15px;font-weight:600">
-              {{ item.projectName || '项目#' + item.projectId }}
-            </el-link>
-            <span style="color:var(--pm-text-muted);font-size:13px">{{ formatTime(item.createTime) }}</span>
+            <div>
+              <span class="exp-title">{{ item.projectName || '项目#' + item.projectId }}</span>
+              <div class="exp-tags">
+                <el-tag size="small" v-if="item.reusableExperience">可复用经验</el-tag>
+                <el-tag size="small" type="warning" v-if="item.shortcomings">短板或缺陷</el-tag>
+                <el-tag size="small" type="info" v-if="item.improvement">改进建议</el-tag>
+              </div>
+            </div>
+            <span class="exp-time">{{ formatTime(item.createTime) }}</span>
           </div>
-          <div v-if="item.reusableExperience" class="exp-card-section">
-            <div class="exp-card-label">可复用经验</div>
-            <div class="exp-card-text">{{ item.reusableExperience }}</div>
+
+          <div class="exp-summary-grid">
+            <div class="exp-summary-item">
+              <div class="exp-summary-label">可复用经验</div>
+              <div class="exp-summary-text line-clamp-2">{{ item.reusableExperience || '暂无内容' }}</div>
+            </div>
+            <div class="exp-summary-item">
+              <div class="exp-summary-label">短板或缺陷</div>
+              <div class="exp-summary-text line-clamp-2">{{ item.shortcomings || '暂无内容' }}</div>
+            </div>
+            <div class="exp-summary-item">
+              <div class="exp-summary-label">改进建议</div>
+              <div class="exp-summary-text line-clamp-2">{{ item.improvement || '暂无内容' }}</div>
+            </div>
           </div>
-          <div v-if="item.shortcomings" class="exp-card-section">
-            <div class="exp-card-label">短板或缺陷</div>
-            <div class="exp-card-text">{{ item.shortcomings }}</div>
-          </div>
-          <div v-if="item.improvement" class="exp-card-section">
-            <div class="exp-card-label">改进建议</div>
-            <div class="exp-card-text">{{ item.improvement }}</div>
+
+          <div class="exp-card-footer">
+            <el-button type="primary" link size="small" @click="openDetail(item)">查看详情</el-button>
           </div>
         </div>
 
@@ -62,27 +75,27 @@
       <el-empty v-else-if="!loading" description="暂无经验总结" />
     </div>
 
-    <!-- Detail Dialog -->
-    <el-dialog v-model="showDetail" title="经验详情" width="680px" append-to-body align-center :lock-scroll="true">
+    <!-- Detail Drawer -->
+    <el-drawer v-model="showDetail" title="经验详情" size="720px" :lock-scroll="true" append-to-body>
       <template v-if="detailItem">
-        <div style="margin-bottom:16px">
-          <el-link type="primary" @click="goProject(detailItem.projectId)" style="font-size:15px;font-weight:600">{{ detailItem.projectName || '项目#'+detailItem.projectId }}</el-link>
-          <span style="color:var(--pm-text-muted);font-size:13px;margin-left:12px">{{ formatTime(detailItem.createTime) }}</span>
+        <div class="drawer-meta">
+          <span class="drawer-project">{{ detailItem.projectName || '项目#'+detailItem.projectId }}</span>
+          <span class="drawer-time">{{ formatTime(detailItem.createTime) }}</span>
         </div>
-        <div v-if="detailItem.reusableExperience" class="detail-block">
-          <div class="detail-label">可复用经验</div>
-          <div class="detail-text long-text">{{ detailItem.reusableExperience }}</div>
+        <div v-if="detailItem.reusableExperience" class="drawer-section">
+          <div class="drawer-label">可复用经验</div>
+          <div class="drawer-text long-text">{{ detailItem.reusableExperience }}</div>
         </div>
-        <div v-if="detailItem.shortcomings" class="detail-block">
-          <div class="detail-label">短板或缺陷</div>
-          <div class="detail-text long-text">{{ detailItem.shortcomings }}</div>
+        <div v-if="detailItem.shortcomings" class="drawer-section">
+          <div class="drawer-label">短板或缺陷</div>
+          <div class="drawer-text long-text">{{ detailItem.shortcomings }}</div>
         </div>
-        <div v-if="detailItem.improvement" class="detail-block">
-          <div class="detail-label">改进建议</div>
-          <div class="detail-text long-text">{{ detailItem.improvement }}</div>
+        <div v-if="detailItem.improvement" class="drawer-section">
+          <div class="drawer-label">改进建议</div>
+          <div class="drawer-text long-text">{{ detailItem.improvement }}</div>
         </div>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
@@ -146,6 +159,7 @@ onMounted(loadData)
 </script>
 
 <style scoped>
+/* ---- Stats cards (fine-tuned) ---- */
 .summary-card--primary { border-left: 3px solid var(--pm-accent); }
 .summary-card--primary .summary-card-value { color: var(--pm-accent); }
 .summary-card--success { border-left: 3px solid var(--pm-green-text); }
@@ -153,39 +167,141 @@ onMounted(loadData)
 .summary-card--warning { border-left: 3px solid var(--pm-amber-text); }
 .summary-card--warning .summary-card-value { color: var(--pm-amber-text); }
 
-.exp-card {
-  padding: 20px 0;
-  border-bottom: 1px solid var(--pm-border);
-  transition: background 0.15s;
+/* ---- Toolbar ---- */
+.exp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
-.exp-card:last-child { border-bottom: none; }
-.exp-card:hover { background: var(--pm-surface-hover); }
+.exp-result-count {
+  font-size: 13px;
+  color: var(--pm-text-muted);
+  white-space: nowrap;
+}
+
+/* ---- Cards ---- */
+.exp-card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+}
+.exp-card:hover {
+  border-color: var(--pm-accent);
+}
+
 .exp-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  margin-bottom: 14px;
 }
-.exp-card-section {
-  margin-bottom: 10px;
+.exp-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pm-text);
 }
-.exp-card-label {
+.exp-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.exp-time {
+  font-size: 13px;
+  color: var(--pm-text-muted);
+  white-space: nowrap;
+}
+
+.exp-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.exp-summary-label {
   font-size: 13px;
   font-weight: 500;
   color: var(--pm-text-secondary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
-.exp-card-text {
+.exp-summary-text {
   font-size: 14px;
-  line-height: 1.7;
   color: var(--pm-text);
+  line-height: 1.6;
+}
+.exp-summary-text:empty::after {
+  content: '暂无内容';
+  color: var(--pm-text-muted);
+}
+
+.exp-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---- Drawer ---- */
+.drawer-meta {
+  margin-bottom: 20px;
+}
+.drawer-project {
+  font-size: 16px;
+  font-weight: 600;
+}
+.drawer-time {
+  font-size: 13px;
+  color: var(--pm-text-muted);
+  margin-left: 12px;
+}
+.drawer-section {
+  margin-bottom: 24px;
+}
+.drawer-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pm-text);
+  margin-bottom: 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--pm-accent);
+}
+.drawer-text {
+  background: var(--pm-bg);
+  border-radius: 6px;
+  padding: 14px 16px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ---- Utilities ---- */
+.line-clamp-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.long-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.75;
+}
 
-.detail-block { margin-bottom: 20px; }
-.detail-label { font-size: 14px; font-weight: 600; color: var(--pm-text); margin-bottom: 8px; padding-left: 10px; border-left: 3px solid var(--pm-accent); }
-.detail-text { background: var(--pm-bg); border-radius: 6px; padding: 14px 16px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .exp-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .exp-card {
+    padding: 16px;
+  }
+  .exp-card-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
 </style>
