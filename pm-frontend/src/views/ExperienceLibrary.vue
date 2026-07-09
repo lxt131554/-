@@ -33,8 +33,8 @@
       </div>
 
       <!-- Experience cards -->
-      <div v-if="pagedData.length" v-loading="loading">
-        <div v-for="item in pagedData" :key="item.id" class="exp-card">
+      <div v-if="filteredData.length" v-loading="loading">
+        <div v-for="item in filteredData" :key="item.id" class="exp-card">
           <div class="exp-card-header">
             <div>
               <span class="exp-title">{{ item.projectName || '项目#' + item.projectId }}</span>
@@ -67,9 +67,10 @@
           </div>
         </div>
 
-        <el-pagination v-if="filteredData.length > expPageSize"
+        <el-pagination v-if="total > expPageSize"
           v-model:current-page="expPage" :page-size="expPageSize"
-          :total="filteredData.length" layout="prev, pager, next" :pager-count="5" size="small"
+          :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+          @current-change="loadData"
           style="margin-top:16px;justify-content:flex-end" />
       </div>
       <el-empty v-else-if="!loading" description="暂无经验总结" />
@@ -111,16 +112,12 @@ const loading = ref(false)
 const keyword = ref('')
 const expPage = ref(1)
 const expPageSize = 10
+const total = ref(0)
 const showDetail = ref(false)
 const detailItem = ref(null)
 
 function openDetail(item) { detailItem.value = item; showDetail.value = true }
 function goProject(pid) { showDetail.value = false; router.push('/projects/' + pid) }
-
-const pagedData = computed(() => {
-  const start = (expPage.value - 1) * expPageSize
-  return filteredData.value.slice(start, start + expPageSize)
-})
 
 const filteredData = computed(() => {
   const text = keyword.value.trim().toLowerCase()
@@ -142,8 +139,10 @@ const withImprovementCount = computed(() => tableData.value.filter(item => item.
 async function loadData() {
   loading.value = true
   try {
-    const res = await request.get('/experiences')
+    const params = { page: expPage.value, size: expPageSize }
+    const res = await request.get('/experiences', { params })
     tableData.value = (res.data && res.data.records) || res.data || []
+    total.value = res.data.total || res.data.length || 0
   } catch (error) {
     showActionError(error, '经验库加载失败')
   } finally { loading.value = false }
@@ -154,7 +153,7 @@ function formatTime(val) {
   return val.substring(0, 16).replace('T', ' ')
 }
 
-watch(keyword, () => { expPage.value = 1 })
+watch(keyword, () => { expPage.value = 1; loadData() })
 onMounted(loadData)
 </script>
 

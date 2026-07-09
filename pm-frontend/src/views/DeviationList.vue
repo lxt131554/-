@@ -33,45 +33,47 @@
         </el-button>
       </div>
 
-      <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
-        <el-table-column prop="projectName" label="所属项目" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="stageName" label="阶段" min-width="120" />
-        <el-table-column prop="type" label="来源" min-width="80" align="center">
-          <template #default="{row}">
-            <el-tag size="small" :type="row.type=='auto'?'warning':'info'">
-              {{ row.type=='auto'?'自动':'手动' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="偏差描述" min-width="240">
-          <template #default="{row}">
-            <el-tooltip :content="row.description" placement="top" :disabled="!row.description || row.description.length < 20">
-              <span class="table-link-ellipsis" @click="router.push(`/deviations/${row.id}`)">{{ row.description }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-        <el-table-column prop="reason" label="偏差原因" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="status" label="状态" min-width="100" align="center">
-          <template #default="{row}">
-            <el-tag :type="row.status=='open'?'danger':'success'" size="small">
-              {{ row.status=='open'?'未关闭':'已关闭' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" min-width="170">
-          <template #default="{row}">{{ formatTime(row.createTime) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" min-width="100" fixed="right" align="center">
-          <template #default="{row}">
-            <div class="table-actions">
-              <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" type="danger" link size="small" @click="handleClose(row)">
-                关闭
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-empty v-else-if="!loading" description="暂无偏差记录" />
+      <div class="table-fixed-area">
+        <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
+          <el-table-column prop="projectName" label="所属项目" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="stageName" label="阶段" min-width="120" />
+          <el-table-column prop="type" label="来源" min-width="80" align="center">
+            <template #default="{row}">
+              <el-tag size="small" :type="row.type=='auto'?'warning':'info'">
+                {{ row.type=='auto'?'自动':'手动' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="偏差描述" min-width="240">
+            <template #default="{row}">
+              <el-tooltip :content="row.description" placement="top" :disabled="!row.description || row.description.length < 20">
+                <span class="table-link-ellipsis" @click="router.push(`/deviations/${row.id}`)">{{ row.description }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column prop="reason" label="偏差原因" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="status" label="状态" min-width="100" align="center">
+            <template #default="{row}">
+              <el-tag :type="row.status=='open'?'danger':'success'" size="small">
+                {{ row.status=='open'?'未关闭':'已关闭' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="170">
+            <template #default="{row}">{{ formatTime(row.createTime) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="100" fixed="right" align="center">
+            <template #default="{row}">
+              <div class="table-actions">
+                <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" type="danger" link size="small" @click="handleClose(row)">
+                  关闭
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else-if="!loading" description="暂无偏差记录" />
+      </div>
       <el-pagination v-if="tableData.length > pageSize"
         v-model:current-page="page" :page-size="pageSize"
         :total="tableData.length" layout="prev, pager, next" :pager-count="5" size="small"

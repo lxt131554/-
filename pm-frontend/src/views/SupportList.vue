@@ -28,38 +28,40 @@
           <el-icon><Plus /></el-icon> 新建支持申请
         </el-button>
       </div>
-      <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
-        <el-table-column prop="projectName" label="所属项目" min-width="200" show-overflow-tooltip />
-        <el-table-column label="事项标题" min-width="280">
-          <template #default="{row}">
-            <el-tooltip :content="row.title" placement="top" :disabled="!row.title || row.title.length < 20">
-              <span class="table-link-ellipsis" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-        <el-table-column prop="applicantName" label="申请人" min-width="100" />
-        <el-table-column prop="handlerName" label="处理人" min-width="100" />
-        <el-table-column label="期望时间" min-width="120">
-          <template #default="{row}">{{ formatTime(row.expectTime) }}</template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" min-width="100" align="center">
-          <template #default="{row}">
-            <el-tag :type="row.status=='pending'?'warning':'success'" size="small">
-              {{ row.status=='pending'?'待处理':'已解决' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" min-width="120" fixed="right" align="center">
-          <template #default="{row}">
-            <div class="table-actions">
-              <el-button v-if="canResolve(row)" type="primary" size="small"
-                @click="$router.push(`/supports/${row.id}`)">处理</el-button>
-              <el-button v-else type="primary" link size="small" @click="$router.push(`/supports/${row.id}`)">查看</el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-empty v-else-if="!loading" description="暂无支持事项" />
+      <div class="table-fixed-area">
+        <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
+          <el-table-column prop="projectName" label="所属项目" min-width="200" show-overflow-tooltip />
+          <el-table-column label="事项标题" min-width="280">
+            <template #default="{row}">
+              <el-tooltip :content="row.title" placement="top" :disabled="!row.title || row.title.length < 20">
+                <span class="table-link-ellipsis" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column prop="applicantName" label="申请人" min-width="100" />
+          <el-table-column prop="handlerName" label="处理人" min-width="100" />
+          <el-table-column label="期望时间" min-width="120">
+            <template #default="{row}">{{ formatTime(row.expectTime) }}</template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" min-width="100" align="center">
+            <template #default="{row}">
+              <el-tag :type="row.status=='pending'?'warning':'success'" size="small">
+                {{ row.status=='pending'?'待处理':'已解决' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="120" fixed="right" align="center">
+            <template #default="{row}">
+              <div class="table-actions">
+                <el-button v-if="canResolve(row)" type="primary" size="small"
+                  @click="$router.push(`/supports/${row.id}`)">处理</el-button>
+                <el-button v-else type="primary" link size="small" @click="$router.push(`/supports/${row.id}`)">查看</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else-if="!loading" description="暂无支持事项" />
+      </div>
       <el-pagination v-if="total > pageSize"
         v-model:current-page="page" :page-size="pageSize"
         :total="total" layout="prev, pager, next" :pager-count="5" size="small"

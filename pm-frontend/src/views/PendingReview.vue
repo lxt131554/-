@@ -34,9 +34,9 @@
       </div>
 
       <!-- Table with horizontal scroll -->
-      <div class="table-scroll-wrapper">
+      <div class="table-fixed-area table-scroll-wrapper">
         <el-table
-          :data="pagedReports"
+          :data="reports"
           v-loading="loading"
           size="small"
           style="min-width:900px"
@@ -94,9 +94,10 @@
       <div v-if="!loading && reports.length>0 && filteredReports.length>0 && filteredReports.length < reports.length" style="text-align:center;padding:4px 0;color:var(--pm-text-muted);font-size:13px">
         已筛选 {{ filteredReports.length }} / {{ reports.length }} 条记录
       </div>
-      <el-pagination v-if="filteredReports.length > pageSize"
+      <el-pagination v-if="total > pageSize"
         v-model:current-page="page" :page-size="pageSize"
-        :total="filteredReports.length" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+        @current-change="loadData"
         style="margin-top:12px;justify-content:flex-end" />
     </div>
   </div>
@@ -132,12 +133,9 @@ const withAttachmentCount = computed(() => reports.value.filter(r => r.attachmen
 
 const page = ref(1)
 const pageSize = 10
-const pagedReports = computed(() => {
-  const start = (page.value - 1) * pageSize
-  return filteredReports.value.slice(start, start + pageSize)
-})
+const total = ref(0)
 
-watch([filterProject, filterDeviation, quickFilter], () => { page.value = 1 })
+watch([filterProject, filterDeviation, quickFilter], () => { page.value = 1; loadData() })
 
 function isOverdue(report) {
   if (!report.submitTime) return false
@@ -152,8 +150,10 @@ function formatTime(val) {
 async function loadData() {
   loading.value = true
   try {
-    const res = await getPendingReviews()
+    const params = { page: page.value, size: pageSize }
+    const res = await getPendingReviews(params)
     reports.value = res.data.records || res.data || []
+    total.value = res.data.total || res.data.length || 0
   } catch (error) {
     showActionError(error, '待审阅填报加载失败')
   } finally { loading.value = false }

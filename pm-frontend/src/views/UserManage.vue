@@ -6,35 +6,38 @@
         <div></div>
         <el-button type="primary" @click="openCreate"><el-icon><Plus /></el-icon> 新增用户</el-button>
       </div>
-      <el-table v-if="users.length" :data="pagedUsers" border stripe v-loading="loading">
-        <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="realName" label="姓名" min-width="100" />
-        <el-table-column prop="role" label="角色" min-width="100">
-          <template #default="{row}">
-            <el-tag size="small">{{ roleMap[row.role] || row.role }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="dept" label="部门" min-width="140" />
-        <el-table-column prop="enabled" label="状态" min-width="100" align="center">
-          <template #default="{row}">
-            <el-tag :type="row.enabled?'success':'danger'" size="small">{{ row.enabled?'启用':'禁用' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" min-width="180" fixed="right" align="center">
-          <template #default="{row}">
-            <div class="table-actions">
-              <el-button type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-              <el-button :type="row.enabled?'warning':'success'" size="small" @click="toggleUser(row)">
-                {{ row.enabled?'禁用':'启用' }}
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-empty v-else-if="!loading" description="暂无用户数据" />
-      <el-pagination v-if="users.length > pageSize"
+      <div class="table-fixed-area">
+        <el-table v-if="users.length" :data="users" border stripe v-loading="loading">
+          <el-table-column prop="username" label="用户名" min-width="120" />
+          <el-table-column prop="realName" label="姓名" min-width="100" />
+          <el-table-column prop="role" label="角色" min-width="100">
+            <template #default="{row}">
+              <el-tag size="small">{{ roleMap[row.role] || row.role }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="dept" label="部门" min-width="140" />
+          <el-table-column prop="enabled" label="状态" min-width="100" align="center">
+            <template #default="{row}">
+              <el-tag :type="row.enabled?'success':'danger'" size="small">{{ row.enabled?'启用':'禁用' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="180" fixed="right" align="center">
+            <template #default="{row}">
+              <div class="table-actions">
+                <el-button type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+                <el-button :type="row.enabled?'warning':'success'" size="small" @click="toggleUser(row)">
+                  {{ row.enabled?'禁用':'启用' }}
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else-if="!loading" description="暂无用户数据" />
+      </div>
+      <el-pagination v-if="total > pageSize"
         v-model:current-page="page" :page-size="pageSize"
-        :total="users.length" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+        @current-change="loadUsers"
         style="margin-top:12px;justify-content:flex-end" />
     </div>
 
@@ -64,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import request from '../api/index'
 import { ElMessage } from 'element-plus'
 import { confirmDanger, showActionError } from '../utils/actionGuards'
@@ -74,10 +77,7 @@ const loading = ref(false)
 
 const page = ref(1)
 const pageSize = 10
-const pagedUsers = computed(() => {
-  const start = (page.value - 1) * pageSize
-  return users.value.slice(start, start + pageSize)
-})
+const total = ref(0)
 const showDialog = ref(false)
 const isEdit = ref(false)
 const editId = ref(null)
@@ -87,8 +87,11 @@ const roleMap = { admin:'管理员', manager:'项目负责人', engineer:'工程
 
 async function loadUsers() {
   loading.value = true
-  try { const res = await request.get('/users'); users.value = res.data.records || res.data || [] }
-  catch (error) { showActionError(error, '用户列表加载失败') }
+  try {
+    const res = await request.get('/users', { params: { page: page.value, size: pageSize } })
+    users.value = res.data.records || res.data || []
+    total.value = res.data.total || res.data.length || 0
+  } catch (error) { showActionError(error, '用户列表加载失败') }
   finally { loading.value = false }
 }
 

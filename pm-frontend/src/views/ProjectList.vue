@@ -53,7 +53,8 @@
         <el-button @click="loadData"><el-icon><Search /></el-icon><span>查询</span></el-button>
       </div>
 
-      <el-table v-if="tableData.length" :data="tableData" class="pm-table">
+      <div class="table-fixed-area">
+        <el-table v-if="tableData.length" :data="tableData" class="pm-table">
         <el-table-column prop="id" label="编号" width="90" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="260" show-overflow-tooltip>
           <template #default="{row}">
@@ -84,6 +85,7 @@
         </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="暂无项目数据" />
+      </div>
 
       <div class="pagination-row" v-if="total > 0">
         <el-pagination v-model:current-page="page" :total="total" :page-size="size"
