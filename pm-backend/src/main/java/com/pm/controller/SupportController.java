@@ -4,7 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysSupportItem;
+import com.pm.entity.SysProject;
+import com.pm.entity.SysUser;
+import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysSupportItemMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.CacheEvictionService;
@@ -24,6 +28,8 @@ public class SupportController {
 
     private final SysSupportItemService supportItemService;
     private final SysSupportItemMapper supportItemMapper;
+    private final SysProjectMapper projectMapper;
+    private final SysUserMapper userMapper;
     private final ProjectAccessService accessService;
     private final CacheEvictionService cacheEvictionService;
 
@@ -48,6 +54,17 @@ public class SupportController {
                 !userId.equals(item.getApplicantId()) &&
                 !accessService.canViewProject(item.getProjectId(), loginUser.getUser()));
             pageObj.setRecords(records);
+        }
+        // Batch enrich projectName, applicantName, handlerName
+        for (SysSupportItem item : pageObj.getRecords()) {
+            SysProject p = projectMapper.selectById(item.getProjectId());
+            if (p != null) item.setProjectName(p.getName());
+            SysUser applicant = userMapper.selectById(item.getApplicantId());
+            if (applicant != null) item.setApplicantName(applicant.getRealName());
+            if (item.getHandlerId() != null) {
+                SysUser handler = userMapper.selectById(item.getHandlerId());
+                if (handler != null) item.setHandlerName(handler.getRealName());
+            }
         }
         return Result.ok(pageObj);
     }
