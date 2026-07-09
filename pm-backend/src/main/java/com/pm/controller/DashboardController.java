@@ -187,7 +187,7 @@ public class DashboardController {
                 .filter(d -> projectIds.contains(d.getProjectId()))
                 .map(SysDeviation::getProjectId)
                 .collect(Collectors.toSet());
-        return projects.stream().map(p -> {
+        return projects.stream().limit(8).map(p -> {
             Map<String, Object> card = new LinkedHashMap<>();
             card.put("id", p.getId());
             card.put("name", p.getName());

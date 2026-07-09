@@ -27,6 +27,9 @@ public class StatisticsController {
 
     @GetMapping("/statistics")
     public Result<Map<String, Object>> stats(@AuthenticationPrincipal LoginUser loginUser) {
+        // PERFORMANCE NOTE: This endpoint does selectList(null) on projects, stages, users,
+        // and experiences tables. For production use with large datasets, consider adding
+        // a caching layer (e.g., @Cacheable with a TTL) to avoid full-table scans on every request.
         accessService.requireLeaderOrAdmin(loginUser.getUser());
         Map<String, Object> data = new HashMap<>();
 

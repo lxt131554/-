@@ -1,5 +1,6 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysUser;
 import com.pm.mapper.SysUserMapper;
@@ -26,16 +27,24 @@ public class UserController {
     private final ProjectAccessService accessService;
 
     @GetMapping
-    public Result<List<SysUser>> list(@AuthenticationPrincipal LoginUser loginUser) {
+    public Result<Page<SysUser>> list(@RequestParam(defaultValue = "1") int page,
+                                       @RequestParam(defaultValue = "10") int size,
+                                       @AuthenticationPrincipal LoginUser loginUser) {
+        if (size > 100) size = 100;
         accessService.requireAdmin(loginUser.getUser());
-        List<SysUser> users = userMapper.selectList(null);
-        users.forEach(u -> u.setPassword(null));
-        return Result.ok(users);
+        Page<SysUser> p = new Page<>(page, size);
+        Page<SysUser> result = userMapper.selectPage(p, null);
+        result.getRecords().forEach(u -> u.setPassword(null));
+        return Result.ok(result);
     }
 
     @GetMapping("/available")
     public Result<List<Map<String, Object>>> available(@AuthenticationPrincipal LoginUser loginUser) {
         List<SysUser> users = userMapper.selectList(null);
+        // Safety cap: limit to 200 users for member selection dropdowns
+        if (users.size() > 200) {
+            users = users.subList(0, 200);
+        }
         List<Map<String, Object>> list = new ArrayList<>();
         for (SysUser u : users) {
             Map<String, Object> info = new HashMap<>();

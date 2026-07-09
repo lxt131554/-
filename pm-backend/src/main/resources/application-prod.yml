@@ -3,6 +3,21 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: PmHikariPool
+
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+    accept-count: 100
+    connection-timeout: 20000
 
 app:
   cors:

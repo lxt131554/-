@@ -1,5 +1,6 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
 import com.pm.entity.SysProjectStage;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -158,12 +160,21 @@ public class ReportController {
     }
 
     @GetMapping("/reports/pending")
-    public Result<List<SysStageReport>> pendingReview(@AuthenticationPrincipal LoginUser loginUser) {
+    public Result<Page<SysStageReport>> pendingReview(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        if (size > 100) size = 100;
         List<SysStageReport> list = reportService.listPendingReview(
                 loginUser.getUser().getId(),
                 loginUser.getUser().getRole());
         list.forEach(r -> r.setAttachmentData(null));
-        return Result.ok(list);
+        long total = list.size();
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, (int) total);
+        Page<SysStageReport> p = new Page<>(page, size, total);
+        p.setRecords(start < total ? list.subList(start, end) : Collections.emptyList());
+        return Result.ok(p);
     }
 
     @GetMapping("/reports/{reportId}/attachment")

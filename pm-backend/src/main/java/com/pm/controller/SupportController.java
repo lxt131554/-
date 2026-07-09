@@ -1,5 +1,6 @@
 package com.pm.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysSupportItem;
 import com.pm.security.LoginUser;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -22,9 +24,12 @@ public class SupportController {
     private final ProjectAccessService accessService;
 
     @GetMapping
-    public Result<List<SysSupportItem>> list(
+    public Result<Page<SysSupportItem>> list(
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal LoginUser loginUser) {
+        if (size > 100) size = 100;
         List<SysSupportItem> list = supportItemService.listAll(status);
         if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
             Long userId = loginUser.getUser().getId();
@@ -32,7 +37,12 @@ public class SupportController {
                 !userId.equals(item.getApplicantId()) &&
                 !accessService.canViewProject(item.getProjectId(), loginUser.getUser()));
         }
-        return Result.ok(list);
+        long total = list.size();
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, (int) total);
+        Page<SysSupportItem> p = new Page<>(page, size, total);
+        p.setRecords(start < total ? list.subList(start, end) : Collections.emptyList());
+        return Result.ok(p);
     }
 
     @PostMapping

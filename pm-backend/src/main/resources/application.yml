@@ -38,6 +38,7 @@ logging:
   level:
     root: INFO
     com.pm: INFO
+    com.pm.mapper: WARN
   file:
     path: ${LOG_PATH:./logs}
 
