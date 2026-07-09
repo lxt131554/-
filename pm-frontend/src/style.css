@@ -4,75 +4,85 @@
 
 /* ---- CSS Custom Properties ---- */
 :root {
-  /* Surfaces */
-  --pm-bg: #F4F6F8;
-  --pm-surface: #FFFFFF;
-  --pm-surface-raised: #FFFFFF;
-  --pm-surface-hover: #F5F7FA;
+  /* Content area */
+  --pm-bg: #f5f7fb;
+  --pm-surface: #ffffff;
+  --pm-surface-hover: #f9fafb;
 
-  /* Text -- charcoal hierarchy, never pure black */
-  --pm-text: #1F2329;
-  --pm-text-secondary: #646A73;
-  --pm-text-muted: #8F959E;
+  /* Text */
+  --pm-text: #1f2937;
+  --pm-text-secondary: #6b7280;
+  --pm-text-muted: #9ca3af;
 
-  /* Primary */
-  --pm-primary: #1677FF;
-  --pm-primary-hover: #4096FF;
-  --pm-primary-light: #EAF2FF;
+  /* Primary - will be overridden by data-theme */
+  --pm-primary: #2563eb;
+  --pm-primary-hover: #1d4ed8;
+  --pm-primary-light: #eff6ff;
 
-  /* Accent -- one, restrained */
-  --pm-accent: #1677FF;
-  --pm-accent-light: #EAF2FF;
+  /* Accent */
+  --pm-accent: #2563eb;
+  --pm-accent-light: #eff6ff;
 
-  /* Borders -- hairline, tinted */
-  --pm-border: #E5E8EB;
-  --pm-border-light: #EEF0F2;
-  --pm-border-strong: #C9CDD4;
+  /* Borders */
+  --pm-border: #e5e7eb;
+  --pm-border-light: #f3f4f6;
+  --pm-border-strong: #c9cdd4;
 
-  /* Shadows -- soft, colored, single light source */
-  --pm-shadow-sm: 0 1px 2px rgba(31,35,41,0.04);
-  --pm-shadow: 0 2px 8px rgba(31,35,41,0.06);
-  --pm-shadow-lg: 0 8px 24px rgba(31,35,41,0.12);
+  /* Shadows */
+  --pm-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --pm-shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
 
-  --pm-radius-sm: 4px;
-  --pm-radius: 6px;
-  --pm-radius-lg: 8px;
+  /* Radius */
+  --pm-radius: 8px;
+  --pm-radius-sm: 6px;
 
-  /* Transitions -- custom cubic-bezier, NOT ease-in-out */
-  --pm-ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --pm-ease-fast: cubic-bezier(0.32, 0.72, 0, 1);
-  --pm-duration: 300ms;
-  --pm-duration-fast: 180ms;
-
-  /* Spacing scale */
+  /* Spacing */
   --pm-space-xs: 4px;
   --pm-space-sm: 8px;
   --pm-space-md: 16px;
   --pm-space-lg: 24px;
   --pm-space-xl: 32px;
-  --pm-space-2xl: 48px;
-  --pm-space-3xl: 64px;
 
-  /* Sidebar */
-  --pm-sidebar-bg: #FFFFFF;
-  --pm-sidebar-text: #4E5969;
-  --pm-sidebar-active: #1677FF;
-  --pm-sidebar-active-bg: #EAF2FF;
-  --pm-sidebar-hover: #F5F7FA;
+  /* Sidebar - default blue theme */
+  --pm-sidebar-bg: #1e40af;
+  --pm-sidebar-text: rgba(255,255,255,0.78);
+  --pm-sidebar-text-active: #ffffff;
+  --pm-sidebar-active-bg: rgba(255,255,255,0.15);
+  --pm-sidebar-hover: rgba(255,255,255,0.08);
 
-  /* Semantic accent colors for tags/badges */
-  --pm-pale-blue: #EFF4FF;
-  --pm-blue-text: #2563EB;
-  --pm-pale-green: #ECFDF5;
+  /* Semantic colors */
+  --pm-pale-blue: #eff4ff;
+  --pm-blue-text: #2563eb;
+  --pm-pale-green: #ecfdf5;
   --pm-green-text: #059669;
-  --pm-pale-amber: #FFF7ED;
-  --pm-amber-text: #D97706;
-  --pm-pale-red: #FEF2F2;
-  --pm-red-text: #DC2626;
-  --pm-pale-purple: #F5F3FF;
-  --pm-purple-text: #7C3AED;
-  --pm-pale-slate: #F8FAFC;
-  --pm-slate-text: #64748B;
+  --pm-pale-amber: #fffbeb;
+  --pm-amber-text: #d97706;
+  --pm-pale-red: #fef2f2;
+  --pm-red-text: #dc2626;
+  --pm-pale-slate: #f8fafc;
+  --pm-slate-text: #64748b;
+}
+
+/* Theme variations */
+:root[data-theme='blue'] {
+  --pm-primary: #2563eb;
+  --pm-accent: #2563eb;
+  --pm-sidebar-bg: #1e40af;
+}
+:root[data-theme='purple'] {
+  --pm-primary: #7c3aed;
+  --pm-accent: #7c3aed;
+  --pm-sidebar-bg: #5b21b6;
+}
+:root[data-theme='green'] {
+  --pm-primary: #059669;
+  --pm-accent: #059669;
+  --pm-sidebar-bg: #047857;
+}
+:root[data-theme='dark'] {
+  --pm-primary: #3b82f6;
+  --pm-accent: #3b82f6;
+  --pm-sidebar-bg: #0f172a;
 }
 
 /* ---- Global Reset ---- */
@@ -669,40 +679,21 @@ body {
 }
 
 /* --- Menu (sidebar) --- */
-.el-menu {
-  background: var(--pm-sidebar-bg);
-  border-right: none;
-}
+.el-menu { background: var(--pm-sidebar-bg); border-right: none; }
 .el-menu-item {
+  color: var(--pm-sidebar-text);
+  height: 44px;
+  line-height: 44px;
+  margin: 2px 8px;
   border-radius: 6px;
-  margin: 2px 0;
-  height: 40px;
-  line-height: 40px;
   font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0;
-  transition: all var(--pm-duration-fast) var(--pm-ease);
-  color: var(--pm-sidebar-text);
 }
-.el-menu-item:hover {
-  background: var(--pm-sidebar-hover);
-  color: var(--pm-sidebar-active);
-}
-.el-menu-item.is-active {
-  background: var(--pm-sidebar-active-bg);
-  color: var(--pm-sidebar-active);
-  font-weight: 600;
-}
-.el-sub-menu__title {
-  color: var(--pm-sidebar-text);
-  border-radius: 6px;
-  margin: 2px 0;
-  height: 40px;
-  line-height: 40px;
-}
+.el-menu-item:hover { background: var(--pm-sidebar-hover); color: var(--pm-sidebar-text-active); }
+.el-menu-item.is-active { background: var(--pm-sidebar-active-bg); color: var(--pm-sidebar-text-active); }
+.el-sub-menu__title { color: var(--pm-sidebar-text); height: 44px; line-height: 44px; }
 .el-sub-menu__title:hover {
   background: var(--pm-sidebar-hover);
-  color: var(--pm-sidebar-active);
+  color: var(--pm-sidebar-text-active);
 }
 .el-menu--collapse .el-sub-menu__title {
   margin: 2px 0;
@@ -760,6 +751,73 @@ body {
 .el-step__title {
   font-size: 16px;
 }
+
+/* ================================================================
+   Global Utility Classes
+   ================================================================ */
+
+/* Unified card */
+.page-card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* Filter panel */
+.filter-panel {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Table wrapper */
+.table-wrap { width: 100%; overflow-x: auto; }
+
+/* Table actions */
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.table-actions .el-button + .el-button { margin-left: 0; }
+.table-actions .el-button { flex-shrink: 0; }
+
+/* Text utilities */
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.long-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; line-height: 1.75; }
+
+/* Form action bar */
+.form-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius);
+  padding: 16px 24px;
+  margin-top: 24px;
+}
+
+/* Table header global */
+.el-table th.el-table__cell {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--pm-text);
+}
+.el-table th.el-table__cell .cell { white-space: nowrap; }
 
 /* ================================================================
    Unified Label & Table Standards
@@ -921,8 +979,6 @@ body {
   }
 }
 
-.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.long-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; line-height: 1.8; font-size: 14px; }
 .review-layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start; }
 .review-aside { background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 8px; padding: 24px; position: sticky; top: 24px; }
 .review-aside h3 { font-size: 16px; margin-bottom: 12px; }
@@ -933,17 +989,3 @@ body {
 .form-tip { font-size: 13px; color: var(--pm-text-muted); margin-top: 6px; line-height: 1.5; }
 .action-bar { display: flex; align-items: center; justify-content: space-between; background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 8px; padding: 16px 24px; margin-top: 24px; position: sticky; bottom: 0; }
 @media (max-width: 900px) { .review-layout { grid-template-columns: 1fr; } .review-aside { position: static; } }
-
-/* ================================================================
-   Table Actions (操作 column buttons)
-   ================================================================ */
-.table-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-.table-actions .el-button + .el-button { margin-left: 0; }
-.table-actions .el-button { flex-shrink: 0; }

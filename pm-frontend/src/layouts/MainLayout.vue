@@ -1,9 +1,9 @@
 <template>
   <el-container style="height:100vh">
     <!-- Sidebar -->
-    <el-aside width="220px" class="layout-sidebar">
+    <el-aside width="232px" class="layout-sidebar">
       <div class="sidebar-brand">
-        <div class="brand-mark"><el-icon><OfficeBuilding /></el-icon></div>
+        <div class="brand-logo"><el-icon :size="22"><OfficeBuilding /></el-icon></div>
         <div class="brand-copy">
           <div class="brand-title">林草规划院</div>
           <div class="brand-subtitle">项目管理系统</div>
@@ -66,20 +66,37 @@
     <!-- Main area -->
     <el-container>
       <el-header class="layout-header">
-        <div class="header-location">
+        <div class="header-left">
           <el-breadcrumb separator="/">
             <el-breadcrumb-item v-for="item in breadcrumbItems" :key="item.title" :to="item.path ? { path: item.path } : undefined">
               {{ item.title }}
             </el-breadcrumb-item>
           </el-breadcrumb>
-          <div class="header-page-title">{{ currentTitle }}</div>
         </div>
-        <div class="header-actions">
+        <div class="header-right">
+          <!-- Theme picker -->
+          <el-dropdown trigger="click" @command="switchTheme">
+            <span class="header-action-btn" title="切换主题">
+              <el-icon :size="18"><Brush /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="blue"><span class="theme-dot theme-dot--blue"></span> 政务蓝</el-dropdown-item>
+                <el-dropdown-item command="purple"><span class="theme-dot theme-dot--purple"></span> 典雅紫</el-dropdown-item>
+                <el-dropdown-item command="green"><span class="theme-dot theme-dot--green"></span> 生态绿</el-dropdown-item>
+                <el-dropdown-item command="dark"><span class="theme-dot theme-dot--dark"></span> 深色蓝</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
+          <!-- Notifications -->
           <el-popover ref="notifyPopover" placement="bottom-end" :width="320" trigger="click">
             <template #reference>
-              <el-badge :value="notifications.length" :hidden="!notifications.length" :max="99" class="header-notify">
-                <el-icon :size="20"><Bell /></el-icon>
-              </el-badge>
+              <span class="header-action-btn">
+                <el-badge :value="notifications.length" :hidden="!notifications.length" :max="99">
+                  <el-icon :size="18"><Bell /></el-icon>
+                </el-badge>
+              </span>
             </template>
             <div v-if="notifications.length" style="max-height:400px;overflow-y:auto">
               <div v-for="(n, i) in notifications" :key="i"
@@ -92,6 +109,8 @@
             </div>
             <el-empty v-else description="暂无待办事项" :image-size="60" />
           </el-popover>
+
+          <!-- User -->
           <div class="header-user">
             <span class="header-avatar">{{ userInitial }}</span>
             <span class="header-name" style="cursor:pointer" @click="showProfile=true">{{ auth.user?.realName }}</span>
@@ -100,26 +119,26 @@
             <el-button text size="small" @click="showProfile=true">修改密码</el-button>
             <el-button type="danger" text size="small" @click="handleLogout">退出</el-button>
           </div>
-
-          <!-- Profile Dialog -->
-          <el-dialog v-model="showProfile" title="修改密码" width="400px" append-to-body align-center :lock-scroll="true">
-            <el-form label-width="100px">
-              <el-form-item label="旧密码">
-                <el-input v-model="profileForm.oldPassword" type="password" show-password />
-              </el-form-item>
-              <el-form-item label="新密码">
-                <el-input v-model="profileForm.newPassword" type="password" show-password placeholder="至少6位" />
-              </el-form-item>
-              <el-form-item label="确认密码">
-                <el-input v-model="profileForm.confirmPassword" type="password" show-password placeholder="再次输入新密码" />
-              </el-form-item>
-            </el-form>
-            <template #footer>
-              <el-button type="primary" @click="handleChangePassword" :loading="changingPwd">确认修改</el-button>
-              <el-button @click="showProfile=false">取消</el-button>
-            </template>
-          </el-dialog>
         </div>
+
+        <!-- Profile Dialog -->
+        <el-dialog v-model="showProfile" title="修改密码" width="400px" append-to-body align-center :lock-scroll="true">
+          <el-form label-width="100px">
+            <el-form-item label="旧密码">
+              <el-input v-model="profileForm.oldPassword" type="password" show-password />
+            </el-form-item>
+            <el-form-item label="新密码">
+              <el-input v-model="profileForm.newPassword" type="password" show-password placeholder="至少6位" />
+            </el-form-item>
+            <el-form-item label="确认密码">
+              <el-input v-model="profileForm.confirmPassword" type="password" show-password placeholder="再次输入新密码" />
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button type="primary" @click="handleChangePassword" :loading="changingPwd">确认修改</el-button>
+            <el-button @click="showProfile=false">取消</el-button>
+          </template>
+        </el-dialog>
       </el-header>
       <el-main class="layout-main">
         <router-view />
@@ -132,7 +151,7 @@
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { computed, ref, reactive, onMounted } from 'vue'
-import { Bell } from '@element-plus/icons-vue'
+import { Bell, Brush } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '../api/index'
 import { showActionError } from '../utils/actionGuards'
@@ -146,6 +165,14 @@ const notifyPopover = ref(null)
 const showProfile = ref(false)
 const changingPwd = ref(false)
 const profileForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+
+const theme = ref(localStorage.getItem('pm-theme') || 'blue')
+function switchTheme(name) {
+  theme.value = name
+  document.documentElement.setAttribute('data-theme', name)
+  localStorage.setItem('pm-theme', name)
+}
+
 async function handleChangePassword() {
   if (!profileForm.oldPassword || !profileForm.newPassword) {
     ElMessage.warning('请输入旧密码和新密码')
@@ -203,7 +230,10 @@ function goNotify(url) {
   router.push(url)
 }
 
-onMounted(() => { loadNotifications() })
+onMounted(() => {
+  document.documentElement.setAttribute('data-theme', theme.value)
+  loadNotifications()
+})
 
 function handleLogout() {
   auth.logout().then(() => router.push('/login'))
@@ -213,49 +243,20 @@ function handleLogout() {
 <style scoped>
 .layout-sidebar {
   background: var(--pm-sidebar-bg);
-  border-right: 1px solid var(--pm-border);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 8px rgba(31, 35, 41, 0.03);
+  overflow: hidden;
 }
-
 .sidebar-brand {
-  height: 58px;
-  padding: 0 18px;
+  padding: 20px 20px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--pm-text);
-  border-bottom: 1px solid var(--pm-border-light);
-  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.brand-mark {
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background: var(--pm-primary);
-  color: #fff;
-  font-size: 17px;
-}
-.brand-copy {
-  min-width: 0;
-}
-.brand-title {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: 1.25;
-}
-.brand-subtitle {
-  font-size: 12px;
-  color: var(--pm-text-muted);
-  letter-spacing: 0;
-  line-height: 1.25;
-}
+.brand-logo { color: #fff; }
+.brand-title { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.3; }
+.brand-subtitle { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
 .sidebar-menu {
   border-right: none;
   flex: 1;
@@ -269,83 +270,38 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
   padding: 0 24px;
   height: 56px;
-  box-shadow: 0 1px 4px rgba(31, 35, 41, 0.03);
-  z-index: 2;
 }
-
-.header-location {
-  min-width: 0;
-}
-
-.header-page-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--pm-text);
-  line-height: 1.2;
-  margin-top: 2px;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.header-notify {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-}
-
-.header-notify :deep(.el-icon) {
-  color: var(--pm-text-secondary);
-}
-
-/* User info */
-.header-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.header-name {
-  color: var(--pm-text);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.header-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+.header-left { display: flex; align-items: center; }
+.header-right { display: flex; align-items: center; gap: 4px; }
+.header-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #e8f1ff;
-  color: var(--pm-primary);
-  font-size: 13px;
-  font-weight: 600;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--pm-text-secondary);
+  transition: background 0.15s;
 }
-
-.header-role {
-  color: var(--pm-text-muted);
-  font-size: 12px;
-  background: var(--pm-surface-hover);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 500;
+.header-action-btn:hover { background: var(--pm-surface-hover); color: var(--pm-text); }
+.header-user { display: flex; align-items: center; gap: 8px; margin-left: 8px; }
+.header-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--pm-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600;
 }
-
-.header-divider {
-  width: 1px;
-  height: 16px;
-  background: var(--pm-border);
-  margin: 0 4px;
-}
+.header-name { color: var(--pm-text); font-size: 14px; font-weight: 500; }
+.header-role { color: var(--pm-text-muted); font-size: 12px; background: var(--pm-surface-hover); padding: 2px 8px; border-radius: 99px; }
+.header-divider { width: 1px; height: 16px; background: var(--pm-border); }
+.theme-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+.theme-dot--blue { background: #2563eb; }
+.theme-dot--purple { background: #7c3aed; }
+.theme-dot--green { background: #059669; }
+.theme-dot--dark { background: #0f172a; }
 
 /* Main content */
 .layout-main {
