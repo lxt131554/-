@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pm.common.Result;
 import com.pm.entity.SysDeviation;
 import com.pm.mapper.SysDeviationMapper;
+import com.pm.mapper.SysProjectMapper;
+import com.pm.mapper.SysProjectStageMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.ProjectAccessService;
 import com.pm.service.CacheEvictionService;
@@ -23,6 +25,8 @@ public class DeviationController {
 
     private final SysDeviationService deviationService;
     private final SysDeviationMapper deviationMapper;
+    private final SysProjectMapper projectMapper;
+    private final SysProjectStageMapper stageMapper;
     private final ProjectAccessService accessService;
     private final CacheEvictionService cacheEvictionService;
 
@@ -47,6 +51,13 @@ public class DeviationController {
             List<SysDeviation> records = pageObj.getRecords();
             records.removeIf(d -> !accessService.canViewProject(d.getProjectId(), loginUser.getUser()));
             pageObj.setRecords(records);
+        }
+        // Batch enrich projectName and stageName
+        for (SysDeviation d : pageObj.getRecords()) {
+            SysProject p = projectMapper.selectById(d.getProjectId());
+            if (p != null) d.setProjectName(p.getName());
+            SysProjectStage s = stageMapper.selectById(d.getStageId());
+            if (s != null) d.setStageName(s.getStageName());
         }
         return Result.ok(pageObj);
     }
