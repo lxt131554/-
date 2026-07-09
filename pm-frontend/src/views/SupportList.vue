@@ -13,7 +13,7 @@
         <div class="summary-card-hint">已处理完成</div>
       </div>
       <div class="summary-card summary-card--primary clickable" :class="{ active: filterStatus==='' }" @click="setStatusFilter('')">
-        <div class="summary-card-value">{{ allData.length }}</div>
+        <div class="summary-card-value">{{ pendingCount + resolvedCount }}</div>
         <div class="summary-card-label">全部事项</div>
       </div>
     </section>
@@ -28,7 +28,7 @@
           <el-icon><Plus /></el-icon> 新建支持申请
         </el-button>
       </div>
-      <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
+      <el-table v-if="tableData.length" :data="tableData" v-loading="loading">
         <el-table-column prop="projectName" label="所属项目" min-width="200" show-overflow-tooltip />
         <el-table-column label="事项标题" min-width="280">
           <template #default="{row}">
@@ -60,9 +60,10 @@
         </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="暂无支持事项" />
-      <el-pagination v-if="tableData.length > pageSize"
+      <el-pagination v-if="total > pageSize"
         v-model:current-page="page" :page-size="pageSize"
-        :total="tableData.length" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+        @current-change="loadData"
         style="margin-top:12px;justify-content:flex-end" />
     </div>
   </div>
@@ -78,20 +79,16 @@ import { showActionError } from '../utils/actionGuards'
 const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
-const allData = ref([])
 const tableData = ref([])
+const total = ref(0)
 const filterStatus = ref('')
 
-const pendingCount = computed(() => allData.value.filter(s => s.status === 'pending').length)
-const resolvedCount = computed(() => allData.value.filter(s => s.status === 'resolved').length)
+const pendingCount = ref(0)
+const resolvedCount = ref(0)
 const canCreateSupport = computed(() => ['engineer', 'admin'].includes(auth.user?.role))
 
 const page = ref(1)
 const pageSize = 10
-const pagedData = computed(() => {
-  const start = (page.value - 1) * pageSize
-  return tableData.value.slice(start, start + pageSize)
-})
 
 function canResolve(row) {
   return row.status === 'pending' && ['manager', 'admin'].includes(auth.user?.role)
@@ -109,17 +106,29 @@ function formatTime(val) {
 }
 
 async function loadData() {
-  page.value = 1
   loading.value = true
   try {
-    const res = await request.get('/supports')
-    allData.value = res.data.records || res.data || []
-    tableData.value = filterStatus.value
-      ? allData.value.filter(item => item.status === filterStatus.value)
-      : allData.value
+    const params = { page: page.value, size: pageSize }
+    if (filterStatus.value) params.status = filterStatus.value
+    const res = await request.get('/supports', { params })
+    tableData.value = res.data.records || res.data || []
+    total.value = res.data.total || 0
+    // Load summary counts separately (lightweight)
+    loadSummaryCounts()
   } catch (error) {
     showActionError(error, '支持事项加载失败')
   } finally { loading.value = false }
+}
+
+async function loadSummaryCounts() {
+  try {
+    const [pRes, rRes] = await Promise.all([
+      request.get('/supports', { params: { page: 1, size: 1, status: 'pending' } }),
+      request.get('/supports', { params: { page: 1, size: 1, status: 'resolved' } })
+    ])
+    pendingCount.value = pRes.data.total || 0
+    resolvedCount.value = rRes.data.total || 0
+  } catch {}
 }
 
 onMounted(loadData)
