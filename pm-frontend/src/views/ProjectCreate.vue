@@ -16,7 +16,6 @@
         <div class="aside-card">
           <h3 class="aside-title">{{ stepTitle }}</h3>
           <p class="aside-desc">{{ stepDesc }}</p>
-          <div class="aside-tip">必填项：项目名称</div>
         </div>
       </aside>
 
@@ -241,7 +240,6 @@
 
           <!-- Bottom action bar -->
           <div class="form-action-bar" style="margin-top:24px">
-            <span class="form-action-tip" style="font-size:13px;color:var(--pm-text-muted)">仅项目名称为必填，其余信息可根据实际情况补充</span>
             <div class="form-action-buttons" style="display:flex;gap:10px">
               <el-button @click="router.push('/projects')">取消</el-button>
               <el-button v-if="currentStep > 0" @click="currentStep--">上一步</el-button>
