@@ -54,7 +54,9 @@
         </el-table-column>
         <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
-            <el-button size="small" text type="primary" @click="$router.push(row.linkUrl)">查看</el-button>
+            <div class="table-actions">
+              <el-button type="primary" link size="small" @click="$router.push(row.linkUrl)">查看</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

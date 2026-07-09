@@ -61,9 +61,11 @@
         </el-table-column>
         <el-table-column label="操作" min-width="100" fixed="right" align="center">
           <template #default="{row}">
-            <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="primary" size="small" @click="handleClose(row)">
-              关闭
-            </el-button>
+            <div class="table-actions">
+              <el-button v-if="row.status=='open' && (auth.user?.role=='manager'||auth.user?.role=='admin')" type="danger" link size="small" @click="handleClose(row)">
+                关闭
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

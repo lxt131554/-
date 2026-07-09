@@ -20,12 +20,14 @@
             <el-tag :type="row.enabled?'success':'danger'" size="small">{{ row.enabled?'启用':'禁用' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="180" fixed="right">
+        <el-table-column label="操作" min-width="180" fixed="right" align="center">
           <template #default="{row}">
-            <el-button text type="primary" size="small" @click="openEdit(row)">编辑</el-button>
-            <el-button text :type="row.enabled?'warning':'success'" size="small" @click="toggleUser(row)">
-              {{ row.enabled?'禁用':'启用' }}
-            </el-button>
+            <div class="table-actions">
+              <el-button type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+              <el-button :type="row.enabled?'warning':'success'" size="small" @click="toggleUser(row)">
+                {{ row.enabled?'禁用':'启用' }}
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>

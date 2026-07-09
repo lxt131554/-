@@ -61,15 +61,17 @@
             <el-tag v-else-if="row.status==='completed'" type="success" size="small">已完成</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="140" fixed="right" align="center">
           <template #default="{row}">
-            <el-button v-if="row.status!=='completed' && row.projectStatus !== 'completed'" type="primary" size="small" @click="router.push(`/my-tasks/${row.id}/report`)">{{ row.status==='submitted' ? '再次填报' : '填报' }}</el-button>
-            <el-tooltip v-else-if="row.projectStatus === 'completed'" content="项目已完成，无法提交" placement="top">
-              <el-button type="primary" size="small" disabled>填报</el-button>
-            </el-tooltip>
-            <el-tooltip v-else-if="row.status==='completed'" content="阶段已完成" placement="top">
-              <el-button type="primary" size="small" disabled>已完成</el-button>
-            </el-tooltip>
+            <div class="table-actions">
+              <el-button v-if="row.status!=='completed' && row.projectStatus !== 'completed'" type="primary" size="small" @click="router.push(`/my-tasks/${row.id}/report`)">{{ row.status==='submitted' ? '再次填报' : '填报' }}</el-button>
+              <el-tooltip v-else-if="row.projectStatus === 'completed'" content="项目已完成，无法提交" placement="top">
+                <el-button type="primary" size="small" disabled>填报</el-button>
+              </el-tooltip>
+              <el-tooltip v-else-if="row.status==='completed'" content="阶段已完成" placement="top">
+                <el-button type="primary" size="small" disabled>已完成</el-button>
+              </el-tooltip>
+            </div>
           </template>
         </el-table-column>
       </el-table>

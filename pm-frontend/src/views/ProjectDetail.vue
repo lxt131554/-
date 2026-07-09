@@ -462,12 +462,12 @@
           <el-table-column label="最新填报" min-width="200" show-overflow-tooltip>
             <template #default="{row}">{{ row.latestReport?.content || '暂无' }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="160" fixed="right" align="center">
+          <el-table-column label="操作" width="180" fixed="right" align="center">
             <template #default="{row}">
-              <div style="display:flex;align-items:center;justify-content:center;gap:12px">
-                <el-button text type="primary" size="small" @click="router.push(`/my-tasks/${row.id}/report`)"
+              <div class="table-actions">
+                <el-button type="primary" size="small" @click="router.push(`/my-tasks/${row.id}/report`)"
                   v-if="(auth.user?.id===row.assigneeId || auth.user?.role==='engineer' || auth.user?.role=='manager' || auth.user?.role=='admin') && row.status!=='completed'">填报</el-button>
-                <el-button text type="danger" size="small" @click="handleDeleteStage(row)" v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status!=='completed'">删除</el-button>
+                <el-button type="danger" link size="small" @click="handleDeleteStage(row)" v-if="(auth.user?.role=='manager'||auth.user?.role=='admin') && project.status!=='completed'">删除</el-button>
               </div>
             </template>
           </el-table-column>
@@ -515,7 +515,9 @@
             </el-table-column>
             <el-table-column label="操作" width="100" align="center">
               <template #default="{row}">
-                <el-button text type="primary" size="small" @click="router.push(`/deviations/${row.id}`)">查看</el-button>
+                <div class="table-actions">
+                  <el-button type="primary" link size="small" @click="router.push(`/deviations/${row.id}`)">查看</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -548,7 +550,9 @@
             </el-table-column>
             <el-table-column label="操作" width="100" align="center">
               <template #default="{row}">
-                <el-button text type="primary" size="small" @click="router.push(`/supports/${row.id}`)">查看</el-button>
+                <div class="table-actions">
+                  <el-button type="primary" link size="small" @click="router.push(`/supports/${row.id}`)">查看</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -586,9 +590,11 @@
             </el-table-column>
             <el-table-column label="操作" width="170" fixed="right" align="center">
               <template #default="{row}">
-                <el-button text type="primary" size="small" @click="router.push(`/changes/${row.id}`)">查看详情</el-button>
-                <el-button v-if="row.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" text type="success" size="small"
-                  @click="handleConfirmChange(row)">确认变更</el-button>
+                <div class="table-actions">
+                  <el-button type="primary" link size="small" @click="router.push(`/changes/${row.id}`)">查看详情</el-button>
+                  <el-button v-if="row.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" type="success" size="small"
+                    @click="handleConfirmChange(row)">确认变更</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -619,7 +625,9 @@
             </el-table-column>
             <el-table-column label="操作" width="120" align="center">
               <template #default="{row}">
-                <el-button size="small" type="primary" link @click="router.push(row.url)">{{ row.status==='已完成' ? '查看/编辑' : '去填写' }}</el-button>
+                <div class="table-actions">
+                  <el-button size="small" type="primary" link @click="router.push(row.url)">{{ row.status==='已完成' ? '查看/编辑' : '去填写' }}</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -751,10 +759,12 @@
         <el-table-column label="操作" min-width="160" fixed="right" align="center">
           <template #default="{row}">
             <template v-if="project.status !== 'completed' && (isProjectManager || auth.user?.role=='admin')">
-              <el-button v-if="row.status==='confirmed'" text type="danger" size="small"
-                @click="handleRemoveMemberClick(row)">移除成员</el-button>
-              <el-button v-else text type="warning" size="small"
-                @click="handleCancelInviteClick(row)">取消邀请</el-button>
+              <div class="table-actions">
+                <el-button v-if="row.status==='confirmed'" type="danger" link size="small"
+                  @click="handleRemoveMemberClick(row)">移除成员</el-button>
+                <el-button v-else type="warning" size="small"
+                  @click="handleCancelInviteClick(row)">取消邀请</el-button>
+              </div>
             </template>
           </template>
         </el-table-column>

@@ -70,15 +70,17 @@
               <span class="cell-time">{{ formatTime(row.submitTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="170" fixed="right">
+          <el-table-column label="操作" min-width="210" fixed="right" align="center">
             <template #default="{row}">
-              <el-button type="primary" size="small" link @click="router.push(`/pending-review/${row.id}`)">
-                查看详情
-              </el-button>
-              <el-button v-if="row.attachmentName" type="success" size="small"
-                @click="router.push(`/achievement-review/${row.id}`)">成果审核</el-button>
-              <el-button v-else type="primary" size="small"
-                @click="router.push(`/pending-review/${row.id}`)">审阅</el-button>
+              <div class="table-actions">
+                <el-button type="primary" link size="small" @click="router.push(`/pending-review/${row.id}`)">
+                  查看详情
+                </el-button>
+                <el-button v-if="row.attachmentName" type="primary" size="small"
+                  @click="router.push(`/achievement-review/${row.id}`)">成果审核</el-button>
+                <el-button v-else type="primary" size="small"
+                  @click="router.push(`/pending-review/${row.id}`)">审阅</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

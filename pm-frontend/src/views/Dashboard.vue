@@ -161,8 +161,10 @@
           </el-table-column>
           <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
-              <el-button type="primary" size="small" link
-                @click="$router.push(`/projects/${row.projectId}`)">审阅</el-button>
+              <div class="table-actions">
+                <el-button type="primary" link size="small"
+                  @click="$router.push(`/projects/${row.projectId}`)">审阅</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -188,8 +190,10 @@
           </el-table-column>
           <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
-              <el-button type="primary" size="small" link
-                @click="$router.push(`/my-tasks/${row.stageId}/report`)">填报</el-button>
+              <div class="table-actions">
+                <el-button type="primary" link size="small"
+                  @click="$router.push(`/my-tasks/${row.stageId}/report`)">填报</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>

@@ -49,9 +49,11 @@
         </el-table-column>
         <el-table-column label="操作" min-width="100" fixed="right" align="center">
           <template #default="{row}">
-            <el-button v-if="canResolve(row)" text type="primary" size="small"
-              @click="$router.push(`/supports/${row.id}`)">处理</el-button>
-            <el-button v-else text size="small" @click="$router.push(`/supports/${row.id}`)">查看</el-button>
+            <div class="table-actions">
+              <el-button v-if="canResolve(row)" type="primary" size="small"
+                @click="$router.push(`/supports/${row.id}`)">处理</el-button>
+              <el-button v-else type="primary" link size="small" @click="$router.push(`/supports/${row.id}`)">查看</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
