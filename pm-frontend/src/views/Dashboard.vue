@@ -110,12 +110,12 @@
       <div class="section-title">近期关注项目</div>
       <el-table :data="displayProjects" size="small" stripe
         style="width:100%">
-        <el-table-column prop="name" label="项目名称" min-width="180">
+        <el-table-column prop="name" label="项目名称" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">
             <el-link type="primary" @click="$router.push(`/projects/${row.projectId}`)">{{ row.projectName }}</el-link>
           </template>
         </el-table-column>
-        <el-table-column prop="currentStage" label="当前阶段" min-width="120" />
+        <el-table-column prop="currentStage" label="当前阶段" min-width="120" show-overflow-tooltip />
         <el-table-column prop="stagePlanEnd" label="计划节点" min-width="120">
           <template #default="{ row }">
             <span v-if="row.stagePlanEnd">{{ formatDate(row.stagePlanEnd) }}</span>

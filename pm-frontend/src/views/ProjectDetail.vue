@@ -435,7 +435,7 @@
           </div>
         </div>
         <el-table v-if="stages.length" :data="stages">
-          <el-table-column prop="stageName" label="阶段名称" min-width="160">
+          <el-table-column prop="stageName" label="阶段名称" min-width="160" show-overflow-tooltip>
             <template #default="{row}">
               <el-link type="primary" @click="router.push(`/stages/${row.id}`)">{{ row.stageName }}</el-link>
             </template>

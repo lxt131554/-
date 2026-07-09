@@ -11,8 +11,8 @@
         <el-descriptions-item label="状态">
           <el-tag size="small" :type="detail.status=='confirmed'?'success':'warning'">{{ detail.status=='confirmed'?'已确认':'待确认' }}</el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="变更内容" :span="2">{{ detail.content }}</el-descriptions-item>
-        <el-descriptions-item label="影响范围" :span="2">{{ detail.impact || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="变更内容" :span="2"><span class="long-text">{{ detail.content }}</span></el-descriptions-item>
+        <el-descriptions-item label="影响范围" :span="2"><span class="long-text">{{ detail.impact || '无' }}</span></el-descriptions-item>
       </el-descriptions>
       <div v-if="detail?.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">
         <el-button type="primary" @click="handleConfirm" :loading="confirming">确认变更</el-button>

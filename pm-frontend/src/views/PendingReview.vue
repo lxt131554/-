@@ -41,25 +41,25 @@
           size="small"
           style="min-width:900px"
         >
-          <el-table-column prop="projectName" label="所属项目" min-width="160">
+          <el-table-column prop="projectName" label="所属项目" min-width="160" show-overflow-tooltip>
             <template #default="{row}">
               <span class="cell-project-name">{{ row.projectName }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="stageName" label="阶段" min-width="120" />
+          <el-table-column prop="stageName" label="阶段" min-width="120" show-overflow-tooltip />
           <el-table-column prop="submitUserName" label="提交人" min-width="100" />
-          <el-table-column label="进度" width="85" align="center">
+          <el-table-column label="进度" min-width="85" align="center">
             <template #default="{row}">
               <span class="progress-text">{{ row.progressRate }}%</span>
             </template>
           </el-table-column>
-          <el-table-column label="偏差" width="80" align="center">
+          <el-table-column label="偏差" min-width="80" align="center">
             <template #default="{row}">
               <el-tag v-if="row.problem && row.problem.trim()" type="danger" size="small">有</el-tag>
               <span v-else class="text-muted">无</span>
             </template>
           </el-table-column>
-          <el-table-column label="附件" width="75" align="center">
+          <el-table-column label="附件" min-width="75" align="center">
             <template #default="{row}">
               <el-icon v-if="row.attachmentName" style="color:#059669" :size="16"><Paperclip /></el-icon>
               <span v-else class="text-muted">-</span>

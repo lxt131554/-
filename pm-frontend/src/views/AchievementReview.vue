@@ -14,8 +14,8 @@
           <el-tag v-else-if="report.reviewStatus==='passed'" type="success" size="small">已通过</el-tag>
           <el-tag v-else-if="report.reviewStatus==='returned'" type="danger" size="small">已退回</el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="工作内容" :span="2">{{ report.content }}</el-descriptions-item>
-        <el-descriptions-item label="存在问题" :span="2">{{ report.problem || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="工作内容" :span="2"><span class="long-text">{{ report.content }}</span></el-descriptions-item>
+        <el-descriptions-item label="存在问题" :span="2"><span class="long-text">{{ report.problem || '无' }}</span></el-descriptions-item>
         <el-descriptions-item label="成果附件" :span="2">
           <template v-if="report.attachmentName">
             <el-link type="primary" @click="downloadAttachment">

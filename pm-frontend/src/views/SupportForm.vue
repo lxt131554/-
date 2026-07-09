@@ -47,8 +47,8 @@
         <el-descriptions-item label="申请人">{{ detail.applicantName }}</el-descriptions-item>
         <el-descriptions-item label="处理人">{{ detail.handlerName || '未指定' }}</el-descriptions-item>
         <el-descriptions-item label="期望时间">{{ detail.expectTime ? formatTime(detail.expectTime) : '不限' }}</el-descriptions-item>
-        <el-descriptions-item label="详细描述" :span="2">{{ detail.content || '无' }}</el-descriptions-item>
-        <el-descriptions-item label="处理回复" :span="2" v-if="detail.reply">{{ detail.reply }}</el-descriptions-item>
+        <el-descriptions-item label="详细描述" :span="2"><span class="long-text">{{ detail.content || '无' }}</span></el-descriptions-item>
+        <el-descriptions-item label="处理回复" :span="2" v-if="detail.reply"><span class="long-text">{{ detail.reply }}</span></el-descriptions-item>
       </el-descriptions>
 
       <div v-if="detail?.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">

@@ -44,7 +44,7 @@
       <div style="margin-bottom:8px;color:var(--pm-text-secondary);font-size:13px">共 {{ filteredTasks.length }} 条任务</div>
       <div style="overflow-x:auto">
         <el-table :data="pagedTasks" v-loading="loading">
-        <el-table-column prop="projectName" label="所属项目" min-width="180" />
+        <el-table-column prop="projectName" label="所属项目" min-width="180" show-overflow-tooltip />
         <el-table-column prop="stageName" label="阶段名称" min-width="140">
           <template #default="{row}">
             <el-link type="primary" @click="router.push(`/stages/${row.id}`)">{{ row.stageName }}</el-link>

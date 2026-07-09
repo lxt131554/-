@@ -14,9 +14,9 @@
         <el-descriptions-item label="状态">
           <el-tag size="small" :type="detail.status=='open'?'danger':'success'">{{ detail.status=='open'?'未关闭':'已关闭' }}</el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="偏差描述" :span="2">{{ detail.description }}</el-descriptions-item>
-        <el-descriptions-item label="偏差原因" :span="2">{{ detail.reason || '无' }}</el-descriptions-item>
-        <el-descriptions-item label="影响范围" :span="2">{{ detail.impact || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="偏差描述" :span="2"><span class="long-text">{{ detail.description }}</span></el-descriptions-item>
+        <el-descriptions-item label="偏差原因" :span="2"><span class="long-text">{{ detail.reason || '无' }}</span></el-descriptions-item>
+        <el-descriptions-item label="影响范围" :span="2"><span class="long-text">{{ detail.impact || '无' }}</span></el-descriptions-item>
         <el-descriptions-item label="创建人">{{ detail.createUserName }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatTime(detail.createTime) }}</el-descriptions-item>
       </el-descriptions>

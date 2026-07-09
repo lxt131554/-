@@ -34,7 +34,7 @@
       </div>
 
       <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
-        <el-table-column prop="projectName" label="所属项目" min-width="180" />
+        <el-table-column prop="projectName" label="所属项目" min-width="180" show-overflow-tooltip />
         <el-table-column prop="stageName" label="阶段" min-width="120" />
         <el-table-column prop="type" label="来源" min-width="80" align="center">
           <template #default="{row}">
@@ -48,7 +48,7 @@
             <el-link type="primary" @click="router.push(`/deviations/${row.id}`)">{{ row.description }}</el-link>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="偏差原因" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="reason" label="偏差原因" min-width="180" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" min-width="100" align="center">
           <template #default="{row}">
             <el-tag :type="row.status=='open'?'danger':'success'" size="small">

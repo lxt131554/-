@@ -29,10 +29,10 @@
         </el-button>
       </div>
       <el-table v-if="tableData.length" :data="pagedData" v-loading="loading">
-        <el-table-column prop="projectName" label="所属项目" min-width="180" />
-        <el-table-column prop="title" label="事项标题" min-width="220" show-overflow-tooltip>
+        <el-table-column prop="projectName" label="所属项目" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="title" label="事项标题" min-width="280" show-overflow-tooltip>
           <template #default="{row}">
-            <el-link type="primary" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</el-link>
+            <span class="table-link-ellipsis" @click="router.push(`/supports/${row.id}`)">{{ row.title }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="applicantName" label="申请人" min-width="100" />
@@ -47,7 +47,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="100" fixed="right" align="center">
+        <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template #default="{row}">
             <div class="table-actions">
               <el-button v-if="canResolve(row)" type="primary" size="small"

@@ -55,7 +55,7 @@
 
       <el-table v-if="tableData.length" :data="tableData" class="pm-table">
         <el-table-column prop="id" label="编号" width="90" align="center" />
-        <el-table-column prop="name" label="项目名称" min-width="260">
+        <el-table-column prop="name" label="项目名称" min-width="260" show-overflow-tooltip>
           <template #default="{row}">
             <el-link class="project-name-link" type="primary" @click="router.push(`/projects/${row.id}`)">{{ row.name }}</el-link>
           </template>
