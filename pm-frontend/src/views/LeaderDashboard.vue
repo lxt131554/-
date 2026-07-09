@@ -104,9 +104,9 @@
         <el-table-column prop="managerName" label="负责人" min-width="100" />
         <el-table-column prop="currentStageName" label="当前阶段" min-width="120" />
       </el-table>
-      <el-pagination v-if="allProjects.length > pageSize"
+      <el-pagination
         v-model:current-page="projectPage" :page-size="pageSize"
-        :total="allProjects.length" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="allProjects.length" layout="total, prev, pager, next" :pager-count="5" size="small"
         style="margin-top:12px;justify-content:flex-end" />
       <el-empty v-else-if="!loading" description="暂无项目" :image-size="60" />
     </div>

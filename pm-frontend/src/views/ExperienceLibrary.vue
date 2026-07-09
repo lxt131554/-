@@ -67,9 +67,9 @@
           </div>
         </div>
 
-        <el-pagination v-if="total > expPageSize"
+        <el-pagination
           v-model:current-page="expPage" :page-size="expPageSize"
-          :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+          :total="total" layout="total, prev, pager, next" :pager-count="5" size="small"
           @current-change="loadData"
           style="margin-top:16px;justify-content:flex-end" />
       </div>

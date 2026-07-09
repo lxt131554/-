@@ -94,9 +94,9 @@
       <div v-if="!loading && reports.length>0 && filteredReports.length>0 && filteredReports.length < reports.length" style="text-align:center;padding:4px 0;color:var(--pm-text-muted);font-size:13px">
         已筛选 {{ filteredReports.length }} / {{ reports.length }} 条记录
       </div>
-      <el-pagination v-if="total > pageSize"
+      <el-pagination
         v-model:current-page="page" :page-size="pageSize"
-        :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="total" layout="total, prev, pager, next" :pager-count="5" size="small"
         @current-change="loadData"
         style="margin-top:12px;justify-content:flex-end" />
     </div>

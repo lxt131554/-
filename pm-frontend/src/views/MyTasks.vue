@@ -78,9 +78,9 @@
       </el-table>
       </div>
       <el-empty v-if="!loading && tasks.length===0" description="暂无需填报的阶段" />
-      <el-pagination v-if="filteredTasks.length > pageSize"
+      <el-pagination
         v-model:current-page="page" :page-size="pageSize"
-        :total="filteredTasks.length" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="filteredTasks.length" layout="total, prev, pager, next" :pager-count="5" size="small"
         style="margin-top:12px;justify-content:flex-end" />
     </div>
   </div>

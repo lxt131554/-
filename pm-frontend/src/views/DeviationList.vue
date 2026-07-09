@@ -74,9 +74,9 @@
         </el-table>
         <el-empty v-else-if="!loading" description="暂无偏差记录" />
       </div>
-      <el-pagination v-if="tableData.length > pageSize"
+      <el-pagination
         v-model:current-page="page" :page-size="pageSize"
-        :total="tableData.length" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="tableData.length" layout="total, prev, pager, next" :pager-count="5" size="small"
         style="margin-top:12px;justify-content:flex-end" />
     </div>
 

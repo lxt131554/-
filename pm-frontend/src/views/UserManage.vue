@@ -34,9 +34,9 @@
         </el-table>
         <el-empty v-else-if="!loading" description="暂无用户数据" />
       </div>
-      <el-pagination v-if="total > pageSize"
+      <el-pagination
         v-model:current-page="page" :page-size="pageSize"
-        :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="total" layout="total, prev, pager, next" :pager-count="5" size="small"
         @current-change="loadUsers"
         style="margin-top:12px;justify-content:flex-end" />
     </div>

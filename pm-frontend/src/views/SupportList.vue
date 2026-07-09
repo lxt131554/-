@@ -62,9 +62,9 @@
         </el-table>
         <el-empty v-else-if="!loading" description="暂无支持事项" />
       </div>
-      <el-pagination v-if="total > pageSize"
+      <el-pagination
         v-model:current-page="page" :page-size="pageSize"
-        :total="total" layout="prev, pager, next" :pager-count="5" size="small"
+        :total="total" layout="total, prev, pager, next" :pager-count="5" size="small"
         @current-change="loadData"
         style="margin-top:12px;justify-content:flex-end" />
     </div>
