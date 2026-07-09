@@ -108,7 +108,7 @@
     <!-- Section 3: Key Projects (manager & engineer only; leader view changes in Task 3) -->
     <section v-if="stats.myProjects && stats.myProjects.length" class="section-block">
       <div class="section-title">近期关注项目</div>
-      <el-table v-if="stats.myProjects && stats.myProjects.length" :data="displayProjects" size="small" stripe
+      <el-table :data="displayProjects" size="small" stripe
         style="width:100%">
         <el-table-column prop="name" label="项目名称" min-width="180">
           <template #default="{ row }">
@@ -142,7 +142,6 @@
       <div v-if="hasMoreProjects" style="text-align:right;margin-top:8px">
         <el-link type="primary" @click="$router.push('/projects')">仅展示需优先关注的 8 个项目，查看全部 →</el-link>
       </div>
-      <el-empty v-else description="暂无项目数据" :image-size="60" />
     </section>
 
     <!-- Section 4: Tasks & Anomalies -->
