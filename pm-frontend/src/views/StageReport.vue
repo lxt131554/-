@@ -81,7 +81,7 @@
               <el-icon><Upload /></el-icon> 选择文件
             </el-button>
             <template #tip>
-              <div class="upload-tip">支持 PDF、Word、Excel、CAD图纸、图片、压缩包，单个文件不超过10MB</div>
+              <div class="upload-tip">支持 PDF、Word、Excel、CAD图纸、图片、压缩包，单个文件不超过50MB</div>
             </template>
           </el-upload>
         </div>

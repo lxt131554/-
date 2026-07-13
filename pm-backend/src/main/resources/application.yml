@@ -14,8 +14,8 @@ spring:
     password: ${DB_PASSWORD:root}
   servlet:
     multipart:
-      max-file-size: ${APP_UPLOAD_MAX_FILE_SIZE:20MB}
-      max-request-size: ${APP_UPLOAD_MAX_REQUEST_SIZE:25MB}
+      max-file-size: ${APP_UPLOAD_MAX_FILE_SIZE:50MB}
+      max-request-size: ${APP_UPLOAD_MAX_REQUEST_SIZE:60MB}
   data:
     redis:
       host: ${REDIS_HOST:localhost}

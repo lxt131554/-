@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReportController {
 
-    private static final long MAX_ATTACHMENT_BYTES = 10L * 1024 * 1024;
+    private static final long MAX_ATTACHMENT_BYTES = 50L * 1024 * 1024;
     private static final Set<String> ALLOWED_ATTACHMENT_EXTENSIONS = Set.of(
             ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".zip", ".rar"
     );
