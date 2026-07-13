@@ -159,7 +159,8 @@ async function handleOaFileSelected(event) {
     )
     await loadData()
   } catch (error) {
-    showActionError(error, 'OA 项目导入失败')
+    const msg = error?.response?.data?.message || error?.message || 'OA 项目导入失败'
+    await ElMessageBox.alert(msg, 'OA 项目导入失败', { confirmButtonText: '知道了', type: 'error' })
   } finally { importingOa.value = false }
 }
 
