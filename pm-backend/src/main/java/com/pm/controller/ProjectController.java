@@ -188,6 +188,7 @@ public class ProjectController {
     public Result<?> addMember(@PathVariable Long id, @RequestBody Map<String, Object> body,
                                @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
+        accessService.requireProjectActive(id);
         Object userIdValue = body.get("userId");
         Object roleValue = body.get("roleInProject");
         if (userIdValue == null || roleValue == null) {
@@ -217,6 +218,7 @@ public class ProjectController {
     public Result<?> removeMember(@PathVariable Long id, @PathVariable Long memberId,
                                   @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
+        accessService.requireProjectActive(id);
         SysProjectMember member = memberMapper.selectById(memberId);
         if (member == null || !member.getProjectId().equals(id)) {
             return Result.fail("成员不属于该项目");
