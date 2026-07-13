@@ -126,7 +126,7 @@ public class ProjectController {
     public Result<OaProjectImportResult> importFromOa(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireAdmin(loginUser.getUser());
+        accessService.requireLeaderOrAdmin(loginUser.getUser());
         return Result.ok(oaProjectImportService.importProjects(file, loginUser.getUser().getId()));
     }
 

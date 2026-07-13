@@ -7,7 +7,7 @@
       </div>
       <div class="heading-actions">
         <input ref="oaFileInput" class="hidden-file-input" type="file" accept=".xls,.xlsx" @change="handleOaFileSelected" />
-        <el-button :loading="importingOa" @click="triggerOaImport" v-if="auth.user?.role==='admin'">
+        <el-button :loading="importingOa" @click="triggerOaImport" v-if="auth.user?.role==='admin'||auth.user?.role==='leader'">
           <el-icon><Upload /></el-icon><span>导入 OA 项目</span>
         </el-button>
         <el-button type="primary" @click="router.push('/projects/create')" v-if="auth.user?.role==='manager'||auth.user?.role==='admin'">

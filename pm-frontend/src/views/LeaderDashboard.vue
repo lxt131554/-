@@ -5,6 +5,12 @@
         <h2>领导看板</h2>
         <p style="color:var(--pm-text-secondary);margin-top:4px">全院项目总览</p>
       </div>
+      <div v-if="auth.user?.role==='leader'||auth.user?.role==='admin'">
+        <input ref="oaFileInput" type="file" accept=".xls,.xlsx" style="display:none" @change="handleOaFileSelected" />
+        <el-button :loading="importingOa" @click="oaFileInput?.click()">
+          <el-icon><Upload /></el-icon> 导入 OA 项目
+        </el-button>
+      </div>
     </div>
 
     <!-- Tier 1: 全院概览 — summary cards -->
@@ -122,6 +128,30 @@ import { showActionError } from '../utils/actionGuards'
 const stats = ref({})
 const loading = ref(false)
 const auth = useAuthStore()
+const oaFileInput = ref(null)
+const importingOa = ref(false)
+
+async function handleOaFileSelected(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  importingOa.value = true
+  try {
+    const { importProjectsFromOa } = await import('../api/project')
+    const { ElMessageBox } = await import('element-plus')
+    const res = await importProjectsFromOa(file)
+    const data = res.data || {}
+    const missing = data.missingManagers?.length ? data.missingManagers.join('、') : '无'
+    await ElMessageBox.alert(
+      `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missing}`,
+      'OA 项目导入结果',
+      { confirmButtonText: '知道了' }
+    )
+    await loadData()
+  } catch (error) {
+    showActionError(error, 'OA 项目导入失败')
+  } finally { importingOa.value = false }
+}
 
 const projectPage = ref(1)
 const pageSize = 10
