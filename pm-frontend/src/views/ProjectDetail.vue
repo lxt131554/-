@@ -832,7 +832,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { getProjectDetail, updateProject } from '../api/project'
@@ -1294,6 +1294,7 @@ function handleExport() {
 }
 
 onMounted(() => { loadProject(); loadStages(); loadMembers(); loadChanges(); loadCloseoutStatus() })
+watch(() => route.params.id, () => { loadProject(); loadStages(); loadMembers(); loadChanges(); loadCloseoutStatus() })
 </script>
 
 <style scoped>
