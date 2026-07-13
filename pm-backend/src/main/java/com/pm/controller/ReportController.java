@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +118,14 @@ public class ReportController {
         if (needSupport && !hasText(supportTitle) && !hasText(supportContent)) {
             throw new IllegalArgumentException("需要支持时请填写支持标题或内容");
         }
-        SysStageReport report = new SysStageReport();
+        // 检查是否存在待审阅状态的上次填报，如果有则替换而非新增
+        SysStageReport report = reportMapper.selectOne(new LambdaQueryWrapper<SysStageReport>()
+                .eq(SysStageReport::getStageId, stageId)
+                .eq(SysStageReport::getReviewStatus, "pending"));
+        boolean isUpdate = (report != null);
+        if (!isUpdate) {
+            report = new SysStageReport();
+        }
         report.setContent(content);
         report.setProgressRate(progressRate);
         report.setProblem(problem);
@@ -138,7 +146,18 @@ public class ReportController {
             report.setAttachmentData(file.getBytes());
         }
 
-        SysStageReport saved = reportService.submit(stageId, report, loginUser.getUser().getId());
+        SysStageReport saved;
+        if (isUpdate) {
+            report.setSubmitTime(LocalDateTime.now());
+            report.setReviewStatus("pending");
+            report.setReviewComment(null);
+            report.setReviewUserId(null);
+            report.setReviewTime(null);
+            reportMapper.updateById(report);
+            saved = report;
+        } else {
+            saved = reportService.submit(stageId, report, loginUser.getUser().getId());
+        }
 
         if (isDeviation) {
             String description = hasText(problem) ? problem : content;
