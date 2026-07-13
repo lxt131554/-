@@ -155,7 +155,7 @@ async function handleOaFileSelected(event) {
     await ElMessageBox.alert(
       `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missing}${detailLines.join('\n')}`,
       'OA 项目导入结果',
-      { confirmButtonText: '知道了', type: skippedItems.length > 0 ? 'warning' : 'success', dangerouslyUseHTMLString: false }
+      { confirmButtonText: '知道了', type: (skippedItems.length > 0 || data.updatedCount > 0) ? 'warning' : 'success', dangerouslyUseHTMLString: false }
     )
     await loadData()
   } catch (error) {
