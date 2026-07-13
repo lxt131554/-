@@ -237,11 +237,8 @@ class OaProjectRowImporter {
      * Resolve project status from OA bid status.
      */
     private String resolveProjectStatus(OaProjectImportRow row) {
-        String bidStatus = row.getBidStatus();
-        if (hasText(bidStatus) && (bidStatus.contains("完成") || bidStatus.contains("结项") || bidStatus.contains("归档"))) {
-            return "completed";
-        }
-        return "active";
+        // OA 导入的项目统一标记为已完成
+        return "completed";
     }
 
     private boolean usernameExists(String username) {
