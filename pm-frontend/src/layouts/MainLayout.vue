@@ -1,10 +1,10 @@
 <template>
   <el-container style="height:100vh">
     <!-- Sidebar -->
-    <el-aside width="280px" class="layout-sidebar">
+    <el-aside :width="sidebarCollapsed ? '64px' : '280px'" class="layout-sidebar" :class="{ collapsed: sidebarCollapsed }">
       <div class="sidebar-brand">
         <div class="brand-logo"><el-icon :size="24"><OfficeBuilding /></el-icon></div>
-        <div class="brand-copy">
+        <div class="brand-copy" v-show="!sidebarCollapsed">
           <div class="brand-title">四川省林业和草原调查规划院</div>
           <div class="brand-subtitle">项目管理系统</div>
         </div>
@@ -12,6 +12,7 @@
       <el-menu
         :default-active="route.path"
         router
+        :collapse="sidebarCollapsed"
         class="sidebar-menu"
       >
         <!-- 工作台 -->
@@ -67,6 +68,9 @@
     <el-container>
       <el-header class="layout-header">
         <div class="header-left">
+          <span class="header-action-btn" @click="sidebarCollapsed = !sidebarCollapsed" title="折叠菜单">
+            <el-icon :size="18"><Fold /></el-icon>
+          </span>
           <el-breadcrumb separator="/">
             <el-breadcrumb-item v-for="item in breadcrumbItems" :key="item.title" :to="item.path ? { path: item.path } : undefined">
               {{ item.title }}
@@ -151,7 +155,7 @@
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { computed, ref, reactive, onMounted } from 'vue'
-import { Bell, Brush } from '@element-plus/icons-vue'
+import { Bell, Brush, Fold } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '../api/index'
 import { showActionError } from '../utils/actionGuards'
@@ -160,6 +164,7 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const notifyPopover = ref(null)
+const sidebarCollapsed = ref(false)
 
 // Profile / password change
 const showProfile = ref(false)
