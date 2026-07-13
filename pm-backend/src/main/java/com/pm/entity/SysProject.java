@@ -15,6 +15,7 @@ public class SysProject {
     @NotBlank(message = "项目名称不能为空")
     @Size(max = 255, message = "项目名称不能超过255个字符")
     private String name;
+    private String projectNo;
     private String description;
     private String status;
     private Long createUserId;

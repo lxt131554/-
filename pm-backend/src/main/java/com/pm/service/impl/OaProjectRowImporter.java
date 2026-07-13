@@ -123,6 +123,7 @@ class OaProjectRowImporter {
         // Create new project with basic fields only
         SysProject project = new SysProject();
         project.setName(row.getProjectName());
+        project.setProjectNo(row.getContractNo());
         project.setDescription(buildOaDescription(row));
         project.setStatus(resolveProjectStatus(row));
         project.setCreateUserId(operatorUserId);
