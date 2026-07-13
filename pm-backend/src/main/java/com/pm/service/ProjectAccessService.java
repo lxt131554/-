@@ -64,9 +64,9 @@ public class ProjectAccessService {
     public boolean canReportStage(Long stageId, SysUser user) {
         SysProjectStage stage = stageMapper.selectById(stageId);
         if (stage == null || user == null) return false;
-        // 已完成/已提交阶段不允许填报
-        if ("completed".equals(stage.getStatus()) || "submitted".equals(stage.getStatus())) return false;
-        // 项目负责人或阶段责任人可填报
+        // 已完成阶段不允许填报
+        if ("completed".equals(stage.getStatus())) return false;
+        // 项目负责人或阶段责任人可填报（含待审阅阶段也可继续填报）
         if (isAdmin(user)) return true;
         if (stage.getAssigneeId() != null && stage.getAssigneeId().equals(user.getId())) return true;
         return canManageProject(stage.getProjectId(), user);

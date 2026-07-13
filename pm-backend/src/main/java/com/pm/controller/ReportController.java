@@ -108,6 +108,16 @@ public class ReportController {
         if (progressRate == null || progressRate < 0 || progressRate > 100) {
             return Result.fail(400, "进度必须在0-100之间");
         }
+        // 校验进度不能倒退：新填报的进度必须不低于该阶段历史最高进度
+        List<SysStageReport> history = reportMapper.selectList(new LambdaQueryWrapper<SysStageReport>()
+                .eq(SysStageReport::getStageId, stageId)
+                .orderByDesc(SysStageReport::getSubmitTime));
+        if (!history.isEmpty()) {
+            int maxRate = history.stream().mapToInt(r -> r.getProgressRate() != null ? r.getProgressRate() : 0).max().orElse(0);
+            if (progressRate < maxRate) {
+                return Result.fail(400, "进度不能低于历史最高值（" + maxRate + "%），当前填报为 " + progressRate + "%");
+            }
+        }
         if (!hasText(content) && !hasText(problem) && !hasText(resultSummary) && !hasText(qualityControl)) {
             throw new IllegalArgumentException("请至少填写填报内容、问题、成果摘要或质量控制信息");
         }
