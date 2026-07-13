@@ -38,7 +38,12 @@
       <div v-if="!reports.length" style="color:var(--pm-text-muted);text-align:center;padding:40px">暂无填报记录</div>
       <div v-for="(r, i) in reports" :key="r.id" style="padding:16px;border:1px solid var(--pm-border);border-radius:8px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-weight:600">第 {{ reports.length - i }} 次填报</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-weight:600">第 {{ reports.length - i }} 次填报</span>
+            <el-tag v-if="r.reviewStatus==='passed'" type="success" size="small">已通过</el-tag>
+            <el-tag v-else-if="r.reviewStatus==='returned'" type="danger" size="small">已退回</el-tag>
+            <el-tag v-else type="info" size="small">待审阅</el-tag>
+          </div>
           <span style="font-size:13px;color:var(--pm-text-muted)">{{ r.submitUserName }} · {{ formatTime(r.submitTime) }}</span>
         </div>
         <div style="margin-bottom:4px"><strong>进度：</strong>{{ r.progressRate }}%</div>
@@ -53,7 +58,6 @@
         </div>
         <div v-if="r.reviewComment" style="margin-top:8px;padding:8px;background:var(--pm-bg);border-radius:4px">
           <strong>审阅意见：</strong>{{ r.reviewComment }}
-          <el-tag size="small" style="margin-left:8px">{{ r.reviewStatus=='passed'?'已通过':r.reviewStatus=='returned'?'已退回':'待审阅' }}</el-tag>
         </div>
       </div>
     </div>
