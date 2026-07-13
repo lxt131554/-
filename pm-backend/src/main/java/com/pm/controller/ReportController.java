@@ -119,9 +119,15 @@ public class ReportController {
             throw new IllegalArgumentException("需要支持时请填写支持标题或内容");
         }
         // 检查是否存在待审阅状态的上次填报，如果有则替换而非新增
-        SysStageReport report = reportMapper.selectOne(new LambdaQueryWrapper<SysStageReport>()
+        List<SysStageReport> pendingReports = reportMapper.selectList(new LambdaQueryWrapper<SysStageReport>()
                 .eq(SysStageReport::getStageId, stageId)
-                .eq(SysStageReport::getReviewStatus, "pending"));
+                .eq(SysStageReport::getReviewStatus, "pending")
+                .orderByDesc(SysStageReport::getSubmitTime));
+        SysStageReport report = pendingReports.isEmpty() ? null : pendingReports.get(0);
+        // 清理多余的重复待审记录（保留最新一条）
+        for (int i = 1; i < pendingReports.size(); i++) {
+            reportMapper.deleteById(pendingReports.get(i).getId());
+        }
         boolean isUpdate = (report != null);
         if (!isUpdate) {
             report = new SysStageReport();
