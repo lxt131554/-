@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +32,43 @@ class OaProjectRowImporter {
     private final SysProjectMemberMapper memberMapper;
     private final SysUserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Validate a single row without persisting. Collects error messages into the errors list.
+     */
+    public void validateRow(OaProjectImportRow row, List<String> errors, OaProjectImportResult.Item item) {
+        String contractNo = row.getContractNo();
+        if (!hasText(contractNo)) {
+            errors.add("第 " + row.getRowNumber() + " 行：合同编号为空");
+            item.setAction("error");
+            item.setMessage("合同编号为空");
+            return;
+        }
+        // Check duplicate by contract_no
+        SysProjectContract existingContract = contractMapper.selectOne(
+                new LambdaQueryWrapper<SysProjectContract>()
+                        .eq(SysProjectContract::getContractNo, contractNo)
+                        .last("LIMIT 1"));
+        // Check duplicate by project_no
+        SysProject duplicateProject = null;
+        if (existingContract == null) {
+            duplicateProject = projectMapper.selectOne(
+                    new LambdaQueryWrapper<SysProject>()
+                            .eq(SysProject::getProjectNo, contractNo)
+                            .last("LIMIT 1"));
+        }
+        if (existingContract != null || duplicateProject != null) {
+            String existName = existingContract != null
+                ? (projectMapper.selectById(existingContract.getProjectId()) != null
+                    ? projectMapper.selectById(existingContract.getProjectId()).getName() : "未知")
+                : (duplicateProject != null ? duplicateProject.getName() : "未知");
+            errors.add("第 " + row.getRowNumber() + " 行：项目编号 " + contractNo + " 已存在（「" + existName + "」），请勿重复导入");
+            item.setAction("error");
+            item.setMessage("项目编号 " + contractNo + " 已存在");
+            return;
+        }
+        item.setAction("ok");
+    }
 
     @Transactional
     public void importRow(OaProjectImportRow row, Long operatorUserId, OaProjectImportResult result) {

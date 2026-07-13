@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -40,6 +41,30 @@ public class OaProjectImportServiceImpl implements OaProjectImportService {
 
         OaProjectImportResult result = new OaProjectImportResult();
         result.setTotalRows(rows.size());
+
+        // Phase 1: Validate ALL rows first, collect errors
+        List<String> errors = new ArrayList<>();
+        for (OaProjectImportRow row : rows) {
+            OaProjectImportResult.Item item = new OaProjectImportResult.Item();
+            item.setRowNumber(row.getRowNumber());
+            item.setProjectName(row.getProjectName());
+            item.setContractNo(row.getContractNo());
+            item.setManagerName(row.getManagerName());
+            rowImporter.validateRow(row, errors, item);
+            result.addItem(item);
+        }
+
+        // If any errors, fail the ENTIRE import
+        if (!errors.isEmpty()) {
+            result.setSkippedCount(errors.size());
+            StringBuilder msg = new StringBuilder("OA 导入失败，以下行存在问题，请修正后重新导入：\n\n");
+            for (String e : errors) {
+                msg.append(e).append('\n');
+            }
+            throw new IllegalArgumentException(msg.toString());
+        }
+
+        // Phase 2: All rows clean — import one by one
         for (OaProjectImportRow row : rows) {
             rowImporter.importRow(row, operatorUserId, result);
         }
