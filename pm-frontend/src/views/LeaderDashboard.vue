@@ -124,6 +124,7 @@ import { ref, computed, onMounted } from 'vue'
 import request from '../api/index'
 import { useAuthStore } from '../stores/auth'
 import { showActionError } from '../utils/actionGuards'
+import { ElMessageBox } from 'element-plus'
 
 const stats = ref({})
 const loading = ref(false)
@@ -138,7 +139,6 @@ async function handleOaFileSelected(event) {
   importingOa.value = true
   try {
     const { importProjectsFromOa } = await import('../api/project')
-    const { ElMessageBox } = await import('element-plus')
     const res = await importProjectsFromOa(file)
     const data = res.data || {}
     const missing = data.missingManagers?.length ? data.missingManagers.join('、') : '无'
