@@ -142,10 +142,20 @@ async function handleOaFileSelected(event) {
     const res = await importProjectsFromOa(file)
     const data = res.data || {}
     const missing = data.missingManagers?.length ? data.missingManagers.join('、') : '无'
+    const items = data.items || []
+    const skippedItems = items.filter(i => i.action === 'skipped')
+    let detailLines = []
+    if (skippedItems.length > 0) {
+      detailLines.push('')
+      detailLines.push('⚠️ 以下行导入失败：')
+      skippedItems.forEach(i => {
+        detailLines.push(`第 ${i.rowNumber} 行 「${i.projectName || '未知'}」编号 ${i.contractNo || '-'} 负责人 ${i.managerName || '-'} —— ${i.message}`)
+      })
+    }
     await ElMessageBox.alert(
-      `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missing}`,
+      `读取项目：${data.totalRows || 0} 条\n新增：${data.createdCount || 0} 条\n更新：${data.updatedCount || 0} 条\n跳过：${data.skippedCount || 0} 条\n负责人已匹配：${data.matchedManagerCount || 0} 条\n未匹配负责人：${missing}${detailLines.join('\n')}`,
       'OA 项目导入结果',
-      { confirmButtonText: '知道了' }
+      { confirmButtonText: '知道了', type: skippedItems.length > 0 ? 'warning' : 'success', dangerouslyUseHTMLString: false }
     )
     await loadData()
   } catch (error) {
