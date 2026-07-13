@@ -223,6 +223,16 @@ public class ProjectController {
         if (member == null || !member.getProjectId().equals(id)) {
             return Result.fail("成员不属于该项目");
         }
+        // 不能移除项目中唯一的负责人
+        if ("manager".equals(member.getRoleInProject())) {
+            Long managerCount = memberMapper.selectCount(new LambdaQueryWrapper<SysProjectMember>()
+                    .eq(SysProjectMember::getProjectId, id)
+                    .eq(SysProjectMember::getRoleInProject, "manager")
+                    .eq(SysProjectMember::getStatus, "confirmed"));
+            if (managerCount != null && managerCount <= 1) {
+                return Result.fail(400, "不能移除项目中唯一的负责人，请先指定新的负责人");
+            }
+        }
         projectService.removeMember(id, memberId);
         return Result.ok();
     }
