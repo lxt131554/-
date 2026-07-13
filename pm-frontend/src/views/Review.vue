@@ -65,7 +65,7 @@ const submitting = ref(false)
 async function loadReport() {
   try {
     const res = await getPendingReviews()
-    const found = res.data.find(r => r.id == reportId)
+    const found = (res.data.records || res.data).find(r => r.id == reportId)
     if (found) report.value = found
     else ElMessage.warning('未找到该待审阅填报，可能已被处理')
   } catch (error) {
