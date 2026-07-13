@@ -57,7 +57,23 @@ class OaProjectRowImporter {
                             .eq(SysProjectContract::getContractNo, contractNo)
                             .last("LIMIT 1"));
 
-            // Step 3: Resolve manager user
+            // Also check by project_no in case contract record is missing but project exists
+            SysProject duplicateProject = null;
+            if (existingContract == null && hasText(contractNo)) {
+                duplicateProject = projectMapper.selectOne(
+                        new LambdaQueryWrapper<SysProject>()
+                                .eq(SysProject::getProjectNo, contractNo)
+                                .last("LIMIT 1"));
+                if (duplicateProject != null) {
+                    result.setSkippedCount(result.getSkippedCount() + 1);
+                    item.setAction("skipped");
+                    item.setMessage("项目编号 " + contractNo + " 已存在（项目：「" + duplicateProject.getName() + "」），请检查 Excel 第 " + row.getRowNumber() + " 行是否重复导入");
+                    result.addItem(item);
+                    return;
+                }
+            }
+
+            // Step 3: Resolve manager user (only AFTER confirming project is new or update)
             SysUser manager = null;
             if (hasText(row.getManagerName())) {
                 manager = resolveManager(row.getManagerName(), result, item);
@@ -73,7 +89,7 @@ class OaProjectRowImporter {
         } catch (Exception e) {
             result.setSkippedCount(result.getSkippedCount() + 1);
             item.setAction("skipped");
-            item.setMessage("导入失败：" + e.getMessage());
+            item.setMessage("Excel 第 " + row.getRowNumber() + " 行导入失败：" + e.getMessage());
         }
         result.addItem(item);
     }
@@ -110,7 +126,7 @@ class OaProjectRowImporter {
         item.setProjectId(project.getId());
         item.setAction("updated");
         if (!hasText(item.getMessage())) {
-            item.setMessage("已更新合同及项目名称");
+            item.setMessage("项目「" + project.getName() + "」已存在（合同编号：" + row.getContractNo() + "），已更新合同数据");
         }
     }
 
