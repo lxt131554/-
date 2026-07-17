@@ -1,0 +1,9 @@
+[build]
+  base = "pm-frontend"
+  command = "npm run build:demo"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
