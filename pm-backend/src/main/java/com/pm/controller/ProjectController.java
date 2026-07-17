@@ -216,6 +216,7 @@ public class ProjectController {
 
     @DeleteMapping("/{id}/members/{memberId}")
     public Result<?> removeMember(@PathVariable Long id, @PathVariable Long memberId,
+                                  @RequestBody(required = false) Map<String, String> body,
                                   @AuthenticationPrincipal LoginUser loginUser) {
         accessService.requireProjectManager(id, loginUser.getUser());
         accessService.requireProjectActive(id);
@@ -223,8 +224,12 @@ public class ProjectController {
         if (member == null || !member.getProjectId().equals(id)) {
             return Result.fail("成员不属于该项目");
         }
+        String reason = body == null ? null : body.get("reason");
+        if ("confirmed".equals(member.getStatus()) && (reason == null || reason.trim().isEmpty())) {
+            return Result.fail(400, "请输入移除原因");
+        }
         // 不能移除项目中唯一的负责人
-        if ("manager".equals(member.getRoleInProject())) {
+        if ("manager".equals(member.getRoleInProject()) && "confirmed".equals(member.getStatus())) {
             Long managerCount = memberMapper.selectCount(new LambdaQueryWrapper<SysProjectMember>()
                     .eq(SysProjectMember::getProjectId, id)
                     .eq(SysProjectMember::getRoleInProject, "manager")
@@ -233,7 +238,8 @@ public class ProjectController {
                 return Result.fail(400, "不能移除项目中唯一的负责人，请先指定新的负责人");
             }
         }
-        projectService.removeMember(id, memberId);
+        projectService.removeMember(id, memberId, reason, loginUser.getUser().getId());
+        cacheEvictionService.evictDashboardCaches();
         return Result.ok();
     }
 

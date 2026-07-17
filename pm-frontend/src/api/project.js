@@ -36,6 +36,8 @@ export function addProjectMember(id, data) {
   return request.post(`/projects/${id}/members`, data)
 }
 
-export function removeProjectMember(projectId, memberId) {
-  return request.delete(`/projects/${projectId}/members/${memberId}`)
+export function removeProjectMember(projectId, memberId, reason) {
+  return request.delete(`/projects/${projectId}/members/${memberId}`, {
+    data: { reason }
+  })
 }

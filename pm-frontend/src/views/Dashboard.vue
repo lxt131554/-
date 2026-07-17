@@ -22,6 +22,50 @@
 
     <!-- Section 2: Summary Cards -->
     <section class="page-summary-grid">
+      <!-- Admin cards -->
+      <template v-if="auth.user?.role=='admin'">
+        <div class="summary-card summary-card--primary" @click="$router.push('/users')">
+          <div class="summary-card-value">{{ stats.userCount ?? '--' }}</div>
+          <div class="summary-card-label">院内用户</div>
+          <div class="summary-card-hint">当前系统用户总数</div>
+        </div>
+        <div class="summary-card summary-card--primary" @click="$router.push('/projects')">
+          <div class="summary-card-value">{{ stats.projectCount ?? '--' }}</div>
+          <div class="summary-card-label">全部项目</div>
+          <div class="summary-card-hint">系统内项目总数</div>
+        </div>
+        <div class="summary-card summary-card--success" @click="$router.push('/projects')">
+          <div class="summary-card-value">{{ stats.activeProjectCount ?? '--' }}</div>
+          <div class="summary-card-label">进行中项目</div>
+          <div class="summary-card-hint">当前正在推进的项目</div>
+        </div>
+        <div class="summary-card summary-card--primary" @click="$router.push('/pending-review')">
+          <div class="summary-card-value">{{ stats.pendingReview ?? '--' }}</div>
+          <div class="summary-card-label">待审核填报</div>
+          <div class="summary-card-hint">尚未处理的阶段填报</div>
+        </div>
+        <div class="summary-card summary-card--warning" @click="$router.push('/deviations')">
+          <div class="summary-card-value">{{ stats.openDeviations ?? '--' }}</div>
+          <div class="summary-card-label">未关闭偏差</div>
+          <div class="summary-card-hint">仍需跟进的项目异常</div>
+        </div>
+        <div class="summary-card summary-card--danger" @click="$router.push('/supports')">
+          <div class="summary-card-value">{{ stats.pendingSupports ?? '--' }}</div>
+          <div class="summary-card-label">待处理支持</div>
+          <div class="summary-card-hint">尚未解决的支持事项</div>
+        </div>
+        <div class="summary-card summary-card--success" @click="$router.push('/projects')">
+          <div class="summary-card-value">{{ stats.completedProjectCount ?? '--' }}</div>
+          <div class="summary-card-label">已完成项目</div>
+          <div class="summary-card-hint">负责人已确认完成</div>
+        </div>
+        <div class="summary-card summary-card--primary" @click="$router.push('/projects')">
+          <div class="summary-card-value">{{ stats.oaImportCount ?? '--' }}</div>
+          <div class="summary-card-label">OA导入项目</div>
+          <div class="summary-card-hint">{{ stats.lastOaImportTime ? `最近导入 ${formatDateTime(stats.lastOaImportTime)}` : '暂无OA导入记录' }}</div>
+        </div>
+      </template>
+
       <!-- Manager cards -->
       <template v-if="auth.user?.role=='manager'">
         <div class="summary-card summary-card--primary" @click="$router.push('/projects')">
@@ -191,7 +235,9 @@
             <template #default="{ row }">
               <el-tag v-if="row.status==='in_progress'" type="primary" size="small">进行中</el-tag>
               <el-tag v-else-if="row.status==='pending'" type="info" size="small">待开始</el-tag>
-              <el-tag v-else size="small">{{ row.status }}</el-tag>
+              <el-tag v-else-if="row.status==='submitted'" type="warning" size="small">待审阅</el-tag>
+              <el-tag v-else-if="row.status==='completed'" type="success" size="small">已完成</el-tag>
+              <el-tag v-else type="info" size="small">未知状态</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="100" align="center">
@@ -246,6 +292,9 @@ const allStatsZero = computed(() => {
   }
   if (auth.user?.role === 'leader') {
     return !s.openDeviations && !s.pendingSupports && !s.pendingReview && !s.pendingChanges
+  }
+  if (auth.user?.role === 'admin') {
+    return !s.userCount && !s.projectCount && !s.pendingReview && !s.openDeviations && !s.pendingSupports
   }
   return false
 })

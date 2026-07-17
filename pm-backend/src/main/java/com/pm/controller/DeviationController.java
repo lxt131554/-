@@ -46,14 +46,16 @@ public class DeviationController {
         LambdaQueryWrapper<SysDeviation> wrapper = new LambdaQueryWrapper<>();
         if (projectId != null) {
             wrapper.eq(SysDeviation::getProjectId, projectId);
+        } else if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
+            List<Long> projectIds = accessService.listConfirmedProjectIds(loginUser.getUser());
+            if (projectIds.isEmpty()) {
+                wrapper.eq(SysDeviation::getProjectId, -1L);
+            } else {
+                wrapper.in(SysDeviation::getProjectId, projectIds);
+            }
         }
         wrapper.orderByDesc(SysDeviation::getCreateTime);
         pageObj = deviationMapper.selectPage(pageObj, wrapper);
-        if (projectId == null && !accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
-            List<SysDeviation> records = pageObj.getRecords();
-            records.removeIf(d -> !accessService.canViewProject(d.getProjectId(), loginUser.getUser()));
-            pageObj.setRecords(records);
-        }
         // Batch enrich projectName and stageName
         for (SysDeviation d : pageObj.getRecords()) {
             SysProject p = projectMapper.selectById(d.getProjectId());

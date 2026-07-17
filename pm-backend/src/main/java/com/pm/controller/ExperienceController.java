@@ -52,12 +52,17 @@ public class ExperienceController {
         if (size > 100) size = 100;
         Page<SysExperience> pageObj = new Page<>(page, size);
         LambdaQueryWrapper<SysExperience> wrapper = new LambdaQueryWrapper<>();
+        if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
+            List<Long> projectIds = accessService.listConfirmedProjectIds(loginUser.getUser());
+            if (projectIds.isEmpty()) {
+                wrapper.eq(SysExperience::getProjectId, -1L);
+            } else {
+                wrapper.in(SysExperience::getProjectId, projectIds);
+            }
+        }
         wrapper.orderByDesc(SysExperience::getCreateTime);
         experienceService.page(pageObj, wrapper);
         List<SysExperience> records = pageObj.getRecords();
-        if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
-            records.removeIf(exp -> !accessService.canViewProject(exp.getProjectId(), loginUser.getUser()));
-        }
         // Batch project name lookup
         Set<Long> projectIds = records.stream()
                 .map(SysExperience::getProjectId).filter(id -> id != null).collect(Collectors.toSet());

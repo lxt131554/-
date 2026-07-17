@@ -787,24 +787,43 @@ async function getMockResponse(config) {
     var start = (page - 1) * size
     result = { code: 200, message: 'success', data: { records: list.slice(start, start + size), total: total, size: size, current: page } }
   }
+  else if (url?.match(/^\/supports\/\d+$/) && method === 'get') {
+    const id = parseInt(url.split('/')[2])
+    const supportItem = mockData.supportItems.find(s => s.id === id)
+    if (supportItem) {
+      var supportProject = mockData.projects.find(function(x) { return x.id === supportItem.projectId })
+      var supportApplicant = Object.values(mockData.users).find(function(x) { return x.id === supportItem.applicantId })
+      var supportHandler = Object.values(mockData.users).find(function(x) { return x.id === supportItem.handlerId })
+      if (supportProject) supportItem.projectName = supportProject.name
+      if (supportApplicant) supportItem.applicantName = supportApplicant.realName
+      if (supportHandler) supportItem.handlerName = supportHandler.realName
+    }
+    result = supportItem
+      ? { code: 200, message: 'success', data: supportItem }
+      : { code: 404, message: '支持事项不存在', data: null }
+  }
   else if (url === '/supports' && method === 'post') {
     const user = getMockUser()
     const now = new Date().toISOString().replace('T', ' ').slice(0, 19)
+    const projectId = parseInt(body.projectId)
+    const handlerId = body.handlerId ? parseInt(body.handlerId) : null
+    const project = mockData.projects.find(p => p.id === projectId)
+    const handler = Object.values(mockData.users).find(u => u.id === handlerId)
     const newSupport = {
       id: Date.now(),
-      projectId: body.projectId,
+      projectId,
       title: body.title,
       content: body.content,
       applicantId: user?.id,
       applicantName: user?.realName || '',
-      handlerId: body.handlerId || null,
-      handlerName: '',
+      handlerId,
+      handlerName: handler?.realName || '',
       expectTime: body.expectTime || '',
       status: 'pending',
       reply: null,
       createTime: now,
       updateTime: now,
-      projectName: ''
+      projectName: project?.name || ''
     }
     mockData.supportItems.push(newSupport)
     result = { code: 200, message: 'success', data: newSupport }

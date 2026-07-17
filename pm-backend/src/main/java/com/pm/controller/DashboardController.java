@@ -11,6 +11,7 @@ import com.pm.entity.SysSupportItem;
 import com.pm.entity.SysChange;
 import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysProjectMemberMapper;
+import com.pm.mapper.SysUserMapper;
 import com.pm.security.LoginUser;
 import com.pm.service.SysDeviationService;
 import com.pm.service.SysProjectStageService;
@@ -43,6 +44,7 @@ public class DashboardController {
     private final ProjectAccessService accessService;
     private final SysProjectMapper projectMapper;
     private final SysProjectMemberMapper memberMapper;
+    private final SysUserMapper userMapper;
 
     @GetMapping
     @Cacheable(cacheNames = "dashboardCache", key = "'user:' + #loginUser.getUser().getId() + ':role:' + #loginUser.getUser().getRole()", unless = "#result == null || #result.data == null")
@@ -172,6 +174,37 @@ public class DashboardController {
                 result.put("pendingReview", pendingReview);
                 break;
             }
+            case "admin": {
+                long userCount = userMapper.selectCount(null);
+                long projectCount = projectMapper.selectCount(null);
+                long activeProjectCount = projectMapper.selectCount(new LambdaQueryWrapper<SysProject>()
+                        .eq(SysProject::getStatus, "active"));
+                long completedProjectCount = projectMapper.selectCount(new LambdaQueryWrapper<SysProject>()
+                        .eq(SysProject::getStatus, "completed"));
+                long pendingReview = reportService.count(new LambdaQueryWrapper<SysStageReport>()
+                        .eq(SysStageReport::getReviewStatus, "pending"));
+                long openDeviations = deviationService.count(new LambdaQueryWrapper<SysDeviation>()
+                        .eq(SysDeviation::getStatus, "open"));
+                long pendingSupports = supportItemService.count(new LambdaQueryWrapper<SysSupportItem>()
+                        .eq(SysSupportItem::getStatus, "pending"));
+                long oaImportCount = projectMapper.selectCount(new LambdaQueryWrapper<SysProject>()
+                        .likeRight(SysProject::getDescription, "OA导入项目"));
+                List<SysProject> latestOaProjects = projectMapper.selectList(new LambdaQueryWrapper<SysProject>()
+                        .likeRight(SysProject::getDescription, "OA导入项目")
+                        .orderByDesc(SysProject::getCreateTime)
+                        .last("LIMIT 1"));
+
+                result.put("userCount", userCount);
+                result.put("projectCount", projectCount);
+                result.put("activeProjectCount", activeProjectCount);
+                result.put("completedProjectCount", completedProjectCount);
+                result.put("pendingReview", pendingReview);
+                result.put("openDeviations", openDeviations);
+                result.put("pendingSupports", pendingSupports);
+                result.put("oaImportCount", oaImportCount);
+                result.put("lastOaImportTime", latestOaProjects.isEmpty() ? null : latestOaProjects.get(0).getCreateTime());
+                break;
+            }
             default: {
                 result.put("message", "no dashboard for role: " + role);
             }
@@ -204,7 +237,17 @@ public class DashboardController {
             SysProjectStage currentStage = stages.stream()
                     .filter(s -> !"completed".equals(s.getStatus()))
                     .findFirst().orElse(null);
-            card.put("currentStage", currentStage != null ? currentStage.getStageName() : "-");
+            String currentStageText;
+            if (currentStage != null) {
+                currentStageText = currentStage.getStageName();
+            } else if ("completed".equals(p.getStatus())) {
+                currentStageText = "项目已完成";
+            } else if (stages.isEmpty()) {
+                currentStageText = "待负责人安排阶段";
+            } else {
+                currentStageText = "阶段已完成，待确认项目完成";
+            }
+            card.put("currentStage", currentStageText);
             card.put("stagePlanEnd", currentStage != null ? currentStage.getPlanEnd() : null);
             card.put("hasDeviation", devProjectIds.contains(p.getId()));
             return card;

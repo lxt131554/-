@@ -14,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ProjectAccessService {
@@ -49,6 +53,19 @@ public class ProjectAccessService {
         if (projectId == null || user == null) return false;
         if (isAdmin(user)) return true;
         return isManagerRole(user) && isConfirmedProjectManager(projectId, user.getId());
+    }
+
+    public List<Long> listConfirmedProjectIds(SysUser user) {
+        if (user == null || user.getId() == null) {
+            return Collections.emptyList();
+        }
+        return memberMapper.selectList(new LambdaQueryWrapper<SysProjectMember>()
+                        .eq(SysProjectMember::getUserId, user.getId())
+                        .eq(SysProjectMember::getStatus, "confirmed"))
+                .stream()
+                .map(SysProjectMember::getProjectId)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     public boolean canViewStage(Long stageId, SysUser user) {

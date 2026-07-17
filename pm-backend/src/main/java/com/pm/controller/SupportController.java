@@ -15,6 +15,7 @@ import com.pm.service.CacheEvictionService;
 import com.pm.service.SysSupportItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,38 +46,54 @@ public class SupportController {
         if (status != null && !status.trim().isEmpty()) {
             wrapper.eq(SysSupportItem::getStatus, status);
         }
-        wrapper.orderByDesc(SysSupportItem::getCreateTime);
-        pageObj = supportItemMapper.selectPage(pageObj, wrapper);
         if (!accessService.isAdmin(loginUser.getUser()) && !accessService.isLeader(loginUser.getUser())) {
             Long userId = loginUser.getUser().getId();
-            List<SysSupportItem> records = pageObj.getRecords();
-            records.removeIf(item ->
-                !userId.equals(item.getApplicantId()) &&
-                !accessService.canViewProject(item.getProjectId(), loginUser.getUser()));
-            pageObj.setRecords(records);
-        }
-        // Batch enrich projectName, applicantName, handlerName
-        for (SysSupportItem item : pageObj.getRecords()) {
-            SysProject p = projectMapper.selectById(item.getProjectId());
-            if (p != null) item.setProjectName(p.getName());
-            SysUser applicant = userMapper.selectById(item.getApplicantId());
-            if (applicant != null) item.setApplicantName(applicant.getRealName());
-            if (item.getHandlerId() != null) {
-                SysUser handler = userMapper.selectById(item.getHandlerId());
-                if (handler != null) item.setHandlerName(handler.getRealName());
+            List<Long> projectIds = accessService.listConfirmedProjectIds(loginUser.getUser());
+            if (projectIds.isEmpty()) {
+                wrapper.eq(SysSupportItem::getApplicantId, userId);
+            } else {
+                wrapper.and(scope -> scope
+                        .in(SysSupportItem::getProjectId, projectIds)
+                        .or()
+                        .eq(SysSupportItem::getApplicantId, userId));
             }
         }
+        wrapper.orderByDesc(SysSupportItem::getCreateTime);
+        pageObj = supportItemMapper.selectPage(pageObj, wrapper);
+        for (SysSupportItem item : pageObj.getRecords()) {
+            enrichNames(item);
+        }
         return Result.ok(pageObj);
+    }
+
+    @GetMapping("/{id}")
+    public Result<SysSupportItem> detail(@PathVariable Long id,
+                                         @AuthenticationPrincipal LoginUser loginUser) {
+        SysSupportItem item = supportItemService.getById(id);
+        if (item == null) {
+            return Result.fail("支持事项不存在");
+        }
+        SysUser user = loginUser.getUser();
+        Long userId = user.getId();
+        if (!accessService.isAdmin(user)
+                && !accessService.isLeader(user)
+                && !userId.equals(item.getApplicantId())
+                && !accessService.canViewProject(item.getProjectId(), user)) {
+            throw new AccessDeniedException("无权操作该数据");
+        }
+        enrichNames(item);
+        return Result.ok(item);
     }
 
     @PostMapping
     public Result<SysSupportItem> create(@Valid @RequestBody SysSupportItem item,
                                           @AuthenticationPrincipal LoginUser loginUser) {
-        accessService.requireProjectManager(item.getProjectId(), loginUser.getUser());
+        accessService.requireProjectView(item.getProjectId(), loginUser.getUser());
         accessService.requireProjectActive(item.getProjectId());
         item.setApplicantId(loginUser.getUser().getId());
         item.setStatus("pending");
         supportItemService.save(item);
+        enrichNames(item);
         cacheEvictionService.evictDashboardCaches();
         return Result.ok(item);
     }
@@ -104,5 +121,16 @@ public class SupportController {
 
     private boolean hasText(String value) {
         return value != null && !value.trim().isEmpty();
+    }
+
+    private void enrichNames(SysSupportItem item) {
+        SysProject project = projectMapper.selectById(item.getProjectId());
+        if (project != null) item.setProjectName(project.getName());
+        SysUser applicant = userMapper.selectById(item.getApplicantId());
+        if (applicant != null) item.setApplicantName(applicant.getRealName());
+        if (item.getHandlerId() != null) {
+            SysUser handler = userMapper.selectById(item.getHandlerId());
+            if (handler != null) item.setHandlerName(handler.getRealName());
+        }
     }
 }

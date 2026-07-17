@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pm.entity.SysProject;
 import com.pm.entity.SysProjectMember;
+import com.pm.entity.SysChange;
+import com.pm.mapper.SysChangeMapper;
 import com.pm.mapper.SysProjectMapper;
 import com.pm.mapper.SysProjectMemberMapper;
 import com.pm.mapper.SysUserMapper;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,7 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
 
     private final SysProjectMemberMapper memberMapper;
     private final SysUserMapper userMapper;
+    private final SysChangeMapper changeMapper;
 
     @Override
     public IPage<SysProject> pageWithMembers(int page, int size, String keyword, String status, Long userId, String role) {
@@ -68,8 +72,32 @@ public class SysProjectServiceImpl extends ServiceImpl<SysProjectMapper, SysProj
     }
 
     @Override
-    public void removeMember(Long projectId, Long memberId) {
+    @Transactional
+    public void removeMember(Long projectId, Long memberId, String reason, Long operatorUserId) {
+        SysProjectMember member = memberMapper.selectById(memberId);
+        if (member == null || !projectId.equals(member.getProjectId())) {
+            throw new IllegalArgumentException("成员不属于该项目");
+        }
+        String memberName = "用户" + member.getUserId();
+        var memberUser = userMapper.selectById(member.getUserId());
+        if (memberUser != null && memberUser.getRealName() != null && !memberUser.getRealName().trim().isEmpty()) {
+            memberName = memberUser.getRealName();
+        }
         memberMapper.deleteById(memberId);
+
+        if (!"confirmed".equals(member.getStatus())) {
+            return;
+        }
+
+        SysChange change = new SysChange();
+        change.setProjectId(projectId);
+        change.setContent("移除项目成员：" + memberName + "（"
+                + ("manager".equals(member.getRoleInProject()) ? "负责人" : "工程师") + "）");
+        change.setImpact("移除原因：" + reason.trim());
+        change.setStatus("confirmed");
+        change.setConfirmTime(LocalDate.now());
+        change.setCreateUserId(operatorUserId);
+        changeMapper.insert(change);
     }
 
     @Override

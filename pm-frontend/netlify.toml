@@ -1,5 +1,5 @@
 [build]
-  command = "VITE_MOCK=true npm run build"
+  command = "npm run build:demo"
   publish = "dist"
 
 [[redirects]]

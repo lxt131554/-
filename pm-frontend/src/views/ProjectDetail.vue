@@ -948,7 +948,12 @@ const statusText = computed(() => project.value.status === 'active' ? '进行中
 const currentStageName = computed(() => {
   const stagesList = stages.value || []
   const active = stagesList.find(s => s.status === 'in_progress' || s.status === 'submitted')
-  return active ? active.stageName : (stagesList.length ? stagesList[stagesList.length - 1].stageName : '未开始')
+  if (active) return active.stageName
+  if (project.value.status === 'completed') return '项目已完成'
+  if (!stagesList.length) return '待负责人安排阶段'
+  if (stagesList.every(s => s.status === 'completed')) return '阶段已完成，待负责人确认项目完成'
+  const pending = stagesList.find(s => s.status === 'pending')
+  return pending ? pending.stageName : '待负责人确认项目进度'
 })
 const latestPlanEnd = computed(() => {
   const stagesList = stages.value || []
@@ -1203,7 +1208,7 @@ async function handleRemoveMemberClick(member) {
         inputValidator: (val) => val && val.trim() ? true : '请输入移除原因'
       }
     )
-    await removeProjectMember(projectId, member.id)
+    await removeProjectMember(projectId, member.id, reason.trim())
     ElMessage.success('成员已移除')
     loadMembers()
   } catch (error) {

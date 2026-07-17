@@ -9,7 +9,7 @@
     <div class="card-box" v-if="!isEdit">
       <el-form :model="form" label-width="120px" ref="formRef">
         <el-form-item label="所属项目" required>
-          <el-select v-model="form.projectId" placeholder="搜索并选择项目" filterable remote :remote-method="searchProjects" :loading="projectLoading" reserve-keyword clearable style="width:100%">
+          <el-select v-model="form.projectId" placeholder="搜索并选择项目" filterable remote :remote-method="searchProjects" :loading="projectLoading" reserve-keyword clearable style="width:100%" @change="handleProjectChange">
             <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
         </el-form-item>
@@ -20,8 +20,8 @@
           <el-input v-model="form.content" type="textarea" :rows="4" placeholder="详细说明需要的支持和原因" />
         </el-form-item>
         <el-form-item label="处理人">
-          <el-select v-model="form.handlerId" placeholder="选择处理人" style="width:100%">
-            <el-option v-for="u in users" :key="u.id" :label="u.realName + '（' + u.dept + '）'" :value="u.id" />
+          <el-select v-model="form.handlerId" placeholder="选择项目处理人" :loading="handlerLoading" :disabled="!form.projectId" style="width:100%">
+            <el-option v-for="u in users" :key="u.userId" :label="u.realName + '（' + (u.dept || '无部门') + '）'" :value="u.userId" />
           </el-select>
         </el-form-item>
         <el-form-item label="期望时间">
@@ -35,21 +35,22 @@
     </div>
 
     <!-- Edit/View mode -->
-    <div class="card-box" v-else>
+    <div class="card-box" v-else v-loading="detailLoading">
       <el-descriptions title="事项详情" :column="2" border v-if="detail">
-        <el-descriptions-item label="标题" :span="2">{{ detail.title }}</el-descriptions-item>
-        <el-descriptions-item label="所属项目">{{ detail.projectName }}</el-descriptions-item>
+        <el-descriptions-item label="标题" :span="2">{{ detail.title || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="所属项目">{{ detail.projectName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag :type="detail.status=='pending'?'warning':'success'" size="small">
             {{ detail.status=='pending'?'待处理':'已解决' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="申请人">{{ detail.applicantName }}</el-descriptions-item>
+        <el-descriptions-item label="申请人">{{ detail.applicantName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="处理人">{{ detail.handlerName || '未指定' }}</el-descriptions-item>
         <el-descriptions-item label="期望时间">{{ detail.expectTime ? formatTime(detail.expectTime) : '不限' }}</el-descriptions-item>
-        <el-descriptions-item label="详细描述" :span="2"><span class="long-text">{{ detail.content || '无' }}</span></el-descriptions-item>
-        <el-descriptions-item label="处理回复" :span="2" v-if="detail.reply"><span class="long-text">{{ detail.reply }}</span></el-descriptions-item>
+        <el-descriptions-item label="问题描述" :span="2"><span class="long-text">{{ detail.content || '暂无描述' }}</span></el-descriptions-item>
+        <el-descriptions-item label="处理回复" :span="2"><span class="long-text">{{ detail.reply || '暂无回复' }}</span></el-descriptions-item>
       </el-descriptions>
+      <el-empty v-else-if="!detailLoading" description="支持事项不存在或无权查看" />
 
       <div v-if="detail?.status=='pending' && (auth.user?.role=='manager'||auth.user?.role=='admin')" style="margin-top:24px">
         <el-form label-width="120px">
@@ -80,7 +81,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import request from '../api/index'
-import { getProjects } from '../api/project'
+import { getProjects, getProjectMembers } from '../api/project'
 import { ElMessage } from 'element-plus'
 import { confirmDanger, showActionError } from '../utils/actionGuards'
 
@@ -92,6 +93,8 @@ const formRef = ref(null)
 const submitting = ref(false)
 const projects = ref([])
 const projectLoading = ref(false)
+const detailLoading = ref(false)
+const handlerLoading = ref(false)
 const users = ref([])
 const detail = ref(null)
 const reply = ref('')
@@ -118,13 +121,32 @@ async function searchProjects(keyword) {
   } finally { projectLoading.value = false }
 }
 
-async function loadDetail() {
+async function handleProjectChange(projectId) {
+  form.handlerId = null
+  users.value = []
+  if (projectId) {
+    await loadProjectHandlers(projectId)
+  }
+}
+
+async function loadProjectHandlers(projectId) {
+  handlerLoading.value = true
   try {
-    const res = await request.get('/supports')
-    detail.value = (res.data || []).find(s => s.id == route.params.id)
+    const res = await getProjectMembers(projectId)
+    users.value = (res.data || []).filter(u => u.status === 'confirmed' && u.roleInProject === 'manager')
+  } catch (error) {
+    showActionError(error, '项目处理人加载失败')
+  } finally { handlerLoading.value = false }
+}
+
+async function loadDetail() {
+  detailLoading.value = true
+  try {
+    const res = await request.get(`/supports/${route.params.id}`)
+    detail.value = res.data || null
   } catch (error) {
     showActionError(error, '支持事项详情加载失败')
-  }
+  } finally { detailLoading.value = false }
 }
 
 function formatTime(val) {
